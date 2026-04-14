@@ -1,148 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Sales Flow</title>
-<style>
-body { font-family: Arial; padding: 20px; }
-button { margin: 5px; padding: 8px; }
-.section { display:none; margin-top:20px; }
-.active { background: green; color: white; }
-table, th, td { border:1px solid black; border-collapse: collapse; padding:5px; }
-</style>
+  <base target="_top">
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { padding: 8px; margin: 5px; }
+    table { border-collapse: collapse; margin-top: 20px; }
+    td, th { border: 1px solid #ccc; padding: 8px; }
+  </style>
 </head>
-
 <body>
 
-<h2>💰 Sales Module</h2>
+<h2>📦 Order Tracking System</h2>
 
-<!-- Steps -->
-<button id="b1" class="active">Pickup</button>
-<button id="b2">Customer</button>
-<button id="b3">Payment</button>
-<button id="b4">Done</button>
+<input type="text" id="orderId" placeholder="Order ID (GS#2001)">
+<input type="text" id="waybill" placeholder="Waybill">
+<button onclick="track()">Track & Save</button>
 
-<!-- STEP 1 -->
-<div id="s1" class="section" style="display:block;">
-<input id="orderId" placeholder="Order ID"><br>
-<input id="tracking" placeholder="Tracking ID"><br>
-<button onclick="step2()">Next</button>
-</div>
-
-<!-- STEP 2 -->
-<div id="s2" class="section">
-<input id="name" placeholder="Name"><br>
-<input id="phone" placeholder="Phone"><br>
-<input id="city" placeholder="City"><br>
-<button onclick="saveTracking()">Save & Next</button>
-</div>
-
-<!-- STEP 3 -->
-<div id="s3" class="section">
-<input id="payment" placeholder="Payment Amount"><br>
-<button onclick="savePayment()">Pay & Next</button>
-</div>
-
-<!-- STEP 4 -->
-<div id="s4" class="section">
-<h3>✅ Done</h3>
-</div>
-
-<hr>
-
-<h3>📊 Orders Table</h3>
-<table id="table">
-<thead>
-<tr>
-<th>Order</th><th>Name</th><th>City</th>
-<th>Tracking</th><th>Payment</th><th>Status</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
+<div id="result"></div>
 
 <script>
-let url = "https://script.google.com/macros/s/AKfycbyy8zYPJLv00h6p3wI3ery1LlmPl9Ty8zPUZbxVDGRxei6LYww-mtO5to4k5P95E88h9g/exec";
+function track() {
+  const orderId = document.getElementById("orderId").value;
+  const waybill = document.getElementById("waybill").value;
 
-// Step switch
-function show(id) {
-  document.querySelectorAll(".section").forEach(x=>x.style.display="none");
-  document.getElementById(id).style.display="block";
+  document.getElementById("result").innerHTML = "Loading...";
+
+  google.script.run.withSuccessHandler(showResult)
+    .getTrackingData(orderId, waybill);
 }
 
-// STEP 1 → Fetch
-async function step2(){
- let id=document.getElementById("orderId").value;
+function showResult(data) {
+  if (data.error) {
+    document.getElementById("result").innerHTML = "❌ " + data.error;
+    return;
+  }
 
- let res=await fetch(url+"?orderId="+id);
- let d=await res.json();
+  let html = `
+    <h3>Result</h3>
+    <table>
+      <tr><th>Date</th><td>${data.date}</td></tr>
+      <tr><th>Order ID</th><td>${data.order_id}</td></tr>
+      <tr><th>Waybill</th><td>${data.waybill}</td></tr>
+      <tr><th>Status</th><td>${data.status}</td></tr>
+      <tr><th>Location</th><td>${data.location}</td></tr>
+      <tr><th>Customer</th><td>${data.customer}</td></tr>
+      <tr><th>State</th><td>${data.state}</td></tr>
+      <tr><th>Amount</th><td>${data.amount}</td></tr>
+      <tr><th>Payment</th><td>${data.payment}</td></tr>
+    </table>
+  `;
 
- if(d.error){ alert("Not found"); return;}
-
- document.getElementById("name").value=d.name;
- document.getElementById("phone").value=d.phone;
- document.getElementById("city").value=d.city;
-
- show("s2");
+  document.getElementById("result").innerHTML = html;
 }
-
-// Save Tracking
-async function saveTracking(){
- await fetch(url,{
-   method:"POST",
-   body:JSON.stringify({
-     orderId:document.getElementById("orderId").value,
-     tracking:document.getElementById("tracking").value
-   })
- });
-
- show("s3");
- loadTable();
-}
-
-// Save Payment
-async function savePayment(){
- await fetch(url,{
-   method:"POST",
-   body:JSON.stringify({
-     orderId:document.getElementById("orderId").value,
-     payment:document.getElementById("payment").value
-   })
- });
-
- await fetch(url,{
-   method:"POST",
-   body:JSON.stringify({
-     orderId:document.getElementById("orderId").value,
-     done:true
-   })
- });
-
- show("s4");
- loadTable();
-}
-
-// Load Table
-async function loadTable(){
- let res=await fetch(url);
- let data=await res.json();
-
- let html="";
- data.forEach(r=>{
-   html+=`<tr>
-   <td>${r.orderId}</td>
-   <td>${r.name}</td>
-   <td>${r.city}</td>
-   <td>${r.tracking||""}</td>
-   <td>${r.payment||""}</td>
-   <td>${r.status||""}</td>
-   </tr>`;
- });
-
- document.querySelector("#table tbody").innerHTML=html;
-}
-
-// Initial load
-loadTable();
 </script>
 
 </body>
