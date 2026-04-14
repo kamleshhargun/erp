@@ -4,16 +4,48 @@
     <title>Sales</title>
     <style>
         body { font-family: Arial; padding: 20px; }
+        input { margin: 5px; padding: 5px; }
     </style>
 </head>
 <body>
 
 <h2>💰 Sales Module</h2>
 
-<ul>
-    <li>Invoice #501 - ₹5000</li>
-    <li>Invoice #502 - ₹8000</li>
-</ul>
+<label>Date:</label>
+<input type="date" id="date"><br>
+
+<label>Order ID:</label>
+<input type="text" id="orderId">
+<button onclick="fetchOrder()">Fetch</button><br>
+
+<label>Name:</label>
+<input type="text" id="name"><br>
+
+<label>Amount:</label>
+<input type="text" id="amount"><br>
+
+<label>Product:</label>
+<input type="text" id="product"><br>
+
+<script>
+    // ✅ Auto today date
+    document.getElementById("date").valueAsDate = new Date();
+
+    async function fetchOrder() {
+        let orderId = document.getElementById("orderId").value;
+
+        let response = await fetch("https://script.google.com/macros/s/AKfycbzgb7kPY-VRT6ysMzAik1_Tngpagc6LawOj1Y2uUEUVznvjUcy7DE7P1wIPUlbl4oWBjQ/exec?orderId=" + orderId);
+        let data = await response.json();
+
+        if (data.error) {
+            alert("Order not found");
+        } else {
+            document.getElementById("name").value = data.name;
+            document.getElementById("amount").value = data.amount;
+            document.getElementById("product").value = data.product;
+        }
+    }
+</script>
 
 </body>
 </html>
