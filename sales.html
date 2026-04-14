@@ -1,55 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base target="_top">
+  <title>Order Tracking System</title>
   <style>
-    body {
-      font-family: Arial;
-      padding: 20px;
-      background: #f5f5f5;
-    }
-
-    h2 {
-      color: #333;
-    }
-
-    input, button {
-      padding: 10px;
-      margin: 5px;
-      font-size: 14px;
-    }
-
-    button {
-      background: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #0056b3;
-    }
-
-    #result {
-      margin-top: 20px;
-      background: white;
-      padding: 15px;
-      border-radius: 5px;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-
-    td, th {
-      border: 1px solid #ddd;
-      padding: 8px;
-    }
-
-    th {
-      background: #eee;
-    }
+    body { font-family: Arial; padding: 20px; }
+    input, button { padding: 10px; margin: 5px; }
+    button { background: green; color: white; border: none; cursor: pointer; }
+    #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; }
   </style>
 </head>
 
@@ -57,64 +14,49 @@
 
 <h2>📦 Order Tracking System</h2>
 
-<input type="text" id="orderId" placeholder="Order ID (GS#2001)">
-<input type="text" id="waybill" placeholder="Waybill Number">
+<input id="orderId" placeholder="Order ID (GS#2001)">
+<input id="waybill" placeholder="Waybill">
 
-<button onclick="trackOrder()">Track & Save</button>
+<button onclick="track()">Track Order</button>
 
 <div id="result"></div>
 
 <script>
-function trackOrder() {
-  const orderId = document.getElementById("orderId").value.trim();
-  const waybill = document.getElementById("waybill").value.trim();
 
-  if (!orderId || !waybill) {
-    document.getElementById("result").innerHTML = "❌ Order ID aur Waybill daalo";
-    return;
-  }
+const API_URL = "https://script.google.com/macros/s/AKfycbypCUwgHZ_02c-9j_GJ8Kw7T1_HD66b6IwXON4OwZcWzhYZe6C2vyqeLNCjpz3fUFM0Ng/exec";
 
-  document.getElementById("result").innerHTML = "⏳ Loading...";
+function track() {
+  let orderId = document.getElementById("orderId").value;
+  let waybill = document.getElementById("waybill").value;
 
-  // 🔥 GOOGLE APPS SCRIPT CALL
-  google.script.run
-    .withSuccessHandler(showResult)
-    .withFailureHandler(showError)
-    .getTrackingData(orderId, waybill);
+  document.getElementById("result").innerHTML = "Loading...";
+
+  fetch(`${API_URL}?orderId=${encodeURIComponent(orderId)}&waybill=${waybill}`)
+    .then(res => res.json())
+    .then(data => {
+
+      if (data.error) {
+        document.getElementById("result").innerHTML =
+          "<b style='color:red'>" + data.error + "</b>";
+        return;
+      }
+
+      document.getElementById("result").innerHTML = `
+        <h3>Result</h3>
+        <p><b>Status:</b> ${data.status}</p>
+        <p><b>Location:</b> ${data.location}</p>
+        <p><b>Customer:</b> ${data.customer}</p>
+        <p><b>State:</b> ${data.state}</p>
+        <p><b>Payment:</b> ${data.payment}</p>
+        <p><b>Amount:</b> ${data.amount}</p>
+        <p><b>Date:</b> ${data.date}</p>
+      `;
+    })
+    .catch(err => {
+      document.getElementById("result").innerHTML = err;
+    });
 }
 
-// ✅ SUCCESS RESULT SHOW
-function showResult(data) {
-
-  if (data.error) {
-    document.getElementById("result").innerHTML =
-      "<pre style='color:red'>" + JSON.stringify(data, null, 2) + "</pre>";
-    return;
-  }
-
-  let html = `
-    <h3>✅ Tracking Result</h3>
-    <table>
-      <tr><th>Date</th><td>${data.date}</td></tr>
-      <tr><th>Order ID</th><td>${data.order_id}</td></tr>
-      <tr><th>Waybill</th><td>${data.waybill}</td></tr>
-      <tr><th>Status</th><td>${data.status}</td></tr>
-      <tr><th>Location</th><td>${data.location}</td></tr>
-      <tr><th>Customer</th><td>${data.customer}</td></tr>
-      <tr><th>State</th><td>${data.state}</td></tr>
-      <tr><th>Amount</th><td>${data.amount}</td></tr>
-      <tr><th>Payment</th><td>${data.payment}</td></tr>
-    </table>
-  `;
-
-  document.getElementById("result").innerHTML = html;
-}
-
-// ❌ ERROR HANDLE
-function showError(error) {
-  document.getElementById("result").innerHTML =
-    "<pre style='color:red'>" + error.message + "</pre>";
-}
 </script>
 
 </body>
