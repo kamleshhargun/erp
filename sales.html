@@ -62,6 +62,11 @@
   .success p {
     margin: 5px 0;
   }
+
+  .loading {
+    color: blue;
+    font-weight: bold;
+  }
 </style>
 
 </head>
@@ -70,12 +75,12 @@
 
 <div class="container">
 
-  <h2>📦 Order Tracking</h2>
+  <h2>📦 Order Tracking System</h2>
 
-  <input id="orderId" placeholder="Order ID (GS#2001)">
-  <input id="waybill" placeholder="Waybill Number">
+  <input id="orderId" placeholder="Enter Order ID (GS#2001)">
+  <input id="waybill" placeholder="Enter Waybill Number">
 
-  <button onclick="track()">Track Order</button>
+  <button onclick="track()">Track & Save</button>
 
   <div id="result"></div>
 
@@ -83,19 +88,20 @@
 
 <script>
 
-const API_URL = "https://script.google.com/macros/s/AKfycbyzJIhq4mz_lxxTcipabA9IYhlPEhbTCl3z8wub2HEbwYrly-vtpqQaibrwc_HRBic_OA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyzJIhq4mz_lxxTcipabA9IYhlPEhbTCl3z8wub2HEbwYrly-vtpqQaibrwc_HRBic_OA/exec"; // ⚠️ yaha apna Apps Script URL daalo
 
 async function track() {
   const orderId = document.getElementById("orderId").value.trim();
   const waybill = document.getElementById("waybill").value.trim();
   const resultBox = document.getElementById("result");
 
+  // validation
   if (!orderId || !waybill) {
     resultBox.innerHTML = "<div class='error'>⚠️ Please fill all fields</div>";
     return;
   }
 
-  resultBox.innerHTML = "⏳ Loading...";
+  resultBox.innerHTML = "<div class='loading'>⏳ Tracking & Saving...</div>";
 
   try {
     const response = await fetch(
@@ -103,7 +109,7 @@ async function track() {
     );
 
     if (!response.ok) {
-      throw new Error("Server not responding");
+      throw new Error("Server error");
     }
 
     const data = await response.json();
@@ -113,27 +119,32 @@ async function track() {
       return;
     }
 
+    // success UI
     resultBox.innerHTML = `
       <div class="success">
-        <h3>✅ Tracking Result</h3>
+        <h3>✅ Order Saved Successfully</h3>
         <p><b>Status:</b> ${data.status}</p>
         <p><b>Location:</b> ${data.location}</p>
         <p><b>Customer:</b> ${data.customer}</p>
         <p><b>State:</b> ${data.state}</p>
         <p><b>Payment:</b> ${data.payment}</p>
         <p><b>Amount:</b> ₹${data.amount}</p>
-        <p><b>Date:</b> ${data.date}</p>
+        <p><b>Updated:</b> ${data.date}</p>
       </div>
     `;
 
-  } catch (err) {
+    // clear input after success
+    document.getElementById("orderId").value = "";
+    document.getElementById("waybill").value = "";
+
+  } catch (error) {
     resultBox.innerHTML = `
       <div class='error'>
         ❌ Failed to fetch data <br>
-        👉 Check API URL / Deployment
+        👉 Check API URL / Deployment / Internet
       </div>
     `;
-    console.error(err);
+    console.error(error);
   }
 }
 
