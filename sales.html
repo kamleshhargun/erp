@@ -1,9 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sales</title>
+    <title>Sales Flow</title>
     <style>
         body { font-family: Arial; padding: 20px; }
+
+        .steps button {
+            padding: 10px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        .active {
+            background-color: green;
+            color: white;
+        }
+
+        .section {
+            display: none;
+            margin-top: 20px;
+        }
+
         input { margin: 5px; padding: 5px; }
     </style>
 </head>
@@ -11,40 +28,103 @@
 
 <h2>💰 Sales Module</h2>
 
-<label>Date:</label>
-<input type="date" id="date"><br>
+<!-- 🔘 STEP BUTTONS -->
+<div class="steps">
+    <button id="btn1" class="active">Pickup</button>
+    <button id="btn2">Customer</button>
+    <button id="btn3">Payment</button>
+    <button id="btn4">Done</button>
+</div>
 
-<label>Order ID:</label>
-<input type="text" id="orderId">
-<button onclick="fetchOrder()">Fetch</button><br>
+<!-- 📦 STEP 1 -->
+<div id="step1" class="section" style="display:block;">
+    <h3>Pickup</h3>
+    <input type="text" id="orderId" placeholder="Order ID"><br>
+    <input type="text" id="trackingId" placeholder="Tracking ID"><br>
+    <button onclick="goToCustomer()">Save & Next</button>
+</div>
 
-<label>Name:</label>
-<input type="text" id="name"><br>
+<!-- 👤 STEP 2 -->
+<div id="step2" class="section">
+    <h3>Customer Details</h3>
+    <input type="text" id="name" placeholder="Name"><br>
+    <input type="text" id="product" placeholder="Product"><br>
+    <input type="text" id="amount" placeholder="Amount"><br>
+    <button onclick="goToPayment()">Save & Next</button>
+</div>
 
-<label>Amount:</label>
-<input type="text" id="amount"><br>
+<!-- 💳 STEP 3 -->
+<div id="step3" class="section">
+    <h3>Payment</h3>
+    <input type="text" id="paymentName" placeholder="Name"><br>
+    <input type="text" id="paymentProduct" placeholder="Product"><br>
+    <input type="text" id="paymentAmount" placeholder="Enter Payment"><br>
+    <button onclick="goToDone()">Save & Done</button>
+</div>
 
-<label>Product:</label>
-<input type="text" id="product"><br>
+<!-- ✅ STEP 4 -->
+<div id="step4" class="section">
+    <h3>✅ Order Completed</h3>
+</div>
 
 <script>
-    // ✅ Auto today date
-    document.getElementById("date").valueAsDate = new Date();
+let scriptURL = "https://script.google.com/macros/s/AKfycbzgb7kPY-VRT6ysMzAik1_Tngpagc6LawOj1Y2uUEUVznvjUcy7DE7P1wIPUlbl4oWBjQ/exec"; // 👈 yaha apna Apps Script URL daalo
 
-    async function fetchOrder() {
-        let orderId = document.getElementById("orderId").value;
+function setActive(btnId) {
+    document.querySelectorAll(".steps button").forEach(btn => btn.classList.remove("active"));
+    document.getElementById(btnId).classList.add("active");
+}
 
-        let response = await fetch("https://script.google.com/macros/s/AKfycbzgb7kPY-VRT6ysMzAik1_Tngpagc6LawOj1Y2uUEUVznvjUcy7DE7P1wIPUlbl4oWBjQ/exec?orderId=" + orderId);
-        let data = await response.json();
+function showStep(stepId, btnId) {
+    document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
+    document.getElementById(stepId).style.display = "block";
+    setActive(btnId);
+}
 
-        if (data.error) {
-            alert("Order not found");
-        } else {
-            document.getElementById("name").value = data.name;
-            document.getElementById("amount").value = data.amount;
-            document.getElementById("product").value = data.product;
-        }
+// 🔹 STEP 1 → STEP 2
+async function goToCustomer() {
+    let orderId = document.getElementById("orderId").value;
+
+    if (!orderId) {
+        alert("Enter Order ID");
+        return;
     }
+
+    // Google Sheet se fetch
+    let res = await fetch(scriptURL + "?orderId=" + orderId);
+    let data = await res.json();
+
+    if (data.error) {
+        alert("Order not found");
+        return;
+    }
+
+    document.getElementById("name").value = data.name;
+    document.getElementById("product").value = data.product;
+    document.getElementById("amount").value = data.amount;
+
+    showStep("step2", "btn2");
+}
+
+// 🔹 STEP 2 → STEP 3
+function goToPayment() {
+    document.getElementById("paymentName").value = document.getElementById("name").value;
+    document.getElementById("paymentProduct").value = document.getElementById("product").value;
+
+    showStep("step3", "btn3");
+}
+
+// 🔹 STEP 3 → STEP 4
+function goToDone() {
+    let payment = document.getElementById("paymentAmount").value;
+
+    if (!payment) {
+        alert("Enter Payment Amount");
+        return;
+    }
+
+    showStep("step4", "btn4");
+}
 </script>
 
 </body>
