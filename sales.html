@@ -1,60 +1,140 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Order Tracking System</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    input, button { padding: 10px; margin: 5px; }
-    button { background: green; color: white; border: none; cursor: pointer; }
-    #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; }
-  </style>
+<meta charset="UTF-8">
+<title>Order Tracking System</title>
+
+<style>
+  body {
+    font-family: Arial;
+    background: #f5f5f5;
+    padding: 30px;
+  }
+
+  .container {
+    max-width: 500px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+
+  h2 {
+    text-align: center;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    background: green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  button:hover {
+    background: darkgreen;
+  }
+
+  #result {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 5px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+  }
+
+  .error {
+    color: red;
+    font-weight: bold;
+  }
+
+  .success p {
+    margin: 5px 0;
+  }
+</style>
+
 </head>
 
 <body>
 
-<h2>📦 Order Tracking System</h2>
+<div class="container">
 
-<input id="orderId" placeholder="Order ID (GS#2001)">
-<input id="waybill" placeholder="Waybill">
+  <h2>📦 Order Tracking</h2>
 
-<button onclick="track()">Track Order</button>
+  <input id="orderId" placeholder="Order ID (GS#2001)">
+  <input id="waybill" placeholder="Waybill Number">
 
-<div id="result"></div>
+  <button onclick="track()">Track Order</button>
+
+  <div id="result"></div>
+
+</div>
 
 <script>
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwMVSelr45t6jNnvufN70sk5eYr7ZscICFJBW6l0dNlCXRcErbEdUu6dAxmepHoeN4WIg/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyzJIhq4mz_lxxTcipabA9IYhlPEhbTCl3z8wub2HEbwYrly-vtpqQaibrwc_HRBic_OA/exec";
 
-function track() {
-  let orderId = document.getElementById("orderId").value;
-  let waybill = document.getElementById("waybill").value;
+async function track() {
+  const orderId = document.getElementById("orderId").value.trim();
+  const waybill = document.getElementById("waybill").value.trim();
+  const resultBox = document.getElementById("result");
 
-  document.getElementById("result").innerHTML = "Loading...";
+  if (!orderId || !waybill) {
+    resultBox.innerHTML = "<div class='error'>⚠️ Please fill all fields</div>";
+    return;
+  }
 
-  fetch(`${API_URL}?orderId=${encodeURIComponent(orderId)}&waybill=${waybill}`)
-    .then(res => res.json())
-    .then(data => {
+  resultBox.innerHTML = "⏳ Loading...";
 
-      if (data.error) {
-        document.getElementById("result").innerHTML =
-          "<b style='color:red'>" + data.error + "</b>";
-        return;
-      }
+  try {
+    const response = await fetch(
+      `${API_URL}?orderId=${encodeURIComponent(orderId)}&waybill=${encodeURIComponent(waybill)}`
+    );
 
-      document.getElementById("result").innerHTML = `
-        <h3>Result</h3>
+    if (!response.ok) {
+      throw new Error("Server not responding");
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      resultBox.innerHTML = `<div class='error'>❌ ${data.error}</div>`;
+      return;
+    }
+
+    resultBox.innerHTML = `
+      <div class="success">
+        <h3>✅ Tracking Result</h3>
         <p><b>Status:</b> ${data.status}</p>
         <p><b>Location:</b> ${data.location}</p>
         <p><b>Customer:</b> ${data.customer}</p>
         <p><b>State:</b> ${data.state}</p>
         <p><b>Payment:</b> ${data.payment}</p>
-        <p><b>Amount:</b> ${data.amount}</p>
+        <p><b>Amount:</b> ₹${data.amount}</p>
         <p><b>Date:</b> ${data.date}</p>
-      `;
-    })
-    .catch(err => {
-      document.getElementById("result").innerHTML = err;
-    });
+      </div>
+    `;
+
+  } catch (err) {
+    resultBox.innerHTML = `
+      <div class='error'>
+        ❌ Failed to fetch data <br>
+        👉 Check API URL / Deployment
+      </div>
+    `;
+    console.error(err);
+  }
 }
 
 </script>
