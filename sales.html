@@ -1,130 +1,148 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sales Flow</title>
-    <style>
-        body { font-family: Arial; padding: 20px; }
-
-        .steps button {
-            padding: 10px;
-            margin-right: 5px;
-            cursor: pointer;
-        }
-
-        .active {
-            background-color: green;
-            color: white;
-        }
-
-        .section {
-            display: none;
-            margin-top: 20px;
-        }
-
-        input { margin: 5px; padding: 5px; }
-    </style>
+<title>Sales Flow</title>
+<style>
+body { font-family: Arial; padding: 20px; }
+button { margin: 5px; padding: 8px; }
+.section { display:none; margin-top:20px; }
+.active { background: green; color: white; }
+table, th, td { border:1px solid black; border-collapse: collapse; padding:5px; }
+</style>
 </head>
+
 <body>
 
 <h2>💰 Sales Module</h2>
 
-<!-- 🔘 STEP BUTTONS -->
-<div class="steps">
-    <button id="btn1" class="active">Pickup</button>
-    <button id="btn2">Customer</button>
-    <button id="btn3">Payment</button>
-    <button id="btn4">Done</button>
+<!-- Steps -->
+<button id="b1" class="active">Pickup</button>
+<button id="b2">Customer</button>
+<button id="b3">Payment</button>
+<button id="b4">Done</button>
+
+<!-- STEP 1 -->
+<div id="s1" class="section" style="display:block;">
+<input id="orderId" placeholder="Order ID"><br>
+<input id="tracking" placeholder="Tracking ID"><br>
+<button onclick="step2()">Next</button>
 </div>
 
-<!-- 📦 STEP 1 -->
-<div id="step1" class="section" style="display:block;">
-    <h3>Pickup</h3>
-    <input type="text" id="orderId" placeholder="Order ID"><br>
-    <input type="text" id="trackingId" placeholder="Tracking ID"><br>
-    <button onclick="goToCustomer()">Save & Next</button>
+<!-- STEP 2 -->
+<div id="s2" class="section">
+<input id="name" placeholder="Name"><br>
+<input id="phone" placeholder="Phone"><br>
+<input id="city" placeholder="City"><br>
+<button onclick="saveTracking()">Save & Next</button>
 </div>
 
-<!-- 👤 STEP 2 -->
-<div id="step2" class="section">
-    <h3>Customer Details</h3>
-    <input type="text" id="name" placeholder="Name"><br>
-    <input type="text" id="product" placeholder="Product"><br>
-    <input type="text" id="amount" placeholder="Amount"><br>
-    <button onclick="goToPayment()">Save & Next</button>
+<!-- STEP 3 -->
+<div id="s3" class="section">
+<input id="payment" placeholder="Payment Amount"><br>
+<button onclick="savePayment()">Pay & Next</button>
 </div>
 
-<!-- 💳 STEP 3 -->
-<div id="step3" class="section">
-    <h3>Payment</h3>
-    <input type="text" id="paymentName" placeholder="Name"><br>
-    <input type="text" id="paymentProduct" placeholder="Product"><br>
-    <input type="text" id="paymentAmount" placeholder="Enter Payment"><br>
-    <button onclick="goToDone()">Save & Done</button>
+<!-- STEP 4 -->
+<div id="s4" class="section">
+<h3>✅ Done</h3>
 </div>
 
-<!-- ✅ STEP 4 -->
-<div id="step4" class="section">
-    <h3>✅ Order Completed</h3>
-</div>
+<hr>
+
+<h3>📊 Orders Table</h3>
+<table id="table">
+<thead>
+<tr>
+<th>Order</th><th>Name</th><th>City</th>
+<th>Tracking</th><th>Payment</th><th>Status</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 
 <script>
-let scriptURL = "https://script.google.com/macros/s/AKfycbzgb7kPY-VRT6ysMzAik1_Tngpagc6LawOj1Y2uUEUVznvjUcy7DE7P1wIPUlbl4oWBjQ/exec"; // 👈 yaha apna Apps Script URL daalo
+let url = "https://script.google.com/macros/s/AKfycbyy8zYPJLv00h6p3wI3ery1LlmPl9Ty8zPUZbxVDGRxei6LYww-mtO5to4k5P95E88h9g/exec";
 
-function setActive(btnId) {
-    document.querySelectorAll(".steps button").forEach(btn => btn.classList.remove("active"));
-    document.getElementById(btnId).classList.add("active");
+// Step switch
+function show(id) {
+  document.querySelectorAll(".section").forEach(x=>x.style.display="none");
+  document.getElementById(id).style.display="block";
 }
 
-function showStep(stepId, btnId) {
-    document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
-    document.getElementById(stepId).style.display = "block";
-    setActive(btnId);
+// STEP 1 → Fetch
+async function step2(){
+ let id=document.getElementById("orderId").value;
+
+ let res=await fetch(url+"?orderId="+id);
+ let d=await res.json();
+
+ if(d.error){ alert("Not found"); return;}
+
+ document.getElementById("name").value=d.name;
+ document.getElementById("phone").value=d.phone;
+ document.getElementById("city").value=d.city;
+
+ show("s2");
 }
 
-// 🔹 STEP 1 → STEP 2
-async function goToCustomer() {
-    let orderId = document.getElementById("orderId").value;
+// Save Tracking
+async function saveTracking(){
+ await fetch(url,{
+   method:"POST",
+   body:JSON.stringify({
+     orderId:document.getElementById("orderId").value,
+     tracking:document.getElementById("tracking").value
+   })
+ });
 
-    if (!orderId) {
-        alert("Enter Order ID");
-        return;
-    }
-
-    // Google Sheet se fetch
-    let res = await fetch(scriptURL + "?orderId=" + orderId);
-    let data = await res.json();
-
-    if (data.error) {
-        alert("Order not found");
-        return;
-    }
-
-    document.getElementById("name").value = data.name;
-    document.getElementById("product").value = data.product;
-    document.getElementById("amount").value = data.amount;
-
-    showStep("step2", "btn2");
+ show("s3");
+ loadTable();
 }
 
-// 🔹 STEP 2 → STEP 3
-function goToPayment() {
-    document.getElementById("paymentName").value = document.getElementById("name").value;
-    document.getElementById("paymentProduct").value = document.getElementById("product").value;
+// Save Payment
+async function savePayment(){
+ await fetch(url,{
+   method:"POST",
+   body:JSON.stringify({
+     orderId:document.getElementById("orderId").value,
+     payment:document.getElementById("payment").value
+   })
+ });
 
-    showStep("step3", "btn3");
+ await fetch(url,{
+   method:"POST",
+   body:JSON.stringify({
+     orderId:document.getElementById("orderId").value,
+     done:true
+   })
+ });
+
+ show("s4");
+ loadTable();
 }
 
-// 🔹 STEP 3 → STEP 4
-function goToDone() {
-    let payment = document.getElementById("paymentAmount").value;
+// Load Table
+async function loadTable(){
+ let res=await fetch(url);
+ let data=await res.json();
 
-    if (!payment) {
-        alert("Enter Payment Amount");
-        return;
-    }
+ let html="";
+ data.forEach(r=>{
+   html+=`<tr>
+   <td>${r.orderId}</td>
+   <td>${r.name}</td>
+   <td>${r.city}</td>
+   <td>${r.tracking||""}</td>
+   <td>${r.payment||""}</td>
+   <td>${r.status||""}</td>
+   </tr>`;
+ });
 
-    showStep("step4", "btn4");
+ document.querySelector("#table tbody").innerHTML=html;
 }
+
+// Initial load
+loadTable();
 </script>
 
 </body>
