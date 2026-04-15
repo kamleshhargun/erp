@@ -1,113 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>ERP System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #f4f6f9;
-    }
+body { margin:0; font-family:Segoe UI; }
 
-    /* Header */
-    header {
-        background: #2c3e50;
-        color: white;
-        padding: 15px;
-        text-align: center;
-        font-size: 24px;
-        font-weight: bold;
-    }
+nav {
+  background:#333;
+  padding:10px;
+  text-align:center;
+}
 
-    /* Navigation */
-    nav {
-        background: #34495e;
-        padding: 10px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        justify-content: center;
-    }
+nav a {
+  color:#fff;
+  margin:10px;
+  text-decoration:none;
+  font-weight:bold;
+}
 
-    nav a {
-        color: white;
-        text-decoration: none;
-        padding: 10px 15px;
-        background: #1abc9c;
-        border-radius: 5px;
-        transition: 0.3s;
-        font-size: 14px;
-    }
-
-    nav a:hover {
-        background: #16a085;
-        transform: scale(1.05);
-    }
-
-    /* Active link */
-    nav a.active {
-        background: #e67e22;
-    }
-
-    /* Iframe */
-    iframe {
-        width: 100%;
-        height: 70vh;
-        border: none;
-        background: white;
-    }
-
-    /* Footer */
-    footer {
-        background: #2c3e50;
-        color: white;
-        text-align: center;
-        padding: 10px;
-        position: fixed;
-        bottom: 0;
-        width: 100%;
-    }
-
-    /* Responsive */
-    @media(max-width: 600px) {
-        nav a {
-            width: 100%;
-            text-align: center;
-        }
-    }
+iframe {
+  width:100%;
+  height:90vh;
+  border:none;
+}
 </style>
+
 </head>
 
 <body>
 
-<header>ERP SYSTEM</header>
-
 <nav>
-    <a href="dashboard.html" target="frame" onclick="setActive(this)">Dashboard</a>
-    <a href="fabric.html" target="frame" onclick="setActive(this)">Fabric</a>
-    <a href="cutting.html" target="frame" onclick="setActive(this)">Cutting</a>
-    <a href="stitching.html" target="frame" onclick="setActive(this)">Stitching</a>
-    <a href="finished.html" target="frame" onclick="setActive(this)">Finished</a>
-    <a href="sales.html" target="frame" onclick="setActive(this)">Sales</a>
-    <a href="returns.html" target="frame" onclick="setActive(this)">Returns</a>
+  <a href="dashboard.html" target="frame">Dashboard</a>
+  <a href="scanner.html" target="frame">Scanner</a>
+  <a href="manual.html" target="frame">Manual</a>
+  <a href="lookup.html" target="frame">Lookup</a>
+  <a href="tracking.html" target="frame">Tracking</a>
 </nav>
 
-<iframe name="frame" id="contentFrame"></iframe>
-
-<footer>My Company ERP © 2026</footer>
-
-<script>
-    // default page load
-    document.getElementById("contentFrame").src = "dashboard.html";
-
-    function setActive(el) {
-        let links = document.querySelectorAll("nav a");
-        links.forEach(a => a.classList.remove("active"));
-        el.classList.add("active");
-    }
-</script>
+<iframe name="frame" src="dashboard.html"></iframe>
 
 </body>
 </html>
