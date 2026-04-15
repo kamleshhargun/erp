@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { text-align:center; font-family:Segoe UI; }
+</style>
+</head>
+
+<body>
+
+<h3>Manual Entry</h3>
+
+<input id="order" placeholder="Order ID"><br>
+<input id="tracking" placeholder="Tracking"><br>
+
+<button onclick="submit()">Submit</button>
+
+<script>
+const API_URL="YOUR_API_URL";
+
+function submit(){
+fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({
+order_id:order.value,
+tracking:tracking.value
+})
+});
+}
+</script>
+
+</body>
+</html>
