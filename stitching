@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Stitching</title>
+
+<style>
+body{margin:0;font-family:Inter;background:#f6f6f7;}
+.wrapper{display:flex;}
+.sidebar{width:240px;background:#fff;height:100vh;}
+.main{flex:1;padding:20px;}
+.card{background:#fff;padding:15px;}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<div class="sidebar">
+<h2>ERP Panel</h2>
+<a href="index.html">Dashboard</a>
+<a href="fabric.html">Fabric</a>
+<a href="cutting.html">Cutting</a>
+<a class="active">Stitching</a>
+</div>
+
+<div class="main">
+
+<h2>Stitching Module</h2>
+
+<div class="card">
+<input type="date" id="date">
+<input id="labour" placeholder="Labour">
+<button onclick="save()">Save</button>
+</div>
+
+</div>
+</div>
+
+<script>
+function save(){
+alert("Saved Stitching");
+}
+</script>
+
+</body>
+</html>
