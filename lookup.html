@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h3>Lookup</h3>
+
+<input id="id">
+<button onclick="search()">Search</button>
+
+<div id="result"></div>
+
+<script>
+const API_URL="YOUR_API_URL";
+
+function search(){
+fetch(API_URL+"?type=lookup&order_id="+id.value)
+.then(res=>res.json())
+.then(d=>{
+result.innerHTML=JSON.stringify(d);
+});
+}
+</script>
+
+</body>
+</html>
