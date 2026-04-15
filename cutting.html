@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Cutting</title>
+
+<style>
+/* SAME CSS */
+*{ box-sizing:border-box; }
+body{ margin:0; font-family:Inter; background:#f6f6f7; }
+.wrapper{ display:flex; }
+.sidebar{ width:240px; background:#fff; height:100vh; }
+.main{ flex:1; padding:20px; }
+.card{ background:#fff; padding:15px; }
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<div class="sidebar">
+<h2>ERP Panel</h2>
+<a href="index.html">Dashboard</a>
+<a href="fabric.html">Fabric</a>
+<a class="active">Cutting</a>
+</div>
+
+<div class="main">
+
+<h2>Cutting Module</h2>
+
+<div class="card">
+<select id="fabricSelect"></select>
+<input type="date" id="date">
+<button onclick="save()">Save</button>
+</div>
+
+</div>
+</div>
+
+<script>
+let cutting=[];
+
+function save(){
+alert("Saved Cutting");
+}
+</script>
+
+</body>
+</html>
