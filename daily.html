@@ -5,18 +5,58 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-
 body {
   font-family: 'Segoe UI', Arial;
   background: linear-gradient(135deg, #eef2f7, #dfe9f3);
-  text-align: center;
   margin: 0;
 }
 
+/* HEADER */
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: #1a73e8;
+  color: #fff;
+  text-align: center;
+  padding: 12px;
+  z-index: 1000;
+  transition: 0.3s;
+}
+
+/* NAVBAR */
+.navbar {
+  position: fixed;
+  top: 60px;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  background: #fff;
+  padding: 10px;
+  z-index: 999;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: 0.3s;
+}
+
+.navbar button {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #eee;
+  cursor: pointer;
+}
+
+.navbar button.active {
+  background: #007bff;
+  color: #fff;
+}
+
+/* CONTAINER */
 .container {
   max-width: 420px;
   margin: auto;
-  padding: 15px;
+  padding: 140px 15px 80px;
+  text-align: center;
 }
 
 /* CARD */
@@ -63,30 +103,40 @@ input {
   border: 1px solid #ccc;
 }
 
-#manualBox {
-  display:none;
-}
+#manualBox { display:none; }
 
 #status {
   font-weight:bold;
   margin-top:10px;
 }
 
+/* FOOTER */
+footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #333;
+  color: #ccc;
+  text-align: center;
+  padding: 10px;
+  transition: 0.3s;
+}
 </style>
-
 </head>
 
 <body>
+
 <header id="header">
-    <h2>Dashboard</h2>
+  <h2>Dashboard</h2>
 </header>
 
 <div class="navbar" id="navbar">
-    <button class="active" onclick="goPage('dashboard.html', this)">Dashboard</button>
-    <button onclick="goPage('daily.html', this)">Daily</button>
-    <button onclick="goPage('lookup.html', this)">Lookup</button>
-    <button onclick="goPage('tracking.html', this)">Tracking</button>
+  <button onclick="goPage('dashboard.html')">Dashboard</button>
+  <button class="active">Daily</button>
+  <button onclick="goPage('lookup.html')">Lookup</button>
+  <button onclick="goPage('tracking.html')">Tracking</button>
 </div>
+
 <div class="container">
 
 <h2>📦 Daily Pickup & Return</h2>
@@ -121,6 +171,10 @@ input {
 
 </div>
 
+<footer id="footer">
+  <p>© 2026 Kon Soft Tech</p>
+</footer>
+
 <script>
 
 const API_URL = "https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
@@ -130,6 +184,11 @@ let orderId = "";
 let mode = "Pickup";
 
 const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+
+// PAGE NAV
+function goPage(page){
+  window.location.href = page;
+}
 
 // MODE
 function setMode(m){
@@ -206,7 +265,7 @@ manualTracking.value = "";
 manualBox.style.display = "none";
 }
 
-// SEND TO SHEET
+// SEND DATA
 function sendData(order, tracking){
 
 fetch(API_URL,{
@@ -221,6 +280,25 @@ tracking: tracking
 status.innerText = "Sent ✅";
 });
 }
+
+/* SCROLL EFFECT */
+let lastScroll = 0;
+
+window.addEventListener("scroll", ()=>{
+let current = window.pageYOffset;
+
+if(current > lastScroll){
+  header.style.top = "-70px";
+  navbar.style.top = "-70px";
+  footer.style.bottom = "-50px";
+}else{
+  header.style.top = "0";
+  navbar.style.top = "60px";
+  footer.style.bottom = "0";
+}
+
+lastScroll = current;
+});
 
 </script>
 
