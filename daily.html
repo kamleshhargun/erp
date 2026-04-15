@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+
+body {
+  font-family: 'Segoe UI', Arial;
+  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
+  text-align: center;
+  margin: 0;
+}
+
+.container {
+  max-width: 420px;
+  margin: auto;
+  padding: 15px;
+}
+
+/* CARD */
+.card {
+  background: #ffffff;
+  padding: 18px;
+  border-radius: 16px;
+  margin-bottom: 15px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+/* BUTTONS */
+button {
+  padding: 11px;
+  margin: 6px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.start { background: #28a745; color: #fff; }
+.next { background: #007bff; color: #fff; }
+.stop { background: #dc3545; color: #fff; }
+.manual { background: #444; color: #fff; }
+
+.mode-btn {
+  padding: 12px;
+  margin: 5px;
+  border-radius: 10px;
+  background: #f1f1f1;
+}
+
+.mode-btn.active {
+  background: #007bff;
+  color: #fff;
+}
+
+input {
+  padding: 11px;
+  width: 92%;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+#manualBox {
+  display:none;
+}
+
+#status {
+  font-weight:bold;
+  margin-top:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>📦 Daily Pickup & Return</h2>
+
+<!-- MODE -->
+<div class="card">
+<button id="pickupBtn" class="mode-btn active" onclick="setMode('Pickup')">📦 Pickup</button>
+<button id="returnBtn" class="mode-btn" onclick="setMode('Return')">↩ Return</button>
+</div>
+
+<!-- SCANNER -->
+<div class="card">
+<div id="reader"></div>
+
+<button class="start" onclick="startOrder()">Start Scan</button>
+<button class="next" onclick="startTracking()" id="nextBtn" style="display:none;">Next Scan</button>
+<button class="stop" onclick="stopScan()">Stop</button>
+<button class="manual" onclick="openManual()">Manual Entry</button>
+
+<div id="status">Ready</div>
+</div>
+
+<!-- MANUAL ENTRY -->
+<div class="card" id="manualBox">
+<h3>Manual Entry</h3>
+
+<input id="manualOrder" placeholder="Order ID">
+<input id="manualTracking" placeholder="Tracking ID">
+
+<button onclick="submitManual()" class="start">Submit</button>
+</div>
+
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
+
+let html5QrCode;
+let orderId = "";
+let mode = "Pickup";
+
+const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+
+// MODE
+function setMode(m){
+mode = m;
+pickupBtn.classList.remove("active");
+returnBtn.classList.remove("active");
+
+if(m === "Pickup") pickupBtn.classList.add("active");
+else returnBtn.classList.add("active");
+}
+
+// START ORDER SCAN
+function startOrder(){
+html5QrCode = new Html5Qrcode("reader");
+
+html5QrCode.start(
+{ facingMode:"environment" },
+{ fps: 25, qrbox: { width: 250, height: 120 } },
+
+text => {
+orderId = text;
+stopScan();
+status.innerText = "Order Scanned ✅";
+nextBtn.style.display = "inline-block";
+}
+);
+}
+
+// TRACKING SCAN
+function startTracking(){
+html5QrCode = new Html5Qrcode("reader");
+
+html5QrCode.start(
+{ facingMode:"environment" },
+{ fps: 25, qrbox: { width: 250, height: 120 } },
+
+text => {
+stopScan();
+beep.play();
+sendData(orderId, text);
+status.innerText = "Saved ✅";
+nextBtn.style.display = "none";
+orderId = "";
+}
+);
+}
+
+// STOP CAMERA
+function stopScan(){
+if(html5QrCode) html5QrCode.stop().catch(()=>{});
+}
+
+// OPEN MANUAL
+function openManual(){
+manualBox.style.display = "block";
+}
+
+// MANUAL SUBMIT
+function submitManual(){
+
+let order = manualOrder.value.trim();
+let tracking = manualTracking.value.trim();
+
+if(!order || !tracking){
+alert("Fill both fields");
+return;
+}
+
+beep.play();
+sendData(order, tracking);
+
+manualOrder.value = "";
+manualTracking.value = "";
+manualBox.style.display = "none";
+}
+
+// SEND TO SHEET
+function sendData(order, tracking){
+
+fetch(API_URL,{
+method:"POST",
+body: JSON.stringify({
+mode: mode.toLowerCase(),
+order_id: order,
+tracking: tracking
+})
+})
+.then(()=> {
+status.innerText = "Sent ✅";
+});
+}
+
+</script>
+
+</body>
+</html>
