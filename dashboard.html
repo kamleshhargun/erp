@@ -1,55 +1,181 @@
 <!DOCTYPE html>
-<html>
+<html lang="hi">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    
+    <style>
+        /* Modern CSS Reset & Styling */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f0f2f5; 
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-<style>
-body { font-family:Segoe UI; background:#eef2f7; text-align:center; }
-.card { background:#fff; padding:15px; margin:10px; border-radius:10px; }
-.stat { display:flex; justify-content:space-between; }
-.stat div { flex:1; margin:5px; background:#f1f1f1; padding:10px; }
-</style>
+        /* Header Styling */
+        header {
+            background: #1a73e8;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        /* Main Container */
+        .container {
+            flex: 1;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .card { 
+            background: #fff; 
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h3 { margin-bottom: 20px; color: #444; font-size: 1.5rem; }
+
+        /* Stats Grid System */
+        .stat-row { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 15px;
+        }
+
+        .stat-box { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 12px; 
+            border-left: 5px solid #1a73e8;
+            transition: transform 0.2s;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+            background: #ffffff;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+        }
+
+        .label { 
+            display: block; 
+            font-size: 0.85rem; 
+            color: #666; 
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .value { 
+            font-size: 1.8rem; 
+            font-weight: bold; 
+            color: #1a73e8; 
+        }
+
+        /* Red color for Returns */
+        .return-box { border-left-color: #d93025; }
+        .return-box .value { color: #d93025; }
+
+        /* Footer Styling */
+        footer {
+            background: #333;
+            color: #ccc;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            .stat-row { grid-template-columns: 1fr; }
+            .value { font-size: 1.5rem; }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="card">
-<h3>Dashboard</h3>
+<header>
+    <h1>Dashboard</h1>
+</header>
 
-<div class="stat">
-<div>Today Pickup <span id="pickup_today">0</span></div>
-<div>Today Return <span id="return_today">0</span></div>
+<div class="container">
+    <div class="card">
+        <h3>Live Stats Dashboard</h3>
+
+        <div class="stat-row">
+            <div class="stat-box">
+                <span class="label">Today Pickup</span>
+                <span class="value" id="pickup_today">0</span>
+            </div>
+            <div class="stat-box return-box">
+                <span class="label">Today Return</span>
+                <span class="value" id="return_today">0</span>
+            </div>
+        </div>
+
+        <div class="stat-row">
+            <div class="stat-box">
+                <span class="label">Yesterday Pickup</span>
+                <span class="value" id="pickup_yesterday">0</span>
+            </div>
+            <div class="stat-box return-box">
+                <span class="label">Yesterday Return</span>
+                <span class="value" id="return_yesterday">0</span>
+            </div>
+        </div>
+
+        <div class="stat-row">
+            <div class="stat-box">
+                <span class="label">Total Pickup</span>
+                <span class="value" id="pickup_total">0</span>
+            </div>
+            <div class="stat-box return-box">
+                <span class="label">Total Return</span>
+                <span class="value" id="return_total">0</span>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="stat">
-<div>Yesterday Pickup <span id="pickup_yesterday">0</span></div>
-<div>Yesterday Return <span id="return_yesterday">0</span></div>
-</div>
-
-<div class="stat">
-<div>Total Pickup <span id="pickup_total">0</span></div>
-<div>Total Return <span id="return_total">0</span></div>
-</div>
-</div>
+<footer>
+    <p>&copy; 2024 Kon Soft Tech</p>
+</footer>
 
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
 
 function loadDashboard(){
-fetch(API_URL+"?type=stats")
-.then(res=>res.json())
-.then(d=>{
-pickup_today.innerText=d.todayPickup||0;
-pickup_yesterday.innerText=d.yesterdayPickup||0;
-pickup_total.innerText=d.totalPickup||0;
+    fetch(API_URL+"?type=stats")
+    .then(res=>res.json())
+    .then(d=>{
+        document.getElementById('pickup_today').innerText = d.todayPickup || 0;
+        document.getElementById('pickup_yesterday').innerText = d.yesterdayPickup || 0;
+        document.getElementById('pickup_total').innerText = d.totalPickup || 0;
 
-return_today.innerText=d.todayReturn||0;
-return_yesterday.innerText=d.yesterdayReturn||0;
-return_total.innerText=d.totalReturn||0;
-});
+        document.getElementById('return_today').innerText = d.todayReturn || 0;
+        document.getElementById('return_yesterday').innerText = d.yesterdayReturn || 0;
+        document.getElementById('return_total').innerText = d.totalReturn || 0;
+    })
+    .catch(err => console.error("Error fetching data:", err));
 }
 
-setInterval(loadDashboard,3000);
+// Data har 3 seconds mein refresh hoga
+setInterval(loadDashboard, 3000);
 loadDashboard();
 </script>
 
