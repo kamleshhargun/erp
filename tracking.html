@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h3>Tracking</h3>
+
+<input id="order">
+<input id="track">
+
+<button onclick="trackOrder()">Track</button>
+
+<div id="result"></div>
+
+<script>
+const API_URL="YOUR_API_URL";
+
+function trackOrder(){
+fetch(API_URL+"?type=track&order_id="+order.value+"&tracking="+track.value)
+.then(res=>res.json())
+.then(d=>{
+result.innerHTML=JSON.stringify(d);
+});
+}
+</script>
+
+</body>
+</html>
