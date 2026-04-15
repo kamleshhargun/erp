@@ -1,7 +1,16 @@
 <!DOCTYPE html>
 <html>
 <body>
+<header id="header">
+    <h2>Dashboard</h2>
+</header>
 
+<div class="navbar" id="navbar">
+    <button class="active" onclick="goPage('dashboard.html', this)">Dashboard</button>
+    <button onclick="goPage('daily.html', this)">Daily</button>
+    <button onclick="goPage('lookup.html', this)">Lookup</button>
+    <button onclick="goPage('tracking.html', this)">Tracking</button>
+</div>
 <h3>Tracking</h3>
 
 <input id="order">
