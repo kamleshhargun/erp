@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { font-family:Segoe UI; background:#eef2f7; text-align:center; }
+.card { background:#fff; padding:15px; margin:10px; border-radius:10px; }
+.stat { display:flex; justify-content:space-between; }
+.stat div { flex:1; margin:5px; background:#f1f1f1; padding:10px; }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h3>Dashboard</h3>
+
+<div class="stat">
+<div>Today Pickup <span id="pickup_today">0</span></div>
+<div>Today Return <span id="return_today">0</span></div>
+</div>
+
+<div class="stat">
+<div>Yesterday Pickup <span id="pickup_yesterday">0</span></div>
+<div>Yesterday Return <span id="return_yesterday">0</span></div>
+</div>
+
+<div class="stat">
+<div>Total Pickup <span id="pickup_total">0</span></div>
+<div>Total Return <span id="return_total">0</span></div>
+</div>
+</div>
+
+<script>
+const API_URL="YOUR_API_URL";
+
+function loadDashboard(){
+fetch(API_URL+"?type=stats")
+.then(res=>res.json())
+.then(d=>{
+pickup_today.innerText=d.todayPickup||0;
+pickup_yesterday.innerText=d.yesterdayPickup||0;
+pickup_total.innerText=d.totalPickup||0;
+
+return_today.innerText=d.todayReturn||0;
+return_yesterday.innerText=d.yesterdayReturn||0;
+return_total.innerText=d.totalReturn||0;
+});
+}
+
+setInterval(loadDashboard,3000);
+loadDashboard();
+</script>
+
+</body>
+</html>
