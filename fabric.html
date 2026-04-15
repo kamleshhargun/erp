@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Fabric</title>
+
+<style>
+/* SAME CSS */
+*{ box-sizing:border-box; }
+body{ margin:0; font-family:Inter, Segoe UI, Arial; background:#f6f6f7; }
+.wrapper{ display:flex; min-height:100vh; }
+.sidebar{ width:240px; background:#fff; border-right:1px solid #e1e3e5; position:sticky; top:0; height:100vh; }
+.sidebar h2{ padding:16px; margin:0; border-bottom:1px solid #e1e3e5; }
+.sidebar a{ display:block; padding:10px 16px; text-decoration:none; color:#202223; }
+.sidebar a.active{ background:#edf4ff; color:#2c6ecb; }
+.main{ flex:1; padding:20px; }
+.card{ background:#fff; padding:15px; border-radius:8px; margin-bottom:15px; }
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<div class="sidebar">
+<h2>ERP Panel</h2>
+<a href="index.html">Dashboard</a>
+<a class="active">Fabric</a>
+<a href="cutting.html">Cutting</a>
+<a href="stitching.html">Stitching</a>
+<a href="finished.html">Finished</a>
+  <a href="daily.html">Daily</a>
+  <a href="lookup.html">Lookup</a>
+  <a href="tracking.html">Tracking</a>
+</div>
+
+<div class="main">
+
+<h2>Fabric Purchase</h2>
+
+<div class="card">
+<input type="date" id="date">
+<select id="party"></select>
+<input id="invoice" placeholder="Invoice">
+
+<div id="fabricContainer"></div>
+
+<button onclick="addFabricRow()">+ Fabric</button>
+<button onclick="saveInvoice()">Save</button>
+</div>
+
+</div>
+</div>
+
+<script src="common.js"></script>
+
+<script>
+loadDropdown("party","partyLedger");
+
+let data = JSON.parse(localStorage.getItem("fabricInvoices")) || [];
+
+date.valueAsDate = new Date();
+
+function addFabricRow(){
+let d=document.createElement("div");
+d.innerHTML=`
+<input class="fabricName" placeholder="Fabric">
+<input class="meter" placeholder="Meter">
+<input class="rate" placeholder="Rate">
+`;
+fabricContainer.appendChild(d);
+}
+
+function saveInvoice(){
+alert("Saved");
+}
+</script>
+
+</body>
+</html>
