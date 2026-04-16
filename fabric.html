@@ -1,74 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="https://unpkg.com/html5-qrcode"></script>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: 'Segoe UI';
+  background: linear-gradient(135deg,#eef2f7,#dfe9f3);
+}
+
+.container {
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+.card {
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+
+input {
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+}
+
+button {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  background:#28a745;
+  color:#fff;
+  border:none;
+}
+</style>
 </head>
 
-<body class="container">
+<body>
 
-<h2>Fabric</h2>
+<div class="container">
 
-<button onclick="openCamera()">Scan</button>
-<button onclick="openManual()">Manual</button>
+<h2>🧵 Fabric Purchase</h2>
 
-<div id="scanArea" style="display:none;">
-  <div id="reader" style="width:300px;"></div>
+<div class="card">
+<input id="name" placeholder="Fabric Name">
+<input id="meter" type="number" placeholder="Meter">
+<button onclick="save()">Save</button>
+</div>
 
-  <input id="orderId" placeholder="Order ID">
-  <input id="tracking" placeholder="Tracking">
+<div class="card" id="list"></div>
 
-  <button onclick="sendData()">Submit</button>
-  <p id="msg"></p>
 </div>
 
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
+let data = JSON.parse(localStorage.getItem("fabricInvoices")) || [];
 
-let html5Qr;
+function save(){
+let name=nameEl.value;
+let meter=parseFloat(meterEl.value);
 
-function resetFields(){
-orderId.value=""; tracking.value=""; msg.innerText="";
-orderId.focus();
+if(!name||!meter){alert("Fill");return;}
+
+data.push({name,meter});
+
+localStorage.setItem("fabricInvoices",JSON.stringify(data));
+
+load();
 }
 
-function sendData(){
-fetch(API_URL,{
-method:"POST",
-body:JSON.stringify({
-mode:"fabric",
-order_id:orderId.value,
-tracking:tracking.value
-})
-})
-.then(()=>{ msg.innerText="Completed ✅"; resetFields(); });
-}
-
-function openManual(){ scanArea.style.display="block"; resetFields(); }
-
-function openCamera(){
-scanArea.style.display="block";
-resetFields();
-
-html5Qr=new Html5Qrcode("reader");
-html5Qr.start({facingMode:"environment"},{fps:10,qrbox:250},
-(txt)=>{
-if(!orderId.value){ orderId.value=txt; }
-else{
-tracking.value=txt;
-sendData();
-html5Qr.stop();
-}
+function load(){
+list.innerHTML="";
+data.forEach(d=>{
+list.innerHTML+=`<div>${d.name} - ${d.meter}m</div>`;
 });
 }
 
-orderId.addEventListener("keypress",e=>{
-if(e.key==="Enter") tracking.focus();
-});
+const nameEl=document.getElementById("name");
+const meterEl=document.getElementById("meter");
 
-tracking.addEventListener("keypress",e=>{
-if(e.key==="Enter") sendData();
-});
+load();
 </script>
 
 </body>
