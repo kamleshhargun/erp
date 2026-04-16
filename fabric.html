@@ -1,79 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Fabric</title>
-
-<style>
-/* SAME CSS */
-*{ box-sizing:border-box; }
-body{ margin:0; font-family:Inter, Segoe UI, Arial; background:#f6f6f7; }
-.wrapper{ display:flex; min-height:100vh; }
-.sidebar{ width:240px; background:#fff; border-right:1px solid #e1e3e5; position:sticky; top:0; height:100vh; }
-.sidebar h2{ padding:16px; margin:0; border-bottom:1px solid #e1e3e5; }
-.sidebar a{ display:block; padding:10px 16px; text-decoration:none; color:#202223; }
-.sidebar a.active{ background:#edf4ff; color:#2c6ecb; }
-.main{ flex:1; padding:20px; }
-.card{ background:#fff; padding:15px; border-radius:8px; margin-bottom:15px; }
-</style>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="container">
 
-<div class="wrapper">
+<h2>Fabric</h2>
 
-<div class="sidebar">
-<h2>ERP Panel</h2>
-<a href="index.html">Dashboard</a>
-<a class="active">Fabric</a>
-<a href="cutting.html">Cutting</a>
-<a href="stitching.html">Stitching</a>
-<a href="finished.html">Finished</a>
-  <a href="daily.html">Daily</a>
-  <a href="lookup.html">Lookup</a>
-  <a href="tracking.html">Tracking</a>
+<button onclick="openCamera()">Scan</button>
+<button onclick="openManual()">Manual</button>
+
+<div id="scanArea" style="display:none;">
+  <div id="reader" style="width:300px;"></div>
+
+  <input id="orderId" placeholder="Order ID">
+  <input id="tracking" placeholder="Tracking">
+
+  <button onclick="sendData()">Submit</button>
+  <p id="msg"></p>
 </div>
-
-<div class="main">
-
-<h2>Fabric Purchase</h2>
-
-<div class="card">
-<input type="date" id="date">
-<select id="party"></select>
-<input id="invoice" placeholder="Invoice">
-
-<div id="fabricContainer"></div>
-
-<button onclick="addFabricRow()">+ Fabric</button>
-<button onclick="saveInvoice()">Save</button>
-</div>
-
-</div>
-</div>
-
-<script src="common.js"></script>
 
 <script>
-loadDropdown("party","partyLedger");
+const API_URL="https://script.google.com/macros/s/AKfycbxnW9V63PUjacF2w-9tVAsaOb6vMrf6XuMowfttVTp_iVpgHgndNVgWueCKvcwV12FB/exec";
 
-let data = JSON.parse(localStorage.getItem("fabricInvoices")) || [];
+let html5Qr;
 
-date.valueAsDate = new Date();
-
-function addFabricRow(){
-let d=document.createElement("div");
-d.innerHTML=`
-<input class="fabricName" placeholder="Fabric">
-<input class="meter" placeholder="Meter">
-<input class="rate" placeholder="Rate">
-`;
-fabricContainer.appendChild(d);
+function resetFields(){
+orderId.value=""; tracking.value=""; msg.innerText="";
+orderId.focus();
 }
 
-function saveInvoice(){
-alert("Saved");
+function sendData(){
+fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({
+mode:"fabric",
+order_id:orderId.value,
+tracking:tracking.value
+})
+})
+.then(()=>{ msg.innerText="Completed ✅"; resetFields(); });
 }
+
+function openManual(){ scanArea.style.display="block"; resetFields(); }
+
+function openCamera(){
+scanArea.style.display="block";
+resetFields();
+
+html5Qr=new Html5Qrcode("reader");
+html5Qr.start({facingMode:"environment"},{fps:10,qrbox:250},
+(txt)=>{
+if(!orderId.value){ orderId.value=txt; }
+else{
+tracking.value=txt;
+sendData();
+html5Qr.stop();
+}
+});
+}
+
+orderId.addEventListener("keypress",e=>{
+if(e.key==="Enter") tracking.focus();
+});
+
+tracking.addEventListener("keypress",e=>{
+if(e.key==="Enter") sendData();
+});
 </script>
 
 </body>
