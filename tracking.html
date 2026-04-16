@@ -56,6 +56,14 @@ button {
 
 <div class="card" id="trackResult">Enter details</div>
 
+<div class="card" id="extraBox" style="display:none;">
+<label>Settled Amount</label>
+<input id="settledAmount" readonly>
+
+<label>Select Date</label>
+<input type="date" id="settledDate">
+</div>
+
 <button class="start" id="saveBtn" onclick="save()" style="display:none;">Save</button>
 
 </div>
@@ -84,13 +92,30 @@ return;
 
 data=d;
 
+// 🔥 PAYMENT LOGIC
+let amount = Number(d.amount || 0);
+let settled = amount;
+
+if(d.payment === "Prepaid"){
+  settled = amount - (amount * 0.025 * 1.18);
+}
+
+// UI update
 trackResult.innerHTML=`
 <b>Status:</b> ${d.status}<br>
 <b>Location:</b> ${d.location}<br>
 <b>Customer:</b> ${d.customer}<br>
-<b>Amount:</b> ₹${d.amount}
+<b>Payment:</b> ${d.payment}<br>
+<b>Amount:</b> ₹${amount}
 `;
 
+settledAmount.value = settled.toFixed(2);
+
+// default date = today
+let today = new Date().toISOString().split('T')[0];
+settledDate.value = today;
+
+extraBox.style.display="block";
 saveBtn.style.display="block";
 });
 }
@@ -99,10 +124,20 @@ function save(){
 
 fetch(API_URL,{
 method:"POST",
-body:JSON.stringify({type:"saveTracking",...data})
+body:JSON.stringify({
+type:"saveTracking",
+...data,
+settled_amount: settledAmount.value,
+settled_date: settledDate.value
 })
-.then(()=>{
+})
+.then(r=>r.json())
+.then(res=>{
+if(res.duplicate){
+alert("⚠️ Duplicate Entry Not Saved");
+}else{
 alert("Saved ✅");
+}
 saveBtn.style.display="none";
 });
 }
