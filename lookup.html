@@ -1,175 +1,49 @@
 <!DOCTYPE html>
-<html lang="hi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lookup</title>
+<html>
+<body class="container">
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
+<h2>Lookup</h2>
 
-body{font-family:sans-serif;background:#f0f2f5;}
+<input id="lookupInput" placeholder="Order ID">
+<button onclick="searchOrder()">Search</button>
+<button onclick="clearSearch()">Clear</button>
 
-/* HEADER */
-header{
-    position:fixed;
-    top:0;
-    width:100%;
-    background:#1a73e8;
-    color:#fff;
-    text-align:center;
-    padding:12px;
-    z-index:1000;
-    transition:0.3s;
-}
-
-/* NAVBAR */
-.navbar{
-    position:fixed;
-    top:60px;
-    width:100%;
-    display:flex;
-    justify-content:space-around;
-    background:#fff;
-    padding:10px;
-    z-index:999;
-    box-shadow:0 2px 5px rgba(0,0,0,0.1);
-    transition:0.3s;
-}
-
-.navbar button{
-    border:none;
-    padding:8px 12px;
-    border-radius:8px;
-    background:#eee;
-    cursor:pointer;
-}
-
-.navbar button.active{
-    background:#1a73e8;
-    color:#fff;
-}
-
-/* CONTENT */
-.container{
-    padding:140px 20px 80px;
-}
-
-.card{
-    background:#fff;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.05);
-}
-
-input{
-    width:100%;
-    padding:10px;
-    margin:10px 0;
-    border-radius:8px;
-    border:1px solid #ccc;
-}
-
-button.search-btn{
-    width:100%;
-    padding:10px;
-    border:none;
-    background:#1a73e8;
-    color:#fff;
-    border-radius:8px;
-    cursor:pointer;
-}
-
-#result{
-    margin-top:15px;
-    background:#f8f9fa;
-    padding:10px;
-    border-radius:8px;
-    word-break:break-word;
-}
-
-/* FOOTER */
-footer{
-    position:fixed;
-    bottom:0;
-    width:100%;
-    background:#333;
-    color:#ccc;
-    text-align:center;
-    padding:10px;
-    transition:0.3s;
-}
-</style>
-</head>
-
-<body>
-
-<header id="header">
-    <h2>Dashboard</h2>
-</header>
-
-<div class="navbar" id="navbar">
-    <button onclick="goPage('dashboard.html', this)">Dashboard</button>
-    <button onclick="goPage('daily.html', this)">Daily</button>
-    <button class="active">Lookup</button>
-    <button onclick="goPage('tracking.html', this)">Tracking</button>
-</div>
-
-<div class="container">
-    <div class="card">
-        <h3>Lookup Order</h3>
-
-        <input id="orderId" placeholder="Enter Order ID">
-        <button class="search-btn" onclick="search()">Search</button>
-
-        <div id="result">Result will show here...</div>
-    </div>
-</div>
-
-<footer id="footer">
-    <p>© 2026 Kon Soft Tech</p>
-</footer>
+<div id="lookupResult"></div>
 
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
 
-function search(){
-    const id = document.getElementById("orderId").value;
-    const result = document.getElementById("result");
+function searchOrder(){
+let order=lookupInput.value.trim();
+if(!order){alert("Enter Order");return;}
 
-    result.innerHTML = "Loading...";
+lookupResult.innerHTML="Loading...";
 
-    fetch(API_URL+"?type=lookup&order_id="+id)
-    .then(res=>res.json())
-    .then(d=>{
-        result.innerHTML = "<pre>"+JSON.stringify(d, null, 2)+"</pre>";
-    })
-    .catch(()=>{
-        result.innerHTML="Error fetching data";
-    });
-}
+fetch(API_URL+"?type=lookup&order_id="+encodeURIComponent(order))
+.then(r=>r.json())
+.then(data=>{
+lookupResult.innerHTML="";
+if(!data.length){lookupResult.innerHTML="No Data";return;}
 
-function goPage(page){
-    window.location.href = page;
-}
-
-/* SCROLL EFFECT */
-let lastScroll=0;
-window.addEventListener("scroll", ()=>{
-    let current=window.pageYOffset;
-
-    if(current>lastScroll){
-        header.style.top="-70px";
-        navbar.style.top="-70px";
-        footer.style.bottom="-50px";
-    }else{
-        header.style.top="0";
-        navbar.style.top="60px";
-        footer.style.bottom="0";
-    }
-
-    lastScroll=current;
+let total=0;
+data.forEach(i=>{
+total+=Number(i.qty)||0;
+lookupResult.innerHTML+=`
+<div>
+Order:${i.order_id}<br>
+Product:${i.product}<br>
+Qty:${i.qty}
+</div>`;
 });
+
+lookupResult.innerHTML+="<b>Total:"+total+"</b>";
+});
+}
+
+function clearSearch(){
+lookupInput.value="";
+lookupResult.innerHTML="";
+}
 </script>
 
 </body>
