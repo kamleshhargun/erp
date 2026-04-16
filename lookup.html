@@ -34,6 +34,7 @@ button {
   background:#6f42c1;
   color:#fff;
   border:none;
+  cursor:pointer;
 }
 
 #result {
@@ -53,7 +54,7 @@ button {
 <button onclick="search()">Search</button>
 </div>
 
-<div class="card" id="result"></div>
+<div class="card" id="result">Enter Order ID</div>
 
 </div>
 
@@ -61,39 +62,61 @@ button {
 const API_URL="https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
 
 function search(){
-let order=document.getElementById("order").value.trim();
-if(!order){alert("Enter Order");return;}
 
-let box=result;
+let order=document.getElementById("order").value.trim();
+
+if(!order){
+  alert("Enter Order");
+  return;
+}
+
+let box=document.getElementById("result");
 box.innerHTML="Loading...";
 
-fetch(API_URL+"?type=lookup&order_id="+order)
+// 🔥 IMPORTANT FIX → encodeURIComponent
+fetch(API_URL + "?type=lookup&order_id=" + encodeURIComponent(order))
 .then(r=>r.json())
 .then(data=>{
 
-if(!data.length){
-box.innerHTML="❌ No Data";
-return;
+// 🔥 ERROR HANDLE
+if(data.error){
+  box.innerHTML="❌ " + data.error;
+  return;
 }
 
-box.innerHTML="";
+// 🔥 EMPTY CHECK (safe)
+if(!Array.isArray(data) || data.length===0){
+  box.innerHTML="❌ No Data Found";
+  return;
+}
+
+let html="";
 let total=0;
 
 data.forEach(i=>{
-total+=Number(i.qty)||0;
+  let qty = Number(i.qty) || 0;
+  total += qty;
 
-box.innerHTML+=`
-<div>
-<b>SKU:</b> ${i.sku}<br>
-<b>Product:</b> ${i.product}<br>
-<b>Qty:</b> ${i.qty}
-<hr>
-</div>
-`;
+  html += `
+  <div>
+    <b>SKU:</b> ${i.sku}<br>
+    <b>Product:</b> ${i.product}<br>
+    <b>Qty:</b> ${qty}
+    <hr>
+  </div>
+  `;
 });
 
-box.innerHTML+=`<b>Total: ${total}</b>`;
+html += `<b>Total Qty: ${total}</b>`;
+
+box.innerHTML = html;
+
+})
+.catch(err=>{
+  box.innerHTML="❌ Error loading data";
+  console.error(err);
 });
+
 }
 </script>
 
