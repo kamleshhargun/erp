@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html>
-<body class="container">
-<link rel="stylesheet" href="style.css">
-<h2>Lookup</h2>
+<div class="container">
 
+<h2>🔍 Lookup</h2>
+
+<div class="card">
 <input id="lookupInput" placeholder="Order ID">
-<button onclick="searchOrder()">Search</button>
-<button onclick="clearSearch()">Clear</button>
+<button class="search" onclick="searchOrder()">Search</button>
+<button class="stop" onclick="clearSearch()">Clear</button>
+</div>
 
-<div id="lookupResult"></div>
+<div class="card" id="lookupResult"></div>
 
+</div>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
 
