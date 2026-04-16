@@ -27,7 +27,7 @@
 </nav>
 
 <!-- MAIN -->
-<iframe id="frame" src="dashboard.html"></iframe>
+<iframe id="frame" src="dashboard.html" onload="hideLoader()"></iframe>
 
 <!-- MOBILE MENU -->
 <div class="mobile-nav">
@@ -40,6 +40,27 @@
 </div>
 
 <script>
+  // K..... animation
+let k = document.getElementById("ktext");
+let dots = 0;
+
+setInterval(()=>{
+  dots = (dots + 1) % 5;
+  k.innerText = "K" + ".".repeat(dots);
+}, 400);
+
+// Hide loader when page loaded
+window.addEventListener("load", ()=>{
+  document.getElementById("loader").style.display = "none";
+});
+  function go(page){
+  document.getElementById("loader").style.display="flex"; // show loader
+  document.getElementById("frame").src = page;
+}
+
+function hideLoader(){
+  document.getElementById("loader").style.display="none";
+}
 function go(page){
   document.getElementById("frame").src = page;
 }
