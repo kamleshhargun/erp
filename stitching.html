@@ -1,104 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { font-family:'Segoe UI'; background:linear-gradient(135deg,#eef2f7,#dfe9f3); }
+.container { max-width:600px; margin:20px auto; }
+.card { background:#fff; padding:15px; border-radius:12px; margin-bottom:10px; }
+
+input { width:100%; padding:10px; margin-top:5px; }
+
+button { width:100%; padding:10px; margin-top:10px; background:#ffc107; border:none; }
+</style>
 </head>
 
-<body class="container">
+<body>
 
-<h2>Stitching</h2>
+<div class="container">
 
-<input type="date" id="date">
+<h2>🧵 Stitching</h2>
+
+<div class="card">
 <input id="labour" placeholder="Labour Name">
+<input id="pcs" type="number" placeholder="PCS">
+<button onclick="save()">Save</button>
+</div>
 
-<div id="entryContainer"></div>
+<div class="card" id="list"></div>
 
-<button onclick="addRow()">Add Item</button>
-<button onclick="saveData()">Save</button>
-<button onclick="exportCSV()">Export</button>
-
-<table border="1" width="100%">
-<thead>
-<tr>
-<th>Date</th>
-<th>Labour</th>
-<th>Total</th>
-<th>Delete</th>
-</tr>
-</thead>
-<tbody id="tableBody"></tbody>
-</table>
-
-<div id="detailBox"></div>
+</div>
 
 <script>
-let stitchingData=JSON.parse(localStorage.getItem("stitchingData"))||[];
+let data = JSON.parse(localStorage.getItem("stitchingData")) || [];
 
-date.valueAsDate=new Date();
+function save(){
+let labour=labourEl.value;
+let pcs=parseInt(pcsEl.value);
 
-function addRow(){
-let d=document.createElement("div");
-d.innerHTML=`
-Item <input class="item">
-Qty <input class="qty" type="number">
-<button onclick="this.parentElement.remove()">❌</button>`;
-entryContainer.appendChild(d);
+if(!labour||!pcs){alert("Fill");return;}
+
+data.push({labour,total:pcs});
+
+localStorage.setItem("stitchingData",JSON.stringify(data));
+
+load();
 }
 
-function saveData(){
-let rows=document.querySelectorAll("div");
-let entries=[]; let total=0;
-
-rows.forEach(r=>{
-let item=r.querySelector(".item")?.value;
-let qty=parseInt(r.querySelector(".qty")?.value)||0;
-if(item&&qty>0){ entries.push({item,qty}); total+=qty; }
+function load(){
+list.innerHTML="";
+data.forEach(d=>{
+list.innerHTML+=`<div>${d.labour} - ${d.total} pcs</div>`;
 });
-
-stitchingData.push({
-date:date.value,
-labour:labour.value,
-entries,total
-});
-
-localStorage.setItem("stitchingData",JSON.stringify(stitchingData));
-location.reload();
 }
 
-function render(){
-let html="";
-stitchingData.forEach((s,i)=>{
-html+=`<tr>
-<td>${s.date}</td>
-<td>${s.labour}</td>
-<td>${s.total}</td>
-<td><button onclick="del(${i})">X</button></td>
-</tr>`;
-});
-tableBody.innerHTML=html;
-}
+const labourEl=document.getElementById("labour");
+const pcsEl=document.getElementById("pcs");
 
-function del(i){
-stitchingData.splice(i,1);
-localStorage.setItem("stitchingData",JSON.stringify(stitchingData));
-location.reload();
-}
-
-function exportCSV(){
-let csv="Date,Labour,Item,Qty\n";
-stitchingData.forEach(s=>{
-s.entries.forEach(e=>{
-csv+=`${s.date},${s.labour},${e.item},${e.qty}\n`;
-});
-});
-let blob=new Blob([csv]);
-let a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download="stitching.csv";
-a.click();
-}
-
-render();
+load();
 </script>
 
 </body>
