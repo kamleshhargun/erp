@@ -1,97 +1,224 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+
+/* BODY */
+body {
+  font-family: 'Segoe UI', Arial;
+  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
+  margin: 0;
+}
+
+/* CONTAINER */
+.container {
+  max-width: 420px;
+  margin: 30px auto;
+  padding: 15px;
+}
+
+/* CARD */
+.card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+/* BUTTON */
+button {
+  width: 100%;
+  padding: 11px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* COLORS */
+.primary { background:#007bff; color:#fff; }
+.success { background:#28a745; color:#fff; }
+.dark { background:#444; color:#fff; }
+
+/* MODE BUTTON */
+.mode {
+  display: flex;
+  gap: 10px;
+}
+
+.mode button {
+  flex: 1;
+  background: #eee;
+}
+
+.mode .active {
+  background: #007bff;
+  color: #fff;
+}
+
+/* INPUT */
+input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* TEXT */
+h2 {
+  text-align: center;
+}
+
+#status {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+.container { margin: 10px auto; }
+}
+
+</style>
 </head>
-<link rel="stylesheet" href="style.css">
-<body class="container">
 
-<h2>Daily Pickup & Return</h2>
+<body>
 
-<button id="pickupBtn" onclick="setMode('Pickup')" class="active">Pickup</button>
+<div class="container">
+
+<h2>📦 Daily Pickup & Return</h2>
+
+<!-- MODE -->
+<div class="card mode">
+<button id="pickupBtn" class="active" onclick="setMode('Pickup')">Pickup</button>
 <button id="returnBtn" onclick="setMode('Return')">Return</button>
-
-<br><br>
-
-<button onclick="startOrder()">Scan Order</button>
-<button id="nextBtn" onclick="startTracking()" style="display:none;">Scan Tracking</button>
-<button onclick="openManual()">Manual</button>
-
-<div id="reader" style="width:300px;"></div>
-<p id="status"></p>
-
-<div id="manualBox" style="display:none;">
-  <input id="manualOrder" placeholder="Order ID">
-  <input id="manualTracking" placeholder="Tracking">
-  <button onclick="submitManual()">Submit</button>
 </div>
 
-<h3>Dashboard</h3>
-Pickup Today: <span id="pickup_today">0</span><br>
-Return Today: <span id="return_today">0</span>
+<!-- SCANNER -->
+<div class="card">
+<div id="reader"></div>
+
+<button class="primary" onclick="startOrder()">Scan Order</button>
+<button class="success" id="nextBtn" onclick="startTracking()" style="display:none;">Scan Tracking</button>
+<button class="dark" onclick="openManual()">Manual Entry</button>
+
+<div id="status">Ready</div>
+</div>
+
+<!-- MANUAL -->
+<div class="card" id="manualBox" style="display:none;">
+<input id="manualOrder" placeholder="Order ID">
+<input id="manualTracking" placeholder="Tracking">
+<button class="success" onclick="submitManual()">Submit</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="card">
+<h3>📊 Today</h3>
+Pickup: <b id="pickup_today">0</b><br>
+Return: <b id="return_today">0</b>
+</div>
+
+</div>
 
 <script>
+
 const API_URL="https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
 
 let html5QrCode, orderId="", mode="Pickup";
 
 const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
+// MODE
 function setMode(m){
 mode=m;
 pickupBtn.classList.remove("active");
 returnBtn.classList.remove("active");
+
 if(m==="Pickup") pickupBtn.classList.add("active");
 else returnBtn.classList.add("active");
 }
 
+// ORDER SCAN
 function startOrder(){
 html5QrCode=new Html5Qrcode("reader");
-html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:{width:250,height:120}},
+
+html5QrCode.start({facingMode:"environment"},{fps:20,qrbox:250},
 text=>{
 orderId=text;
 stopScan();
+
 status.innerText="Order Scanned ✅";
-nextBtn.style.display="inline-block";
+nextBtn.style.display="block";
 });
 }
 
+// TRACKING SCAN
 function startTracking(){
 html5QrCode=new Html5Qrcode("reader");
-html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:{width:250,height:120}},
+
+html5QrCode.start({facingMode:"environment"},{fps:20,qrbox:250},
 text=>{
 stopScan();
 beep.play();
+
 sendData(orderId,text);
+
 status.innerText="Done ✅";
 nextBtn.style.display="none";
 orderId="";
 });
 }
 
+// STOP
 function stopScan(){
-if(html5QrCode) html5QrCode.stop().catch(()=>{});
+if(html5QrCode){
+html5QrCode.stop().catch(()=>{});
+}
 }
 
-function openManual(){ manualBox.style.display="block"; }
+// MANUAL
+function openManual(){
+manualBox.style.display="block";
+}
 
 function submitManual(){
 let o=manualOrder.value.trim();
 let t=manualTracking.value.trim();
-if(!o||!t){alert("Fill both");return;}
+
+if(!o||!t){
+alert("Fill both fields");
+return;
+}
+
 beep.play();
 sendData(o,t);
+
 manualOrder.value="";
 manualTracking.value="";
 manualBox.style.display="none";
 }
 
+// SEND API
 function sendData(o,t){
-fetch(API_URL,{method:"POST",body:JSON.stringify({
-mode:mode.toLowerCase(),order_id:o,tracking:t
-})}).then(loadDashboard);
+fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({
+mode:mode.toLowerCase(),
+order_id:o,
+tracking:t
+})
+})
+.then(()=>loadDashboard());
 }
 
+// DASHBOARD
 function loadDashboard(){
 fetch(API_URL+"?type=stats")
 .then(r=>r.json())
@@ -101,8 +228,19 @@ return_today.innerText=d.todayReturn||0;
 });
 }
 
+// AUTO REFRESH
 setInterval(loadDashboard,3000);
 loadDashboard();
+
+// ENTER FLOW (FAST)
+manualOrder.addEventListener("keypress",e=>{
+if(e.key==="Enter") manualTracking.focus();
+});
+
+manualTracking.addEventListener("keypress",e=>{
+if(e.key==="Enter") submitManual();
+});
+
 </script>
 
 </body>
