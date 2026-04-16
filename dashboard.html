@@ -1,34 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-.cards{
-display:flex;
-flex-wrap:wrap;
-gap:15px;
+body {
+  font-family: 'Segoe UI', Arial;
+  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
+  margin: 0;
 }
-.card{
-flex:1;
-min-width:180px;
-background:#222;
-color:#fff;
-padding:15px;
-border-radius:8px;
-text-align:center;
-cursor:pointer;
+
+.container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 15px;
 }
-.big{font-size:24px;font-weight:bold;}
-.section-title{
-margin-top:20px;
-font-weight:bold;
+
+h2 {
+  text-align: center;
+}
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.card {
+  flex: 1;
+  min-width: 200px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.big {
+  font-size: 22px;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.section-title {
+  margin-top: 20px;
+  font-weight: bold;
 }
 </style>
 </head>
 
-<body class="container">
+<body>
 
-<h2>📊 Dashboard</h2>
+<div class="container">
+
+<h2>🏠 Home</h2>
 
 <div class="section-title">Daily</div>
 <div class="cards">
@@ -53,78 +79,35 @@ font-weight:bold;
   </div>
 </div>
 
-<div class="section-title">Production Flow</div>
-<div class="cards">
-  <div class="card" onclick="go('fabric.html')">
-    <h3>Fabric</h3>
-    <div class="big" id="fabric_count">0</div>
-  </div>
-
-  <div class="card" onclick="go('cutting.html')">
-    <h3>Cutting</h3>
-    <div class="big" id="cutting_count">0</div>
-  </div>
-
-  <div class="card" onclick="go('stitching.html')">
-    <h3>Stitching</h3>
-    <div class="big" id="stitching_count">0</div>
-  </div>
-
-  <div class="card" onclick="go('finished.html')">
-    <h3>Finished</h3>
-    <div class="big" id="finished_count">0</div>
-  </div>
-</div>
-
-<div class="section-title">Quick</div>
+<div class="section-title">Quick Access</div>
 <div class="cards">
   <div class="card" onclick="go('daily.html')">Daily</div>
   <div class="card" onclick="go('lookup.html')">Lookup</div>
   <div class="card" onclick="go('tracking.html')">Tracking</div>
 </div>
 
+</div>
+
 <script>
+const API_URL = "https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
 
-// ✅ SINGLE API
-const API_URL="https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
-
-// NAV
 function go(page){
-window.parent.frames['frame'].location = page;
+  window.location.href = page;
 }
 
-// ===== LOAD DASHBOARD =====
 function loadDashboard(){
-
 fetch(API_URL+"?type=stats")
 .then(res=>res.json())
 .then(d=>{
-
-// DAILY
 pickup_today.innerText = d.todayPickup || 0;
 return_today.innerText = d.todayReturn || 0;
 pickup_total.innerText = d.totalPickup || 0;
 return_total.innerText = d.totalReturn || 0;
-
-// 🔥 FLOW (IMPORTANT: API me add karna padega)
-fabric_count.innerText = d.fabric || 0;
-cutting_count.innerText = d.cutting || 0;
-finished_count.innerText = d.finished || 0;
-
 });
-
-// stitching (local)
-let stitch = JSON.parse(localStorage.getItem("stitchingData")) || [];
-let total = 0;
-stitch.forEach(s=> total += s.total || 0);
-stitching_count.innerText = total;
-
 }
 
-// AUTO REFRESH
 setInterval(loadDashboard,3000);
 loadDashboard();
-
 </script>
 
 </body>
