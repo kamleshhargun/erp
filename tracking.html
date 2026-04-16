@@ -1,176 +1,64 @@
 <!DOCTYPE html>
-<html lang="hi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tracking</title>
+<html>
+<body class="container">
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:sans-serif;background:#f0f2f5;}
+<h2>Tracking</h2>
 
-/* HEADER */
-header{
-    position:fixed;
-    top:0;
-    width:100%;
-    background:#1a73e8;
-    color:#fff;
-    text-align:center;
-    padding:12px;
-    z-index:1000;
-    transition:0.3s;
-}
+<input id="trackOrderId" placeholder="Order ID">
+<input id="trackWaybill" placeholder="Tracking">
+<button onclick="trackOrder()">Track</button>
 
-/* NAVBAR */
-.navbar{
-    position:fixed;
-    top:60px;
-    width:100%;
-    display:flex;
-    justify-content:space-around;
-    background:#fff;
-    padding:10px;
-    z-index:999;
-    box-shadow:0 2px 5px rgba(0,0,0,0.1);
-    transition:0.3s;
-}
+<div id="trackResult"></div>
 
-.navbar button{
-    border:none;
-    padding:8px 12px;
-    border-radius:8px;
-    background:#eee;
-    cursor:pointer;
-}
-
-.navbar button.active{
-    background:#1a73e8;
-    color:#fff;
-}
-
-/* CONTENT */
-.container{
-    padding:140px 20px 80px;
-}
-
-.card{
-    background:#fff;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.05);
-}
-
-input{
-    width:100%;
-    padding:10px;
-    margin:10px 0;
-    border-radius:8px;
-    border:1px solid #ccc;
-}
-
-button.track-btn{
-    width:100%;
-    padding:10px;
-    border:none;
-    background:#1a73e8;
-    color:#fff;
-    border-radius:8px;
-    cursor:pointer;
-}
-
-#result{
-    margin-top:15px;
-    background:#f8f9fa;
-    padding:10px;
-    border-radius:8px;
-}
-
-/* FOOTER */
-footer{
-    position:fixed;
-    bottom:0;
-    width:100%;
-    background:#333;
-    color:#ccc;
-    text-align:center;
-    padding:10px;
-    transition:0.3s;
-}
-</style>
-</head>
-
-<body>
-
-<header id="header">
-    <h2>Dashboard</h2>
-</header>
-
-<div class="navbar" id="navbar">
-    <button onclick="goPage('dashboard.html', this)">Dashboard</button>
-    <button onclick="goPage('daily.html', this)">Daily</button>
-    <button onclick="goPage('lookup.html', this)">Lookup</button>
-    <button class="active">Tracking</button>
+<br>
+<div id="settleBox" style="display:none;">
+<input id="settleAmount" placeholder="Amount">
+<input id="settleDate" type="date">
+<button id="saveBtn" onclick="saveTracking()">Save</button>
 </div>
-
-<div class="container">
-    <div class="card">
-        <h3>Update Tracking</h3>
-
-        <input id="orderId" placeholder="Order ID">
-        <input id="trackingId" placeholder="Tracking ID">
-
-        <button class="track-btn" onclick="trackOrder()">Update Tracking</button>
-
-        <div id="result">Result will show here...</div>
-    </div>
-</div>
-
-<footer id="footer">
-    <p>© 2026 Kon Soft Tech</p>
-</footer>
 
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
 
+let trackingData=null;
+
 function trackOrder(){
-    const order = document.getElementById("orderId").value;
-    const track = document.getElementById("trackingId").value;
-    const result = document.getElementById("result");
+let o=trackOrderId.value.trim();
+let t=trackWaybill.value.trim();
 
-    result.innerHTML="Updating...";
+if(!o||!t){alert("Enter both");return;}
 
-    fetch(API_URL+"?type=track&order_id="+order+"&tracking="+track)
-    .then(res=>res.json())
-    .then(d=>{
-        result.innerHTML="<pre>"+JSON.stringify(d,null,2)+"</pre>";
-    })
-    .catch(()=>{
-        result.innerHTML="Error updating tracking";
-    });
-}
+trackResult.innerHTML="Loading...";
 
-function goPage(page){
-    window.location.href = page;
-}
+fetch(API_URL+"?type=track&order_id="+encodeURIComponent(o)+"&tracking="+encodeURIComponent(t))
+.then(r=>r.json())
+.then(d=>{
+if(d.error){trackResult.innerHTML=d.error;return;}
 
-/* SCROLL EFFECT */
-let lastScroll=0;
-window.addEventListener("scroll", ()=>{
-    let current=window.pageYOffset;
+trackingData=d;
 
-    if(current>lastScroll){
-        header.style.top="-70px";
-        navbar.style.top="-70px";
-        footer.style.bottom="-50px";
-    }else{
-        header.style.top="0";
-        navbar.style.top="60px";
-        footer.style.bottom="0";
-    }
+trackResult.innerHTML=`
+Status:${d.status}<br>
+Location:${d.location}<br>
+Customer:${d.customer}<br>
+Amount:${d.amount}`;
 
-    lastScroll=current;
+settleBox.style.display="block";
+settleAmount.value=d.amount;
 });
+}
+
+function saveTracking(){
+fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({
+type:"saveTracking",
+...trackingData,
+settled_amount:settleAmount.value,
+settled_date:settleDate.value
+})
+}).then(()=>alert("Saved ✅"));
+}
 </script>
 
 </body>
