@@ -4,85 +4,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-
-/* BODY */
 body {
-  font-family: 'Segoe UI', Arial;
-  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
-  margin: 0;
+  font-family: 'Segoe UI';
+  background: linear-gradient(135deg,#eef2f7,#dfe9f3);
 }
 
-/* CENTER CONTAINER */
 .container {
   max-width: 420px;
-  margin: 40px auto; /* 🔥 desktop center */
-  padding: 15px;
+  margin: 40px auto;
 }
 
-/* CARD */
 .card {
-  background: #ffffff;
-  padding: 18px;
-  border-radius: 16px;
-  margin-bottom: 15px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  transition: 0.2s;
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:10px;
 }
 
-.card:hover {
-  transform: translateY(-2px);
-}
-
-/* INPUT */
 input {
-  padding: 11px;
-  width: 92%;
-  margin: 6px 0;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 14px;
+  width:100%;
+  padding:10px;
+  margin-top:5px;
 }
 
-input:focus {
-  border-color: #007bff;
-  outline: none;
-  box-shadow: 0 0 5px rgba(0,123,255,0.3);
-}
-
-/* BUTTON */
 button {
-  padding: 11px;
-  margin-top: 10px;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  background:#6f42c1;
+  color:#fff;
+  border:none;
 }
 
-/* COLORS */
-.search { background: #6f42c1; color: #fff; }
-.start { background: #28a745; color: #fff; }
-
-/* HEADING */
-h2 {
-  text-align: center;
-  margin-bottom: 15px;
-  color: #333;
+#result {
+  font-size:14px;
 }
-
-/* RESULT */
-#trackResult {
-  text-align: left;
-  font-size: 14px;
-}
-
-/* 🔥 MOBILE */
-@media(max-width:768px){
-  .container{
-    margin: 10px auto;
-  }
-}
-
 </style>
 </head>
 
@@ -90,108 +46,55 @@ h2 {
 
 <div class="container">
 
-<h2>📦 Tracking</h2>
+<h2>🔍 Lookup</h2>
 
 <div class="card">
-<input id="trackOrderId" placeholder="Order ID">
-<input id="trackWaybill" placeholder="Tracking">
-<button class="search" onclick="trackOrder()">Track</button>
+<input id="order" placeholder="Order ID">
+<button onclick="search()">Search</button>
 </div>
 
-<div class="card" id="trackResult"></div>
-
-<button class="start" id="saveBtn" onclick="saveTracking()" style="display:none;">Save</button>
+<div class="card" id="result"></div>
 
 </div>
 
 <script>
+const API_URL="https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
 
-// 🔥 SAME API
-const API_URL = "https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
+function search(){
+let order=document.getElementById("order").value.trim();
+if(!order){alert("Enter Order");return;}
 
-let trackingData = null;
+let box=result;
+box.innerHTML="Loading...";
 
-// TRACK
-function trackOrder(){
+fetch(API_URL+"?type=lookup&order_id="+order)
+.then(r=>r.json())
+.then(data=>{
 
-let order = document.getElementById("trackOrderId").value.trim();
-let tracking = document.getElementById("trackWaybill").value.trim();
-
-if(!order || !tracking){
-  alert("Enter Order ID & Tracking");
-  return;
+if(!data.length){
+box.innerHTML="❌ No Data";
+return;
 }
 
-let box = document.getElementById("trackResult");
-box.innerHTML = "Loading...";
+box.innerHTML="";
+let total=0;
 
-let url = API_URL + "?type=track"
-  + "&order_id=" + encodeURIComponent(order)
-  + "&tracking=" + encodeURIComponent(tracking);
+data.forEach(i=>{
+total+=Number(i.qty)||0;
 
-fetch(url)
-.then(res=>res.json())
-.then(d=>{
-
-if(d.error){
-  box.innerHTML = "❌ " + d.error;
-  return;
-}
-
-trackingData = d;
-
-box.innerHTML = `
-<b>Status:</b> ${d.status}<br>
-<b>Location:</b> ${d.location}<br>
-<b>Customer:</b> ${d.customer}<br>
-<b>State:</b> ${d.state}<br>
-<b>Payment:</b> ${d.payment}<br>
-<b>Amount:</b> ₹${d.amount}
+box.innerHTML+=`
+<div>
+<b>SKU:</b> ${i.sku}<br>
+<b>Product:</b> ${i.product}<br>
+<b>Qty:</b> ${i.qty}
+<hr>
+</div>
 `;
-
-document.getElementById("saveBtn").style.display = "block";
-
-})
-.catch(()=>{
-  box.innerHTML = "❌ Error";
 });
 
-}
-
-// SAVE
-function saveTracking(){
-
-if(!trackingData){
-  alert("No data");
-  return;
-}
-
-fetch(API_URL,{
-method:"POST",
-body:JSON.stringify({
-type:"saveTracking",
-order_id:trackingData.order_id,
-tracking:trackingData.tracking,
-status:trackingData.status,
-location:trackingData.location,
-customer:trackingData.customer,
-state:trackingData.state,
-amount:trackingData.amount,
-payment:trackingData.payment
-})
-})
-.then(()=>{
-
-alert("Saved ✅");
-document.getElementById("saveBtn").style.display="none";
-
-})
-.catch(()=>{
-alert("❌ Failed");
+box.innerHTML+=`<b>Total: ${total}</b>`;
 });
-
 }
-
 </script>
 
 </body>
