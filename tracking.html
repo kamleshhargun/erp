@@ -12,7 +12,7 @@ body {
   margin: 0;
 }
 
-/* CENTER */
+/* CENTER CONTAINER */
 .container {
   max-width: 420px;
   margin: 40px auto;
@@ -21,7 +21,7 @@ body {
 
 /* CARD */
 .card {
-  background: #fff;
+  background: #ffffff;
   padding: 18px;
   border-radius: 16px;
   margin-bottom: 15px;
@@ -65,6 +65,7 @@ h2 {
   text-align: left;
   font-size: 14px;
   line-height: 1.6;
+  color: #333;
 }
 
 /* MOBILE */
@@ -131,14 +132,12 @@ if(d.error){
 trackingData = d;
 
 box.innerHTML = `
-<div class="card">
 <b>Status:</b> ${d.status}<br>
 <b>Location:</b> ${d.location}<br>
 <b>Customer:</b> ${d.customer}<br>
 <b>State:</b> ${d.state}<br>
 <b>Payment:</b> ${d.payment}<br>
 <b>Amount:</b> ₹${d.amount}
-</div>
 `;
 
 document.getElementById("saveBtn").style.display = "block";
@@ -173,13 +172,11 @@ payment:trackingData.payment
 })
 })
 .then(()=>{
-
-alert("Saved ✅");
-document.getElementById("saveBtn").style.display="none";
-
+  alert("Saved ✅");
+  document.getElementById("saveBtn").style.display="none";
 })
 .catch(()=>{
-alert("❌ Failed");
+  alert("❌ Failed");
 });
 
 }
