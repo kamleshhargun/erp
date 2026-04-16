@@ -1,225 +1,27 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard</title>
-
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #f0f2f5;
-}
-
-/* HEADER */
-header {
-    background: #1a73e8;
-    color: #fff;
-    padding: 12px;
-    text-align: center;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000;
-    transition: top 0.3s;
-}
-
-/* NAV BUTTONS */
-.navbar {
-    position: fixed;
-    top: 60px;
-    width: 100%;
-    background: #fff;
-    display: flex;
-    justify-content: space-around;
-    padding: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    z-index: 999;
-    transition: top 0.3s;
-}
-
-.navbar button {
-    border: none;
-    background: #eee;
-    padding: 8px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.navbar button.active {
-    background: #1a73e8;
-    color: #fff;
-}
-
-/* MAIN CONTENT */
-.container {
-    padding: 140px 20px 80px;
-    max-width: 800px;
-    margin: auto;
-}
-
-.card {
-    background: #fff;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-.stat-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.stat-box {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 12px;
-    border-left: 5px solid #1a73e8;
-}
-
-.return-box { border-left-color: #d93025; }
-.return-box .value { color: #d93025; }
-
-.label {
-    font-size: 0.8rem;
-    color: #666;
-    font-weight: bold;
-}
-
-.value {
-    font-size: 1.7rem;
-    font-weight: bold;
-    color: #1a73e8;
-}
-
-/* FOOTER */
-footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background: #333;
-    color: #ccc;
-    text-align: center;
-    padding: 10px;
-    transition: bottom 0.3s;
-}
-
-/* MOBILE */
-@media(max-width:480px){
-    .stat-row { grid-template-columns: 1fr; }
-}
-</style>
+  <title>ERP System</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<header id="header">
-    <h2>Dashboard</h2>
+<header>
+  <h2>ERP SYSTEM</h2>
 </header>
 
-<div class="navbar" id="navbar">
-    <button class="active" onclick="goPage('dashboard.html', this)">Dashboard</button>
-    <button onclick="goPage('daily.html', this)">Daily</button>
-    <button onclick="goPage('lookup.html', this)">Lookup</button>
-    <button onclick="goPage('tracking.html', this)">Tracking</button>
-</div>
+<nav>
+  <a href="daily.html" target="frame">Daily</a>
+  <a href="lookup.html" target="frame">Lookup</a>
+  <a href="tracking.html" target="frame">Tracking</a>
+  <a href="fabric.html" target="frame">Fabric</a>
+  <a href="cutting.html" target="frame">Cutting</a>
+  <a href="stitching.html" target="frame">Stitching</a>
+  <a href="finished.html" target="frame">Finished</a>
+</nav>
 
-<div class="container">
-    <div class="card">
-        <h3>Live Stats Dashboard</h3>
-
-        <div class="stat-row">
-            <div class="stat-box">
-                <span class="label">Today Pickup</span>
-                <span class="value" id="pickup_today">0</span>
-            </div>
-            <div class="stat-box return-box">
-                <span class="label">Today Return</span>
-                <span class="value" id="return_today">0</span>
-            </div>
-        </div>
-
-        <div class="stat-row">
-            <div class="stat-box">
-                <span class="label">Yesterday Pickup</span>
-                <span class="value" id="pickup_yesterday">0</span>
-            </div>
-            <div class="stat-box return-box">
-                <span class="label">Yesterday Return</span>
-                <span class="value" id="return_yesterday">0</span>
-            </div>
-        </div>
-
-        <div class="stat-row">
-            <div class="stat-box">
-                <span class="label">Total Pickup</span>
-                <span class="value" id="pickup_total">0</span>
-            </div>
-            <div class="stat-box return-box">
-                <span class="label">Total Return</span>
-                <span class="value" id="return_total">0</span>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<footer id="footer">
-    <p>&copy; 2026 Kon Soft Tech</p>
-</footer>
-
-<script>
-const API_URL="https://script.google.com/macros/s/AKfycby4-vEvaelZLen4d3nixr7-Trn2LIlCUD7vlDxqFa0nq2OGLHyKadFKARFl1Fb7A40j/exec";
-
-function loadDashboard(){
-    fetch(API_URL+"?type=stats")
-    .then(res=>res.json())
-    .then(d=>{
-        document.getElementById('pickup_today').innerText = d.todayPickup || 0;
-        document.getElementById('pickup_yesterday').innerText = d.yesterdayPickup || 0;
-        document.getElementById('pickup_total').innerText = d.totalPickup || 0;
-
-        document.getElementById('return_today').innerText = d.todayReturn || 0;
-        document.getElementById('return_yesterday').innerText = d.yesterdayReturn || 0;
-        document.getElementById('return_total').innerText = d.totalReturn || 0;
-    })
-    .catch(err => console.error("Error:", err));
-}
-
-setInterval(loadDashboard, 3000);
-loadDashboard();
-
-/* PAGE NAVIGATION */
-function goPage(page, btn){
-    document.querySelectorAll('.navbar button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    window.location.href = page;
-}
-
-/* HEADER FOOTER SCROLL EFFECT */
-let lastScroll = 0;
-
-window.addEventListener("scroll", ()=>{
-    let currentScroll = window.pageYOffset;
-
-    if(currentScroll > lastScroll){
-        document.getElementById("header").style.top = "-70px";
-        document.getElementById("navbar").style.top = "-70px";
-        document.getElementById("footer").style.bottom = "-50px";
-    }else{
-        document.getElementById("header").style.top = "0";
-        document.getElementById("navbar").style.top = "60px";
-        document.getElementById("footer").style.bottom = "0";
-    }
-
-    lastScroll = currentScroll;
-});
-</script>
+<iframe name="frame" src="daily.html"></iframe>
 
 </body>
 </html>
