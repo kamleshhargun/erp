@@ -2,71 +2,72 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="style.css">
+
+<style>
+
+/* BODY */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial;
+}
+
+/* HEADER */
+.header {
+  background: #111;
+  color: #fff;
+  padding: 15px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* NAVBAR */
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  background: #222;
+}
+
+nav a {
+  flex: 1;
+  padding: 12px;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  border-right: 1px solid #333;
+}
+
+nav a:hover {
+  background: #007bff;
+}
+
+/* FRAME */
+iframe {
+  width: 100%;
+  height: calc(100vh - 110px);
+  border: none;
+}
+
+</style>
 </head>
 
 <body>
-<div id="loader">
-  <div class="loader-box">
-    <div class="k-loader" id="ktext">K</div>
-    <div>Loading...</div>
-  </div>
-</div>
-<header class="topbar">KONE ERP SYSTEM</header>
 
-<!-- DESKTOP MENU -->
-<nav class="desktop-nav">
-  <a onclick="go('dashboard.html')">Home</a>
-  <a onclick="go('daily.html')">Daily</a>
-  <a onclick="go('lookup.html')">Lookup</a>
-  <a onclick="go('tracking.html')">Tracking</a>
-  <a onclick="go('fabric.html')">Fabric</a>
-  <a onclick="go('cutting.html')">Cutting</a>
-  <a onclick="go('stitching.html')">Stitching</a>
-  <a onclick="go('finished.html')">Finished</a>
+<div class="header">KONE ERP SYSTEM</div>
+
+<nav>
+  <a href="dashboard.html" target="frame">Home</a>
+  <a href="daily.html" target="frame">Daily</a>
+  <a href="lookup.html" target="frame">Lookup</a>
+  <a href="tracking.html" target="frame">Tracking</a>
+  <a href="fabric.html" target="frame">Fabric</a>
+  <a href="cutting.html" target="frame">Cutting</a>
+  <a href="stitching.html" target="frame">Stitching</a>
+  <a href="finished.html" target="frame">Finished</a>
 </nav>
 
-<!-- MAIN -->
-<iframe id="frame" src="dashboard.html" onload="hideLoader()"></iframe>
-
-<!-- MOBILE MENU -->
-<div class="mobile-nav">
-  <button onclick="go('dashboard.html')">🏠<br>Home</button>
-  <button onclick="go('daily.html')">📦<br>Daily</button>
-  <button onclick="go('lookup.html')">📦<br>Lookup</button>
-  <button onclick="go('tracking.html')">📦<br>Tracking</button>
-  <button onclick="go('fabric.html')">🧵<br>Fabric</button>
-  <button onclick="go('cutting.html')">✂️<br>Cutting</button>
-  <button onclick="go('stitching.html')">🪡<br>Stitch</button>
-  <button onclick="go('finished.html')">🎯<br>Done</button>
-</div>
-
-<script>
-  // K..... animation
-let k = document.getElementById("ktext");
-let dots = 0;
-
-setInterval(()=>{
-  dots = (dots + 1) % 5;
-  k.innerText = "K" + ".".repeat(dots);
-}, 400);
-
-// Hide loader when page loaded
-window.addEventListener("load", ()=>{
-  document.getElementById("loader").style.display = "none";
-});
-  function go(page){
-  document.getElementById("loader").style.display="flex"; // show loader
-  document.getElementById("frame").src = page;
-}
-
-function hideLoader(){
-  document.getElementById("loader").style.display="none";
-}
-function go(page){
-  document.getElementById("frame").src = page;
-}
-</script>
+<!-- DEFAULT PAGE -->
+<iframe name="frame" src="dashboard.html"></iframe>
 
 </body>
 </html>
