@@ -1,28 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>KONE ERP System</title>
-  <link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<header>
-  <h2>ERP SYSTEM</h2>
-</header>
+<header class="topbar">KONE ERP SYSTEM</header>
 
-<nav>
-  <a href="dashboard.html" target="frame">Home</a>
-  <a href="daily.html" target="frame">Daily</a>
-  <a href="lookup.html" target="frame">Lookup</a>
-  <a href="tracking.html" target="frame">Tracking</a>
-  <a href="fabric.html" target="frame">Fabric</a>
-  <a href="cutting.html" target="frame">Cutting</a>
-  <a href="stitching.html" target="frame">Stitching</a>
-  <a href="finished.html" target="frame">Finished</a>
+<!-- DESKTOP MENU -->
+<nav class="desktop-nav">
+  <a onclick="go('dashboard.html')">Home</a>
+  <a onclick="go('daily.html')">Daily</a>
+  <a onclick="go('lookup.html')">Lookup</a>
+  <a onclick="go('tracking.html')">Tracking</a>
+  <a onclick="go('fabric.html')">Fabric</a>
+  <a onclick="go('cutting.html')">Cutting</a>
+  <a onclick="go('stitching.html')">Stitching</a>
+  <a onclick="go('finished.html')">Finished</a>
 </nav>
 
-<iframe name="frame" src="dashboard.html"></iframe>
+<!-- MAIN -->
+<iframe id="frame" src="dashboard.html"></iframe>
+
+<!-- MOBILE MENU -->
+<div class="mobile-nav">
+  <button onclick="go('dashboard.html')">🏠</button>
+  <button onclick="go('daily.html')">📦</button>
+  <button onclick="go('fabric.html')">🧵</button>
+  <button onclick="go('cutting.html')">✂️</button>
+  <button onclick="go('stitching.html')">🪡</button>
+  <button onclick="go('finished.html')">🎯</button>
+</div>
+
+<script>
+function go(page){
+  document.getElementById("frame").src = page;
+}
+</script>
 
 </body>
 </html>
