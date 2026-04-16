@@ -1,50 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Cutting</title>
-
-<style>
-/* SAME CSS */
-*{ box-sizing:border-box; }
-body{ margin:0; font-family:Inter; background:#f6f6f7; }
-.wrapper{ display:flex; }
-.sidebar{ width:240px; background:#fff; height:100vh; }
-.main{ flex:1; padding:20px; }
-.card{ background:#fff; padding:15px; }
-</style>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="container">
 
-<div class="wrapper">
+<h2>Cutting</h2>
 
-<div class="sidebar">
-<h2>ERP Panel</h2>
-<a href="index.html">Dashboard</a>
-<a href="fabric.html">Fabric</a>
-<a class="active">Cutting</a>
-</div>
+<button onclick="openCamera()">Scan</button>
+<button onclick="openManual()">Manual</button>
 
-<div class="main">
+<div id="scanArea" style="display:none;">
+  <div id="reader" style="width:300px;"></div>
 
-<h2>Cutting Module</h2>
+  <input id="orderId" placeholder="Order ID">
+  <input id="tracking" placeholder="Tracking">
 
-<div class="card">
-<select id="fabricSelect"></select>
-<input type="date" id="date">
-<button onclick="save()">Save</button>
-</div>
-
-</div>
+  <button onclick="sendData()">Submit</button>
+  <p id="msg"></p>
 </div>
 
 <script>
-let cutting=[];
+const API_URL="https://script.google.com/macros/s/AKfycbxnW9V63PUjacF2w-9tVAsaOb6vMrf6XuMowfttVTp_iVpgHgndNVgWueCKvcwV12FB/exec";
 
-function save(){
-alert("Saved Cutting");
+let html5Qr;
+
+function resetFields(){
+orderId.value=""; tracking.value=""; msg.innerText="";
+orderId.focus();
 }
+
+function sendData(){
+fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({
+mode:"cutting",
+order_id:orderId.value,
+tracking:tracking.value
+})
+})
+.then(()=>{ msg.innerText="Completed ✅"; resetFields(); });
+}
+
+function openManual(){ scanArea.style.display="block"; resetFields(); }
+
+function openCamera(){
+scanArea.style.display="block";
+resetFields();
+
+html5Qr=new Html5Qrcode("reader");
+html5Qr.start({facingMode:"environment"},{fps:10,qrbox:250},
+(txt)=>{
+if(!orderId.value){ orderId.value=txt; }
+else{
+tracking.value=txt;
+sendData();
+html5Qr.stop();
+}
+});
+}
+
+orderId.addEventListener("keypress",e=>{
+if(e.key==="Enter") tracking.focus();
+});
+
+tracking.addEventListener("keypress",e=>{
+if(e.key==="Enter") sendData();
+});
 </script>
 
 </body>
