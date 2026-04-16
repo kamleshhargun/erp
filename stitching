@@ -1,47 +1,104 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Stitching</title>
-
-<style>
-body{margin:0;font-family:Inter;background:#f6f6f7;}
-.wrapper{display:flex;}
-.sidebar{width:240px;background:#fff;height:100vh;}
-.main{flex:1;padding:20px;}
-.card{background:#fff;padding:15px;}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="container">
 
-<div class="wrapper">
+<h2>Stitching</h2>
 
-<div class="sidebar">
-<h2>ERP Panel</h2>
-<a href="index.html">Dashboard</a>
-<a href="fabric.html">Fabric</a>
-<a href="cutting.html">Cutting</a>
-<a class="active">Stitching</a>
-</div>
-
-<div class="main">
-
-<h2>Stitching Module</h2>
-
-<div class="card">
 <input type="date" id="date">
-<input id="labour" placeholder="Labour">
-<button onclick="save()">Save</button>
-</div>
+<input id="labour" placeholder="Labour Name">
 
-</div>
-</div>
+<div id="entryContainer"></div>
+
+<button onclick="addRow()">Add Item</button>
+<button onclick="saveData()">Save</button>
+<button onclick="exportCSV()">Export</button>
+
+<table border="1" width="100%">
+<thead>
+<tr>
+<th>Date</th>
+<th>Labour</th>
+<th>Total</th>
+<th>Delete</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+<div id="detailBox"></div>
 
 <script>
-function save(){
-alert("Saved Stitching");
+let stitchingData=JSON.parse(localStorage.getItem("stitchingData"))||[];
+
+date.valueAsDate=new Date();
+
+function addRow(){
+let d=document.createElement("div");
+d.innerHTML=`
+Item <input class="item">
+Qty <input class="qty" type="number">
+<button onclick="this.parentElement.remove()">❌</button>`;
+entryContainer.appendChild(d);
 }
+
+function saveData(){
+let rows=document.querySelectorAll("div");
+let entries=[]; let total=0;
+
+rows.forEach(r=>{
+let item=r.querySelector(".item")?.value;
+let qty=parseInt(r.querySelector(".qty")?.value)||0;
+if(item&&qty>0){ entries.push({item,qty}); total+=qty; }
+});
+
+stitchingData.push({
+date:date.value,
+labour:labour.value,
+entries,total
+});
+
+localStorage.setItem("stitchingData",JSON.stringify(stitchingData));
+location.reload();
+}
+
+function render(){
+let html="";
+stitchingData.forEach((s,i)=>{
+html+=`<tr>
+<td>${s.date}</td>
+<td>${s.labour}</td>
+<td>${s.total}</td>
+<td><button onclick="del(${i})">X</button></td>
+</tr>`;
+});
+tableBody.innerHTML=html;
+}
+
+function del(i){
+stitchingData.splice(i,1);
+localStorage.setItem("stitchingData",JSON.stringify(stitchingData));
+location.reload();
+}
+
+function exportCSV(){
+let csv="Date,Labour,Item,Qty\n";
+stitchingData.forEach(s=>{
+s.entries.forEach(e=>{
+csv+=`${s.date},${s.labour},${e.item},${e.qty}\n`;
+});
+});
+let blob=new Blob([csv]);
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="stitching.csv";
+a.click();
+}
+
+render();
 </script>
 
 </body>
