@@ -96,6 +96,7 @@ input{padding:11px;width:92%;margin:6px 0;border-radius:8px;border:1px solid #cc
 <script>
 
 let html5QrCode, orderId="", mode="Pickup", trackingData=null;
+let step = "order"; // 🔥 step control
 
 const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
@@ -109,33 +110,51 @@ else returnBtn.classList.add("active");
 resetFlow();
 }
 
-// SCAN ORDER
+// 🔥 START BUTTON CONTROL
 function startOrder(){
+
+// STEP 1 → ORDER SCAN
+if(step === "order"){
+
 html5QrCode=new Html5Qrcode("reader");
+
 html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:250},
 text=>{
 orderId=text;
 stopScan();
+
 status.innerText="Order Scanned ✅";
 
-// AUTO TRACKING
-setTimeout(startTracking,300);
+// 🔥 CHANGE BUTTON
+document.querySelector(".start").innerText="Next";
+
+step = "tracking";
 });
+
 }
 
-// SCAN TRACKING
-function startTracking(){
+// STEP 2 → TRACKING SCAN
+else if(step === "tracking"){
+
 html5QrCode=new Html5Qrcode("reader");
+
 html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:250},
 text=>{
 stopScan();
+
 beep.play();
+
+// 🔥 SEND DATA
 sendData(orderId,text);
+
 status.innerText="Done ✅";
 
-// RESET
-setTimeout(resetFlow,500);
+// 🔥 RESET FLOW AFTER SHORT DELAY
+setTimeout(resetFlow,800);
 });
+
+}
+
 }
 
 function stopScan(){
@@ -158,13 +177,18 @@ sendData(o,t);
 resetFlow();
 }
 
-// RESET
+// 🔥 RESET
 function resetFlow(){
 orderId="";
 manualOrder.value="";
 manualTracking.value="";
-manualBox.style.display="none"; // 🔥 fix
+manualBox.style.display="none";
+
 status.innerText="Ready...";
+
+// 🔥 RESET BUTTON + STEP
+document.querySelector(".start").innerText="Start";
+step = "order";
 }
 
 // SEND
@@ -210,7 +234,7 @@ return;
 
 trackingData=d;
 
-// 🔥 PREPAID CALC
+// PREPAID CALC
 let finalAmount = d.amount;
 if(d.payment==="Prepaid"){
 finalAmount = d.amount - (d.amount*0.025*1.18);
@@ -229,7 +253,6 @@ saveBtn.style.display="block";
 
 // SAVE
 function saveTracking(){
-
 fetch(API.post,{
 method:"POST",
 body:JSON.stringify({type:"saveTracking",...trackingData})
