@@ -9,43 +9,69 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', Arial;
+  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
 }
 
 /* HEADER */
 .header {
-  background: #111;
+  background: linear-gradient(135deg, #1f2937, #111827);
   color: #fff;
-  padding: 15px;
+  padding: 14px;
   text-align: center;
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
 }
 
 /* NAVBAR */
 nav {
   display: flex;
   flex-wrap: wrap;
-  background: #222;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
+/* NAV BUTTON */
 nav a {
   flex: 1;
   padding: 12px;
-  color: #fff;
   text-align: center;
   text-decoration: none;
-  border-right: 1px solid #333;
+  font-size: 13px;
+  color: #333;
+  border: 1px solid #eee;
+  transition: 0.3s;
 }
 
+/* HOVER */
 nav a:hover {
   background: #007bff;
+  color: #fff;
+}
+
+/* ACTIVE TAB */
+nav a.active {
+  background: #007bff;
+  color: #fff;
+  font-weight: bold;
 }
 
 /* FRAME */
 iframe {
   width: 100%;
-  height: calc(100vh - 110px);
+  height: calc(100vh - 105px);
   border: none;
+  background: transparent;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  nav a {
+    flex: 50%;
+    font-size: 12px;
+    padding: 10px;
+  }
 }
 
 </style>
@@ -53,22 +79,32 @@ iframe {
 
 <body>
 
-<div class="header">KONE ERP SYSTEM</div>
+<div class="header">📦 KONE ERP SYSTEM</div>
 
 <nav>
-  <a href="dashboard.html" target="frame">Home</a>
-  <a href="daily.html" target="frame">Daily</a>
-  <a href="lookup.html" target="frame">Lookup</a>
-  <a href="tracking.html" target="frame">Tracking</a>
-  <a href="return-request.html" target="frame">Return Request</a>
-  <a href="fabric.html" target="frame">Fabric</a>
-  <a href="cutting.html" target="frame">Cutting</a>
-  <a href="stitching.html" target="frame">Stitching</a>
-  <a href="finished.html" target="frame">Finished</a>
+  <a href="dashboard.html" target="frame" onclick="setActive(this)" class="active">Home</a>
+  <a href="daily.html" target="frame" onclick="setActive(this)">Daily</a>
+  <a href="lookup.html" target="frame" onclick="setActive(this)">Lookup</a>
+  <a href="tracking.html" target="frame" onclick="setActive(this)">Tracking</a>
+  <a href="return-request.html" target="frame" onclick="setActive(this)">Return</a>
+  <a href="fabric.html" target="frame" onclick="setActive(this)">Fabric</a>
+  <a href="cutting.html" target="frame" onclick="setActive(this)">Cutting</a>
+  <a href="stitching.html" target="frame" onclick="setActive(this)">Stitching</a>
+  <a href="finished.html" target="frame" onclick="setActive(this)">Finished</a>
 </nav>
 
-<!-- DEFAULT PAGE -->
+<!-- IFRAME -->
 <iframe name="frame" src="dashboard.html"></iframe>
+
+<script>
+
+// ACTIVE TAB HIGHLIGHT
+function setActive(el){
+  document.querySelectorAll("nav a").forEach(a=>a.classList.remove("active"));
+  el.classList.add("active");
+}
+
+</script>
 
 </body>
 </html>
