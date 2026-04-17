@@ -47,7 +47,20 @@ button {
 <div class="container">
 
 <h2>📦 Tracking</h2>
-
+<button onclick="refreshPage()" style="
+position:fixed;
+top:10px;
+right:10px;
+padding:8px 12px;
+background:#007bff;
+color:#fff;
+border:none;
+border-radius:6px;
+cursor:pointer;
+z-index:999;
+">
+🔄 Refresh
+</button>
 <div class="card">
 <input id="order" placeholder="Order ID">
 <input id="tracking" placeholder="Tracking">
@@ -138,6 +151,36 @@ alert("Saved ✅");
 }
 saveBtn.style.display="none";
 });
+}
+  // HTML REFRESH
+  function refreshPage(){
+
+  // ✅ Return Request Page
+  if (typeof loadData === "function") {
+    loadData();
+    console.log("Return data refreshed");
+  }
+
+  // ✅ Scanner Dashboard
+  if (typeof loadDashboard === "function") {
+    loadDashboard();
+    console.log("Dashboard refreshed");
+  }
+
+  // ✅ Tracking Page
+  if (typeof trackOrder === "function" && trackingData) {
+    trackOrder();
+    console.log("Tracking refreshed");
+  }
+
+  // ✅ Extra safety (agar kuch bhi na mile)
+  if (
+    typeof loadData !== "function" &&
+    typeof loadDashboard !== "function"
+  ){
+    console.log("Fallback reload");
+    location.reload(); // last option
+  }
 }
 </script>
 
