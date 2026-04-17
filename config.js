@@ -1,5 +1,5 @@
 // 🔥 SINGLE SOURCE API CONFIG
-const API_BASE = "https://script.google.com/macros/s/AKfycby2h41GQ7lBc1Qu1bm4jutZBEEE4Cck2Ro5iQgl7So2i8vFPXmoxeJEkl0m2QB6KtsyGw/exec";
+const API_BASE = "https://script.google.com/macros/s/AKfycbwkdafYPoII7QgrZmDMVutFIDFkoyZhQdV3PJS_24RweetdeBaaNa7ZDzN6AtGSmCQC4A/exec";
 
 // 🔥 ALL ENDPOINTS
 const API = {
