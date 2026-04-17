@@ -71,7 +71,7 @@ if(!order){
 let box=document.getElementById("result");
 box.innerHTML="Loading...";
 
-fetch(API_URL + "?type=lookup&order_id=" + encodeURIComponent(order))
+fetch(API.lookup(order))
 .then(r=>r.json())
 .then(data=>{
 
