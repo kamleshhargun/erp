@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Return Request</title>
+
+<style>
+body {
+  font-family: Arial;
+  background:#f6f6f7;
+  padding:10px;
+  margin:0;
+}
+
+h2 {
+  text-align:center;
+  font-size:18px;
+}
+
+/* Tabs */
+.tabs {
+  text-align:center;
+  margin-bottom:10px;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.tabs button {
+  padding:8px 10px;
+  margin:3px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  background:#e5e7eb;
+  font-size:12px;
+}
+
+.tabs button.active {
+  background:#111;
+  color:#fff;
+}
+
+/* Table */
+table {
+  width:100%;
+  border-collapse: collapse;
+  background:#fff;
+}
+
+th, td {
+  padding:8px;
+  border-bottom:1px solid #eee;
+  font-size:12px;
+  text-align:left;
+}
+
+th {
+  background:#f1f2f4;
+}
+
+/* Buttons */
+.btn {
+  padding:6px 10px;
+  margin:2px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:11px;
+}
+
+.pickup { background:#e3f1df; }
+.received { background:#dbeafe; }
+.ship { background:#ede9fe; }
+.done { background:#f3f4f6; }
+.undo { background:#fdecea; color:#c62828; }
+.delete { background:#000; color:#fff; }
+
+/* 🔥 MOBILE CARD VIEW */
+@media (max-width: 768px) {
+
+  table, thead, tbody, th, td, tr {
+    display:block;
+  }
+
+  thead {
+    display:none;
+  }
+
+  tr {
+    background:#fff;
+    margin-bottom:12px;
+    border-radius:10px;
+    padding:10px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.05);
+  }
+
+  td {
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+    border:none;
+    font-size:12px;
+  }
+
+  td::before {
+    content: attr(data-label);
+    font-weight:bold;
+    color:#555;
+  }
+
+  .btn {
+    margin-top:5px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>R&E Management System</h2>
+
+<div class="tabs" id="tabs">
+  <button data-tab="pending" class="active">Active</button>
+  <button data-tab="pickup_generated">Pickup</button>
+  <button data-tab="received">Received</button>
+  <button data-tab="exchange_shipped">Shipped</button>
+  <button data-tab="completed">Completed</button>
+  <button data-tab="deleted">Deleted</button>
+</div>
+
+<div class="table-container">
+  <table id="table"></table>
+</div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbwcCPMTmU2FC0QDC-erKTzoz2GEmQAlXm4hYgnHSPyGW3BVHR1RU3Nxf5wurv3-ideMAA/exec";
+let currentTab = "pending";
+
+// TAB CLICK
+document.querySelectorAll("#tabs button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    setTab(btn.dataset.tab);
+  });
+});
+
+function setTab(tab){
+  currentTab = tab;
+
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.remove("active"));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add("active");
+
+  loadData();
+}
+
+// DATE FORMAT
+function formatDate(dateStr){
+  if(!dateStr) return "";
+  let d = new Date(dateStr);
+  return d.toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+}
+
+// TIME FORMAT
+function formatTime(timeStr){
+  if(!timeStr) return "";
+  let d = new Date(timeStr);
+  return d.toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+}
+
+// LOAD DATA
+async function loadData(){
+  let res = await fetch(API);
+  let data = await res.json();
+
+  let html = `
+<thead>
+<tr>
+<th>Date</th>
+<th>Time</th>
+<th>ID</th>
+<th>Name</th>
+<th>Mobile</th>
+<th>Email</th>
+<th>Order</th>
+<th>Type</th>
+<th>Reason</th>
+<th>Status</th>
+<th>Duplicate</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+`;
+
+  data.forEach(item=>{
+
+    if(currentTab === "completed"){
+      if(item.status !== "completed" && item.status !== "refunded") return;
+    } else {
+      if(item.status !== currentTab) return;
+    }
+
+    html += `
+<tr>
+<td data-label="Date">${formatDate(item.date)}</td>
+<td data-label="Time">${formatTime(item.time)}</td>
+<td data-label="ID">${item.request_id}</td>
+<td data-label="Name">${item.name}</td>
+<td data-label="Mobile">${item.mobile}</td>
+<td data-label="Email">${item.email}</td>
+<td data-label="Order">${item.order_id}</td>
+<td data-label="Type">${item.type}</td>
+<td data-label="Reason">${item.reason}</td>
+<td data-label="Status">${item.status}</td>
+<td data-label="Duplicate">${item.duplicate}</td>
+<td data-label="Action">
+  ${nextButton(item)}
+  ${undoButton(item)}
+  ${deleteButton(item)}
+</td>
+</tr>`;
+  });
+
+  html += `</tbody>`; // ✅ IMPORTANT FIX
+
+  document.getElementById("table").innerHTML = html;
+}
+
+// NEXT ACTION
+function nextButton(item){
+
+  if(item.status === "pending"){
+    return `<button class="btn pickup" onclick="action('${item.request_id}','pickup_generated')">Pickup</button>`;
+  }
+
+  if(item.status === "pickup_generated"){
+    return `<button class="btn received" onclick="action('${item.request_id}','received')">Received</button>`;
+  }
+
+  if(item.status === "received"){
+    if(item.type === "exchange"){
+      return `<button class="btn ship" onclick="action('${item.request_id}','exchange_shipped')">Shipped</button>`;
+    }
+    if(item.type === "return"){
+      return `<button class="btn done" onclick="action('${item.request_id}','refunded')">Refund</button>`;
+    }
+  }
+
+  if(item.status === "exchange_shipped"){
+    return `<button class="btn done" onclick="action('${item.request_id}','completed')">Complete</button>`;
+  }
+
+  return "";
+}
+
+// DELETE
+function deleteButton(item){
+  if(item.status === "pending"){
+    return `<button class="btn delete" onclick="action('${item.request_id}','deleted')">Delete</button>`;
+  }
+  return "";
+}
+
+// UNDO
+function undoButton(item){
+
+  let prev = "";
+
+  if(item.status === "pickup_generated") prev = "pending";
+  else if(item.status === "received") prev = "pickup_generated";
+  else if(item.status === "exchange_shipped") prev = "received";
+  else if(item.status === "completed") prev = "exchange_shipped";
+  else if(item.status === "refunded") prev = "received";
+  else if(item.status === "deleted") prev = "pending";
+
+  if(prev === "") return "";
+
+  return `<button class="btn undo" onclick="action('${item.request_id}','${prev}')">Undo</button>`;
+}
+
+// ACTION
+function action(id, status){
+
+  let msg = (status === "deleted") 
+    ? "Delete this request?" 
+    : "Proceed to next step?";
+
+  if(!confirm(msg)) return;
+
+  updateStatus(id, status);
+
+  setTab(status);
+}
+
+// API
+async function updateStatus(id, status){
+  await fetch(API, {
+    method:"POST",
+    body: JSON.stringify({
+      action:"update",
+      request_id:id,
+      status:status
+    })
+  });
+}
+
+loadData();
+setInterval(loadData, 5000);
+
+</script>
+
+</body>
+</html>
