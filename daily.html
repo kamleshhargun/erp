@@ -135,17 +135,21 @@ let html5QrCode, orderId="", mode="Pickup";
 
 const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
-// MODE
+// ================= MODE =================
 function setMode(m){
 mode=m;
+
 pickupBtn.classList.remove("active");
 returnBtn.classList.remove("active");
 
 if(m==="Pickup") pickupBtn.classList.add("active");
 else returnBtn.classList.add("active");
+
+// 🔥 Reset flow on mode change
+resetFlow();
 }
 
-// ORDER SCAN
+// ================= ORDER SCAN =================
 function startOrder(){
 html5QrCode=new Html5Qrcode("reader");
 
@@ -155,11 +159,13 @@ orderId=text;
 stopScan();
 
 status.innerText="Order Scanned ✅";
-nextBtn.style.display="block";
+
+// 🔥 AUTO → tracking scan start
+setTimeout(()=>startTracking(),300);
 });
 }
 
-// TRACKING SCAN
+// ================= TRACKING SCAN =================
 function startTracking(){
 html5QrCode=new Html5Qrcode("reader");
 
@@ -171,21 +177,25 @@ beep.play();
 sendData(orderId,text);
 
 status.innerText="Done ✅";
-nextBtn.style.display="none";
-orderId="";
+
+// 🔥 RESET FLOW AFTER COMPLETE
+setTimeout(resetFlow,500);
 });
 }
 
-// STOP
+// ================= STOP =================
 function stopScan(){
 if(html5QrCode){
 html5QrCode.stop().catch(()=>{});
 }
 }
 
-// MANUAL
+// ================= MANUAL =================
 function openManual(){
 manualBox.style.display="block";
+
+// 🔥 AUTO FOCUS ORDER INPUT
+setTimeout(()=>manualOrder.focus(),100);
 }
 
 function submitManual(){
@@ -200,12 +210,27 @@ return;
 beep.play();
 sendData(o,t);
 
-manualOrder.value="";
-manualTracking.value="";
-manualBox.style.display="none";
+// 🔥 RESET AFTER SUBMIT
+resetFlow();
 }
 
-// SEND API
+// ================= RESET FLOW =================
+function resetFlow(){
+
+orderId="";
+
+manualOrder.value="";
+manualTracking.value="";
+
+manualBox.style.display="block";
+
+// 🔥 AUTO FOCUS BACK TO ORDER
+setTimeout(()=>manualOrder.focus(),100);
+
+status.innerText="Ready for next...";
+}
+
+// ================= SEND API =================
 function sendData(o,t){
 fetch(API_URL,{
 method:"POST",
@@ -218,7 +243,7 @@ tracking:t
 .then(()=>loadDashboard());
 }
 
-// DASHBOARD
+// ================= DASHBOARD =================
 function loadDashboard(){
 fetch(API_URL+"?type=stats")
 .then(r=>r.json())
@@ -228,17 +253,21 @@ return_today.innerText=d.todayReturn||0;
 });
 }
 
-// AUTO REFRESH
+// ================= AUTO REFRESH =================
 setInterval(loadDashboard,3000);
 loadDashboard();
 
-// ENTER FLOW (FAST)
+// ================= FAST ENTER FLOW =================
 manualOrder.addEventListener("keypress",e=>{
-if(e.key==="Enter") manualTracking.focus();
+if(e.key==="Enter"){
+manualTracking.focus();
+}
 });
 
 manualTracking.addEventListener("keypress",e=>{
-if(e.key==="Enter") submitManual();
+if(e.key==="Enter"){
+submitManual();
+}
 });
 
 </script>
