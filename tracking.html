@@ -79,7 +79,7 @@ if(!o||!t){alert("Enter both");return;}
 
 trackResult.innerHTML="Loading...";
 
-fetch(API_URL+`?type=track&order_id=${o}&tracking=${t}`)
+fetch(API.track(o,t))
 .then(r=>r.json())
 .then(d=>{
 
