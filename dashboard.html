@@ -124,6 +124,9 @@ fetch(API.stats)
   document.getElementById("pickup_total").innerText = d.totalPickup || 0;
   document.getElementById("return_total").innerText = d.totalReturn || 0;
 
+  saved_count.innerText=d.saved||0;
+pending_count.innerText=d.pending||0;
+
 })
 .catch(err => console.error(err));
 
