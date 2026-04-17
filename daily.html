@@ -2,95 +2,254 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 body {
   font-family: 'Segoe UI', Arial;
-  background: linear-gradient(135deg,#eef2f7,#dfe9f3);
+  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
+  text-align: center;
   margin: 0;
 }
-
-.container {
-  max-width: 420px;
-  margin: 20px auto;
-  padding: 10px;
-}
-
+.container { max-width: 420px; margin: auto; padding: 15px; }
 .card {
-  background:#fff;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:10px;
-  text-align:center;
+  background:#fff;padding:18px;border-radius:16px;margin-bottom:15px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
 }
-
-.big {
-  font-size:22px;
-  font-weight:bold;
-  color:#007bff;
+button {
+  padding:11px;margin:6px;border:none;border-radius:10px;
+  font-weight:600;cursor:pointer;
 }
+.start{background:#28a745;color:#fff;}
+.next{background:#007bff;color:#fff;}
+.stop{background:#dc3545;color:#fff;}
+.manual{background:#444;color:#fff;}
+.search{background:#6f42c1;color:#fff;}
+.mode-btn{padding:12px;margin:5px;background:#eee;}
+.mode-btn.active{background:#007bff;color:#fff;}
+input{padding:11px;width:92%;margin:6px 0;border-radius:8px;border:1px solid #ccc;}
+.stat{display:flex;justify-content:space-between;}
+.stat div{flex:1;background:#f8f9fa;margin:3px;padding:8px;border-radius:8px;}
+.stat span{font-size:18px;font-weight:bold;color:#007bff;}
+#manualBox{display:none;}
 </style>
 </head>
 
 <body>
-
 <div class="container">
 
-<h2 style="text-align:center;">📊 Daily Stats</h2>
+<h2>📦 Daily Scan</h2>
 
+<!-- DASHBOARD -->
 <div class="card">
-  <h3>Pickup Today</h3>
-  <div class="big" id="pickup_today">0</div>
+<h3>📊 Dashboard</h3>
+
+<div class="stat">
+<div>Today Pickup <span id="pickup_today">0</span></div>
+<div>Today Return <span id="return_today">0</span></div>
 </div>
 
-<div class="card">
-  <h3>Return Today</h3>
-  <div class="big" id="return_today">0</div>
+<div class="stat">
+<div>Yesterday Pickup <span id="pickup_yesterday">0</span></div>
+<div>Yesterday Return <span id="return_yesterday">0</span></div>
 </div>
 
-<div class="card">
-  <h3>Pickup Yesterday</h3>
-  <div class="big" id="pickup_yesterday">0</div>
+<div class="stat">
+<div>Total Pickup <span id="pickup_total">0</span></div>
+<div>Total Return <span id="return_total">0</span></div>
+</div>
 </div>
 
+<!-- MODE -->
 <div class="card">
-  <h3>Return Yesterday</h3>
-  <div class="big" id="return_yesterday">0</div>
+<button id="pickupBtn" class="mode-btn active" onclick="setMode('Pickup')">Pickup</button>
+<button id="returnBtn" class="mode-btn" onclick="setMode('Return')">Return</button>
+</div>
+
+<!-- CAMERA -->
+<div class="card">
+<div id="reader"></div>
+<button class="start" onclick="startOrder()">Start</button>
+<button class="stop" onclick="stopScan()">Stop</button>
+<button class="manual" onclick="openManual()">Manual</button>
+<div id="status">Ready</div>
+</div>
+
+<!-- MANUAL -->
+<div class="card" id="manualBox">
+<input id="manualOrder" placeholder="Order ID">
+<input id="manualTracking" placeholder="Tracking ID">
+<button onclick="submitManual()">Submit</button>
+</div>
+
+<!-- TRACKING -->
+<div class="card">
+<input id="trackOrderId" placeholder="Order ID">
+<input id="trackWaybill" placeholder="Waybill">
+<button onclick="trackOrder()">Track</button>
+<div id="trackResult"></div>
+<button class="start" id="saveBtn" onclick="saveTracking()" style="display:none;">Save</button>
 </div>
 
 </div>
 
 <script>
-
 const API_URL="https://script.google.com/macros/s/AKfycbwHRpW0V9Jc2uvhkBHum_AX6Asrk1U_7RyL48hdV6dP0VFj6i_eQeyqRu8ZBXu2Ub6I-g/exec";
 
-// 🔥 FIXED FUNCTION
-function loadDashboard(){
+let html5QrCode, orderId="", mode="Pickup", trackingData=null;
 
-fetch(API_URL + "?type=stats")
-.then(res => res.json())
-.then(d => {
+const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
-  // 🔥 SAFE UPDATE (IMPORTANT FIX)
-  document.getElementById("pickup_today").innerText = d.todayPickup || 0;
-  document.getElementById("return_today").innerText = d.todayReturn || 0;
-
-  document.getElementById("pickup_yesterday").innerText = d.yesterdayPickup || 0;
-  document.getElementById("return_yesterday").innerText = d.yesterdayReturn || 0;
-
-})
-.catch(err=>{
-  console.error("Stats error:", err);
-});
-
+// MODE
+function setMode(m){
+mode=m;
+pickupBtn.classList.remove("active");
+returnBtn.classList.remove("active");
+if(m==="Pickup") pickupBtn.classList.add("active");
+else returnBtn.classList.add("active");
+resetFlow();
 }
 
-// 🔄 AUTO REFRESH
-setInterval(loadDashboard, 5000);
+// SCAN ORDER
+function startOrder(){
+html5QrCode=new Html5Qrcode("reader");
+html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:250},
+text=>{
+orderId=text;
+stopScan();
+status.innerText="Order Scanned ✅";
 
-// 🚀 FIRST LOAD
+// AUTO TRACKING
+setTimeout(startTracking,300);
+});
+}
+
+// SCAN TRACKING
+function startTracking(){
+html5QrCode=new Html5Qrcode("reader");
+html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:250},
+text=>{
+stopScan();
+beep.play();
+sendData(orderId,text);
+status.innerText="Done ✅";
+
+// RESET
+setTimeout(resetFlow,500);
+});
+}
+
+function stopScan(){
+if(html5QrCode) html5QrCode.stop().catch(()=>{});
+}
+
+// MANUAL
+function openManual(){
+manualBox.style.display="block";
+setTimeout(()=>manualOrder.focus(),100);
+}
+
+function submitManual(){
+let o=manualOrder.value.trim();
+let t=manualTracking.value.trim();
+if(!o||!t){alert("Fill both");return;}
+
+beep.play();
+sendData(o,t);
+resetFlow();
+}
+
+// RESET
+function resetFlow(){
+orderId="";
+manualOrder.value="";
+manualTracking.value="";
+manualBox.style.display="block";
+setTimeout(()=>manualOrder.focus(),100);
+status.innerText="Ready...";
+}
+
+// SEND
+function sendData(o,t){
+fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({
+mode:mode.toLowerCase(),
+order_id:o,
+tracking:t
+})
+}).then(loadDashboard);
+}
+
+// DASHBOARD
+function loadDashboard(){
+fetch(API_URL+"?type=stats")
+.then(r=>r.json())
+.then(d=>{
+document.getElementById("pickup_today").innerText=d.todayPickup||0;
+document.getElementById("return_today").innerText=d.todayReturn||0;
+document.getElementById("pickup_yesterday").innerText=d.yesterdayPickup||0;
+document.getElementById("return_yesterday").innerText=d.yesterdayReturn||0;
+document.getElementById("pickup_total").innerText=d.totalPickup||0;
+document.getElementById("return_total").innerText=d.totalReturn||0;
+});
+}
+
+// TRACK
+function trackOrder(){
+let o=trackOrderId.value.trim();
+let t=trackWaybill.value.trim();
+
+fetch(API_URL+`?type=track&order_id=${o}&tracking=${t}`)
+.then(r=>r.json())
+.then(d=>{
+
+if(d.error){
+trackResult.innerHTML="❌ "+d.error;
+return;
+}
+
+trackingData=d;
+
+// 🔥 PREPAID CALC
+let finalAmount = d.amount;
+if(d.payment==="Prepaid"){
+finalAmount = d.amount - (d.amount*0.025*1.18);
+}
+
+trackResult.innerHTML=`
+Status: ${d.status}<br>
+Customer: ${d.customer}<br>
+Payment: ${d.payment}<br>
+Amount: ₹${finalAmount.toFixed(2)}
+`;
+
+saveBtn.style.display="block";
+});
+}
+
+// SAVE
+function saveTracking(){
+
+fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({type:"saveTracking",...trackingData})
+})
+.then(()=>alert("Saved ✅"));
+}
+
+// AUTO REFRESH
+setInterval(loadDashboard,3000);
 loadDashboard();
 
+// ENTER FLOW
+manualOrder.addEventListener("keypress",e=>{
+if(e.key==="Enter") manualTracking.focus();
+});
+
+manualTracking.addEventListener("keypress",e=>{
+if(e.key==="Enter") submitManual();
+});
 </script>
 
 </body>
