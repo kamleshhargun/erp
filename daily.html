@@ -39,7 +39,20 @@ input{padding:11px;width:92%;margin:6px 0;border-radius:8px;border:1px solid #cc
 <div class="container">
 
 <h2>📦 Daily Scan</h2>
-
+<button onclick="refreshPage()" style="
+position:fixed;
+top:10px;
+right:10px;
+padding:8px 12px;
+background:#007bff;
+color:#fff;
+border:none;
+border-radius:6px;
+cursor:pointer;
+z-index:999;
+">
+🔄 Refresh
+</button>
 <!-- DASHBOARD -->
 <div class="card">
 <h3>📊 Dashboard</h3>
@@ -263,7 +276,35 @@ if(e.key==="Enter") manualTracking.focus();
 manualTracking.addEventListener("keypress",e=>{
 if(e.key==="Enter") submitManual();
 });
+function refreshPage(){
+  // HTML REFRESH
+  // ✅ Return Request Page
+  if (typeof loadData === "function") {
+    loadData();
+    console.log("Return data refreshed");
+  }
 
+  // ✅ Scanner Dashboard
+  if (typeof loadDashboard === "function") {
+    loadDashboard();
+    console.log("Dashboard refreshed");
+  }
+
+  // ✅ Tracking Page
+  if (typeof trackOrder === "function" && trackingData) {
+    trackOrder();
+    console.log("Tracking refreshed");
+  }
+
+  // ✅ Extra safety (agar kuch bhi na mile)
+  if (
+    typeof loadData !== "function" &&
+    typeof loadDashboard !== "function"
+  ){
+    console.log("Fallback reload");
+    location.reload(); // last option
+  }
+}
 </script>
 
 </body>
