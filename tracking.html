@@ -120,7 +120,7 @@ saveBtn.style.display="block";
 
 function save(){
 
-fetch(API_URL,{
+fetch(API.post,{
 method:"POST",
 body:JSON.stringify({
 type:"saveTracking",
