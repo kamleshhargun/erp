@@ -107,11 +107,10 @@ function go(page){
 
 function loadDashboard(){
 
-fetch(API_URL + "?type=stats")
+fetch(API.stats)
 .then(res => res.json())
 .then(d => {
 
-  // 🔥 SAFE UPDATE
   document.getElementById("pickup_today").innerText = d.todayPickup || 0;
   document.getElementById("return_today").innerText = d.todayReturn || 0;
 
@@ -122,9 +121,7 @@ fetch(API_URL + "?type=stats")
   document.getElementById("return_total").innerText = d.totalReturn || 0;
 
 })
-.catch(err => {
-  console.error(err);
-});
+.catch(err => console.error(err));
 
 }
 
