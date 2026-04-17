@@ -136,7 +136,9 @@ th {
 
 <script>
 const API = "https://script.google.com/macros/s/AKfycbwHRpW0V9Jc2uvhkBHum_AX6Asrk1U_7RyL48hdV6dP0VFj6i_eQeyqRu8ZBXu2Ub6I-g/exec";
+
 let currentTab = "pending";
+let interval;
 
 // TAB CLICK
 document.querySelectorAll("#tabs button").forEach(btn=>{
@@ -158,6 +160,8 @@ function setTab(tab){
 function formatDate(dateStr){
   if(!dateStr) return "";
   let d = new Date(dateStr);
+  if(isNaN(d)) return dateStr;
+
   return d.toLocaleDateString("en-IN", {
     timeZone: "Asia/Kolkata",
     day: "2-digit",
@@ -170,6 +174,8 @@ function formatDate(dateStr){
 function formatTime(timeStr){
   if(!timeStr) return "";
   let d = new Date(timeStr);
+  if(isNaN(d)) return timeStr;
+
   return d.toLocaleTimeString("en-IN", {
     timeZone: "Asia/Kolkata",
     hour: "2-digit",
@@ -180,10 +186,16 @@ function formatTime(timeStr){
 
 // LOAD DATA
 async function loadData(){
-  let res = await fetch(API);
-  let data = await res.json();
+  try{
+    let res = await fetch(API);
+    let data = await res.json();
 
-  let html = `
+    if(!Array.isArray(data)){
+      document.getElementById("table").innerHTML = "❌ Invalid data";
+      return;
+    }
+
+    let html = `
 <thead>
 <tr>
 <th>Date</th>
@@ -203,41 +215,46 @@ async function loadData(){
 <tbody>
 `;
 
-  data.forEach(item=>{
+    data.forEach(item=>{
 
-    if(currentTab === "completed"){
-      if(item.status !== "completed" && item.status !== "refunded") return;
-    } else {
-      if(item.status !== currentTab) return;
-    }
+      // TAB FILTER
+      if(currentTab === "completed"){
+        if(item.status !== "completed" && item.status !== "refunded") return;
+      } else {
+        if(item.status !== currentTab) return;
+      }
 
-    html += `
+      html += `
 <tr>
 <td data-label="Date">${formatDate(item.date)}</td>
 <td data-label="Time">${formatTime(item.time)}</td>
-<td data-label="ID">${item.request_id}</td>
-<td data-label="Name">${item.name}</td>
-<td data-label="Mobile">${item.mobile}</td>
-<td data-label="Email">${item.email}</td>
-<td data-label="Order">${item.order_id}</td>
-<td data-label="Type">${item.type}</td>
-<td data-label="Reason">${item.reason}</td>
-<td data-label="Status">${item.status}</td>
-<td data-label="Duplicate">${item.duplicate}</td>
+<td data-label="ID">${item.request_id || ""}</td>
+<td data-label="Name">${item.name || ""}</td>
+<td data-label="Mobile">${item.mobile || ""}</td>
+<td data-label="Email">${item.email || ""}</td>
+<td data-label="Order">${item.order_id || ""}</td>
+<td data-label="Type">${item.type || ""}</td>
+<td data-label="Reason">${item.reason || ""}</td>
+<td data-label="Status">${item.status || ""}</td>
+<td data-label="Duplicate">${item.duplicate || ""}</td>
 <td data-label="Action">
   ${nextButton(item)}
   ${undoButton(item)}
   ${deleteButton(item)}
 </td>
 </tr>`;
-  });
+    });
 
-  html += `</tbody>`; // ✅ IMPORTANT FIX
+    html += `</tbody>`;
+    document.getElementById("table").innerHTML = html;
 
-  document.getElementById("table").innerHTML = html;
+  }catch(err){
+    console.error(err);
+    document.getElementById("table").innerHTML = "❌ Failed to load data";
+  }
 }
 
-// NEXT ACTION
+// NEXT ACTION BUTTON
 function nextButton(item){
 
   if(item.status === "pending"){
@@ -264,7 +281,7 @@ function nextButton(item){
   return "";
 }
 
-// DELETE
+// DELETE BUTTON
 function deleteButton(item){
   if(item.status === "pending"){
     return `<button class="btn delete" onclick="action('${item.request_id}','deleted')">Delete</button>`;
@@ -272,7 +289,7 @@ function deleteButton(item){
   return "";
 }
 
-// UNDO
+// UNDO BUTTON
 function undoButton(item){
 
   let prev = "";
@@ -289,8 +306,8 @@ function undoButton(item){
   return `<button class="btn undo" onclick="action('${item.request_id}','${prev}')">Undo</button>`;
 }
 
-// ACTION
-function action(id, status){
+// ACTION HANDLER
+async function action(id, status){
 
   let msg = (status === "deleted") 
     ? "Delete this request?" 
@@ -298,14 +315,25 @@ function action(id, status){
 
   if(!confirm(msg)) return;
 
-  updateStatus(id, status);
+  try{
+    clearInterval(interval);
 
-  setTab(status);
+    await updateStatus(id, status);
+
+    await loadData();
+
+    interval = setInterval(loadData, 5000);
+
+  }catch(err){
+    console.error(err);
+    alert("❌ Action failed");
+  }
 }
 
-// API
+// API UPDATE
 async function updateStatus(id, status){
-  await fetch(API, {
+
+  let res = await fetch(API, {
     method:"POST",
     body: JSON.stringify({
       action:"update",
@@ -313,10 +341,17 @@ async function updateStatus(id, status){
       status:status
     })
   });
+
+  let json = await res.json();
+
+  if(json.status !== "updated"){
+    alert("❌ Update failed");
+  }
 }
 
+// INIT
 loadData();
-setInterval(loadData, 5000);
+interval = setInterval(loadData, 5000);
 
 </script>
 
