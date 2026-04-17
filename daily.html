@@ -163,8 +163,7 @@ function resetFlow(){
 orderId="";
 manualOrder.value="";
 manualTracking.value="";
-manualBox.style.display="block";
-setTimeout(()=>manualOrder.focus(),100);
+manualBox.style.display="none"; // 🔥 fix
 status.innerText="Ready...";
 }
 
@@ -186,12 +185,12 @@ function loadDashboard(){
 fetch(API.stats)
 .then(r=>r.json())
 .then(d=>{
-document.getElementById("pickup_today").innerText=d.todayPickup||0;
-document.getElementById("return_today").innerText=d.todayReturn||0;
-document.getElementById("pickup_yesterday").innerText=d.yesterdayPickup||0;
-document.getElementById("return_yesterday").innerText=d.yesterdayReturn||0;
-document.getElementById("pickup_total").innerText=d.totalPickup||0;
-document.getElementById("return_total").innerText=d.totalReturn||0;
+pickup_today.innerText=d.todayPickup||0;
+return_today.innerText=d.todayReturn||0;
+pickup_yesterday.innerText=d.yesterdayPickup||0;
+return_yesterday.innerText=d.yesterdayReturn||0;
+pickup_total.innerText=d.totalPickup||0;
+return_total.innerText=d.totalReturn||0;
 });
 }
 
