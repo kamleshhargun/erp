@@ -59,6 +59,7 @@ button {
 </div>
 
 <script>
+
 const API_URL="https://script.google.com/macros/s/AKfycbwHRpW0V9Jc2uvhkBHum_AX6Asrk1U_7RyL48hdV6dP0VFj6i_eQeyqRu8ZBXu2Ub6I-g/exec";
 
 function search(){
@@ -73,7 +74,6 @@ if(!order){
 let box=document.getElementById("result");
 box.innerHTML="Loading...";
 
-// 🔥 IMPORTANT FIX → encodeURIComponent
 fetch(API_URL + "?type=lookup&order_id=" + encodeURIComponent(order))
 .then(r=>r.json())
 .then(data=>{
@@ -84,21 +84,41 @@ if(data.error){
   return;
 }
 
-// 🔥 EMPTY CHECK (safe)
-if(!Array.isArray(data) || data.length===0){
+// 🔥 FORCE ARRAY FIX
+if(!Array.isArray(data)){
+  data = [];
+}
+
+// 🔥 FILTER EXACT MATCH (IMPORTANT)
+let filtered = data.filter(i =>
+  String(i.order_id).trim().toLowerCase() === order.toLowerCase()
+);
+
+// अगर exact नहीं मिला तो partial दिखाओ
+if(filtered.length === 0){
+  filtered = data;
+}
+
+// 🔥 EMPTY CHECK
+if(filtered.length === 0){
   box.innerHTML="❌ No Data Found";
   return;
 }
 
+// 🔥 SORT (optional but clean)
+filtered.sort((a,b)=> a.sku.localeCompare(b.sku));
+
 let html="";
 let total=0;
 
-data.forEach(i=>{
+filtered.forEach(i=>{
+
   let qty = Number(i.qty) || 0;
   total += qty;
 
   html += `
-  <div>
+  <div style="padding:8px 0;">
+    <b>Order:</b> ${i.order_id}<br>
     <b>SKU:</b> ${i.sku}<br>
     <b>Product:</b> ${i.product}<br>
     <b>Qty:</b> ${qty}
@@ -107,7 +127,12 @@ data.forEach(i=>{
   `;
 });
 
-html += `<b>Total Qty: ${total}</b>`;
+// 🔥 TOTAL
+html += `
+<div style="padding:10px; font-weight:bold;">
+Total Qty: ${total}
+</div>
+`;
 
 box.innerHTML = html;
 
@@ -118,6 +143,7 @@ box.innerHTML = html;
 });
 
 }
+
 </script>
 
 </body>
