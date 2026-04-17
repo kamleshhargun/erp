@@ -2,89 +2,33 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-
-/* BODY */
 body {
   font-family: 'Segoe UI', Arial;
-  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
+  background: linear-gradient(135deg,#eef2f7,#dfe9f3);
   margin: 0;
 }
 
-/* CONTAINER */
 .container {
   max-width: 420px;
-  margin: 30px auto;
-  padding: 15px;
-}
-
-/* CARD */
-.card {
-  background: #fff;
-  padding: 16px;
-  border-radius: 14px;
-  margin-bottom: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-}
-
-/* BUTTON */
-button {
-  width: 100%;
-  padding: 11px;
-  margin-top: 8px;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-/* COLORS */
-.primary { background:#007bff; color:#fff; }
-.success { background:#28a745; color:#fff; }
-.dark { background:#444; color:#fff; }
-
-/* MODE BUTTON */
-.mode {
-  display: flex;
-  gap: 10px;
-}
-
-.mode button {
-  flex: 1;
-  background: #eee;
-}
-
-.mode .active {
-  background: #007bff;
-  color: #fff;
-}
-
-/* INPUT */
-input {
-  width: 100%;
+  margin: 20px auto;
   padding: 10px;
-  margin-top: 6px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
 }
 
-/* TEXT */
-h2 {
-  text-align: center;
+.card {
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:10px;
+  text-align:center;
 }
 
-#status {
-  margin-top: 10px;
-  font-weight: bold;
+.big {
+  font-size:22px;
+  font-weight:bold;
+  color:#007bff;
 }
-
-/* MOBILE */
-@media(max-width:768px){
-.container { margin: 10px auto; }
-}
-
 </style>
 </head>
 
@@ -92,37 +36,26 @@ h2 {
 
 <div class="container">
 
-<h2>📦 Daily Pickup & Return</h2>
+<h2 style="text-align:center;">📊 Daily Stats</h2>
 
-<!-- MODE -->
-<div class="card mode">
-<button id="pickupBtn" class="active" onclick="setMode('Pickup')">Pickup</button>
-<button id="returnBtn" onclick="setMode('Return')">Return</button>
-</div>
-
-<!-- SCANNER -->
 <div class="card">
-<div id="reader"></div>
-
-<button class="primary" onclick="startOrder()">Scan Order</button>
-<button class="success" id="nextBtn" onclick="startTracking()" style="display:none;">Scan Tracking</button>
-<button class="dark" onclick="openManual()">Manual Entry</button>
-
-<div id="status">Ready</div>
+  <h3>Pickup Today</h3>
+  <div class="big" id="pickup_today">0</div>
 </div>
 
-<!-- MANUAL -->
-<div class="card" id="manualBox" style="display:none;">
-<input id="manualOrder" placeholder="Order ID">
-<input id="manualTracking" placeholder="Tracking">
-<button class="success" onclick="submitManual()">Submit</button>
-</div>
-
-<!-- DASHBOARD -->
 <div class="card">
-<h3>📊 Today</h3>
-Pickup: <b id="pickup_today">0</b><br>
-Return: <b id="return_today">0</b>
+  <h3>Return Today</h3>
+  <div class="big" id="return_today">0</div>
+</div>
+
+<div class="card">
+  <h3>Pickup Yesterday</h3>
+  <div class="big" id="pickup_yesterday">0</div>
+</div>
+
+<div class="card">
+  <h3>Return Yesterday</h3>
+  <div class="big" id="return_yesterday">0</div>
 </div>
 
 </div>
@@ -131,144 +64,32 @@ Return: <b id="return_today">0</b>
 
 const API_URL="https://script.google.com/macros/s/AKfycbwHRpW0V9Jc2uvhkBHum_AX6Asrk1U_7RyL48hdV6dP0VFj6i_eQeyqRu8ZBXu2Ub6I-g/exec";
 
-let html5QrCode, orderId="", mode="Pickup";
-
-const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
-
-// ================= MODE =================
-function setMode(m){
-mode=m;
-
-pickupBtn.classList.remove("active");
-returnBtn.classList.remove("active");
-
-if(m==="Pickup") pickupBtn.classList.add("active");
-else returnBtn.classList.add("active");
-
-// 🔥 Reset flow on mode change
-resetFlow();
-}
-
-// ================= ORDER SCAN =================
-function startOrder(){
-html5QrCode=new Html5Qrcode("reader");
-
-html5QrCode.start({facingMode:"environment"},{fps:20,qrbox:250},
-text=>{
-orderId=text;
-stopScan();
-
-status.innerText="Order Scanned ✅";
-
-// 🔥 AUTO → tracking scan start
-setTimeout(()=>startTracking(),300);
-});
-}
-
-// ================= TRACKING SCAN =================
-function startTracking(){
-html5QrCode=new Html5Qrcode("reader");
-
-html5QrCode.start({facingMode:"environment"},{fps:20,qrbox:250},
-text=>{
-stopScan();
-beep.play();
-
-sendData(orderId,text);
-
-status.innerText="Done ✅";
-
-// 🔥 RESET FLOW AFTER COMPLETE
-setTimeout(resetFlow,500);
-});
-}
-
-// ================= STOP =================
-function stopScan(){
-if(html5QrCode){
-html5QrCode.stop().catch(()=>{});
-}
-}
-
-// ================= MANUAL =================
-function openManual(){
-manualBox.style.display="block";
-
-// 🔥 AUTO FOCUS ORDER INPUT
-setTimeout(()=>manualOrder.focus(),100);
-}
-
-function submitManual(){
-let o=manualOrder.value.trim();
-let t=manualTracking.value.trim();
-
-if(!o||!t){
-alert("Fill both fields");
-return;
-}
-
-beep.play();
-sendData(o,t);
-
-// 🔥 RESET AFTER SUBMIT
-resetFlow();
-}
-
-// ================= RESET FLOW =================
-function resetFlow(){
-
-orderId="";
-
-manualOrder.value="";
-manualTracking.value="";
-
-manualBox.style.display="block";
-
-// 🔥 AUTO FOCUS BACK TO ORDER
-setTimeout(()=>manualOrder.focus(),100);
-
-status.innerText="Ready for next...";
-}
-
-// ================= SEND API =================
-function sendData(o,t){
-fetch(API_URL,{
-method:"POST",
-body:JSON.stringify({
-mode:mode.toLowerCase(),
-order_id:o,
-tracking:t
-})
-})
-.then(()=>loadDashboard());
-}
-
-// ================= DASHBOARD =================
+// 🔥 FIXED FUNCTION
 function loadDashboard(){
-fetch(API_URL+"?type=stats")
-.then(r=>r.json())
-.then(d=>{
-pickup_today.innerText=d.todayPickup||0;
-return_today.innerText=d.todayReturn||0;
+
+fetch(API_URL + "?type=stats")
+.then(res => res.json())
+.then(d => {
+
+  // 🔥 SAFE UPDATE (IMPORTANT FIX)
+  document.getElementById("pickup_today").innerText = d.todayPickup || 0;
+  document.getElementById("return_today").innerText = d.todayReturn || 0;
+
+  document.getElementById("pickup_yesterday").innerText = d.yesterdayPickup || 0;
+  document.getElementById("return_yesterday").innerText = d.yesterdayReturn || 0;
+
+})
+.catch(err=>{
+  console.error("Stats error:", err);
 });
+
 }
 
-// ================= AUTO REFRESH =================
-setInterval(loadDashboard,3000);
+// 🔄 AUTO REFRESH
+setInterval(loadDashboard, 5000);
+
+// 🚀 FIRST LOAD
 loadDashboard();
-
-// ================= FAST ENTER FLOW =================
-manualOrder.addEventListener("keypress",e=>{
-if(e.key==="Enter"){
-manualTracking.focus();
-}
-});
-
-manualTracking.addEventListener("keypress",e=>{
-if(e.key==="Enter"){
-submitManual();
-}
-});
 
 </script>
 
