@@ -131,26 +131,26 @@ saveBtn.style.display="block";
 });
 }
 
-function save(){
+function saveTracking(){
 
-fetch(API.post,{
-method:"POST",
-body:JSON.stringify({
-type:"saveTracking",
-...data,
-settled_amount: settledAmount.value,
-settled_date: settledDate.value
-})
-})
-.then(r=>r.json())
-.then(res=>{
-if(res.duplicate){
-alert("⚠️ Duplicate Entry Not Saved");
-}else{
-alert("Saved ✅");
-}
-saveBtn.style.display="none";
-});
+  fetch(API.post,{
+    method:"POST",
+    body:JSON.stringify({
+      type:"saveTracking",
+      ...trackingData
+    })
+  })
+  .then(()=>{
+    alert("Saved ✅");
+
+    // 🔥 RESET ALL FIELDS
+    trackOrderId.value = "";
+    trackWaybill.value = "";
+    trackResult.innerHTML = "";
+    saveBtn.style.display = "none";
+
+    trackingData = null;
+  });
 }
   // HTML REFRESH
   function refreshPage(){
@@ -181,6 +181,64 @@ saveBtn.style.display="none";
     console.log("Fallback reload");
     location.reload(); // last option
   }
+}
+  async function trackOrder(){
+
+  let o = trackOrderId.value.trim();
+  let t = trackWaybill.value.trim();
+
+  if(!o || !t){
+    alert("Enter Order & Waybill");
+    return;
+  }
+
+  // 🔥 1. GET TRACKING (Delhivery)
+  let trackRes = await fetch(API.track(o,t));
+  let trackData = await trackRes.json();
+
+  if(trackData.error){
+    trackResult.innerHTML = "❌ " + trackData.error;
+    return;
+  }
+
+  // 🔥 2. GET LOOKUP DATA (Sheet2)
+  let lookupRes = await fetch(API.lookup(o));
+  let items = await lookupRes.json();
+
+  let total = 0;
+  let payment = "Prepaid";
+
+  items.forEach(i=>{
+    total += Number(i.amount || 0);
+
+    if(String(i.payment).toLowerCase() === "cod"){
+      payment = "COD";
+    }
+  });
+
+  // 🔥 3. CALCULATION
+  let finalAmount = total;
+
+  if(payment === "Prepaid"){
+    finalAmount = total - (total * 0.025 * 1.18);
+  }
+
+  // 🔥 SAVE DATA READY
+  trackingData = {
+    ...trackData,
+    amount: finalAmount,
+    payment: payment
+  };
+
+  // 🔥 UI SHOW
+  trackResult.innerHTML = `
+    Status: ${trackData.status}<br>
+    Customer: ${trackData.customer}<br>
+    Payment: ${payment}<br>
+    Amount: ₹${finalAmount.toFixed(2)}
+  `;
+
+  saveBtn.style.display = "block";
 }
 </script>
 
