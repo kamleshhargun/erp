@@ -92,9 +92,8 @@ input{padding:11px;width:92%;margin:6px 0;border-radius:8px;border:1px solid #cc
 </div>
 
 </div>
-
+<script src="config.js"></script>
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycbwMkd9ti1ZXErhacqVPcgqtRpzBxqOlG89UZ6YBPCXHpRyZUorbyNuyBQ_NwrMg7wpR3A/exec";
 
 let html5QrCode, orderId="", mode="Pickup", trackingData=null;
 
@@ -171,7 +170,7 @@ status.innerText="Ready...";
 
 // SEND
 function sendData(o,t){
-fetch(API_URL,{
+fetch(API.post,{
 method:"POST",
 body:JSON.stringify({
 mode:mode.toLowerCase(),
@@ -183,7 +182,7 @@ tracking:t
 
 // DASHBOARD
 function loadDashboard(){
-fetch(API_URL+"?type=stats")
+fetch(API.stats)
 .then(r=>r.json())
 .then(d=>{
 document.getElementById("pickup_today").innerText=d.todayPickup||0;
@@ -200,7 +199,7 @@ function trackOrder(){
 let o=trackOrderId.value.trim();
 let t=trackWaybill.value.trim();
 
-fetch(API_URL+`?type=track&order_id=${o}&tracking=${t}`)
+fetch(API.track(o,t))
 .then(r=>r.json())
 .then(d=>{
 
@@ -231,7 +230,7 @@ saveBtn.style.display="block";
 // SAVE
 function saveTracking(){
 
-fetch(API_URL,{
+fetch(API.post,{
 method:"POST",
 body:JSON.stringify({type:"saveTracking",...trackingData})
 })
@@ -250,6 +249,7 @@ if(e.key==="Enter") manualTracking.focus();
 manualTracking.addEventListener("keypress",e=>{
 if(e.key==="Enter") submitManual();
 });
+
 </script>
 
 </body>
