@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Cutting</title>
+</head>
+
+<body>
+
+<h2>Cutting</h2>
+
+<select id="fabric"></select>
+
+<input list="skuList" id="sku">
+<datalist id="skuList"></datalist>
+
+<input id="qty">
+
+<button onclick="save()">Save</button>
+
+<script src="config.js"></script>
+
+<script>
+let fabrics=[], skus=[];
+
+async function load(){
+let f = await fetch(API_BASE+"?type=ledger&category=fabric").then(r=>r.json());
+let s = await fetch(API_BASE+"?type=ledger&category=sku").then(r=>r.json());
+
+fabrics = f.map(x=>x.name);
+skus = s.map(x=>x.name);
+
+fabric.innerHTML = fabrics.map(x=>`<option>${x}</option>`).join("");
+skuList.innerHTML = skus.map(x=>`<option value="${x}">`).join("");
+}
+
+function save(){
+if(!skus.includes(sku.value)) return alert("Invalid SKU");
+alert("Saved");
+}
+
+load();
+</script>
+
+</body>
+</html>

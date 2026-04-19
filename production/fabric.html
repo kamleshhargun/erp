@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Fabric</title>
+
+<style>
+body{font-family:Arial;background:#f4f6f9;padding:20px;}
+.row{display:flex;gap:10px;margin-bottom:5px;}
+input{padding:8px;margin:5px;}
+button{padding:8px;border:none;color:#fff;}
+.add{background:green;}
+.save{background:black;}
+</style>
+
+</head>
+
+<body>
+
+<h2>Fabric Purchase</h2>
+
+<input type="date" id="date">
+<input list="partyList" id="party" placeholder="Party">
+<datalist id="partyList"></datalist>
+
+<div id="rows"></div>
+<button class="add" onclick="addRow()">+ Add Fabric</button>
+
+<br><br>
+<input id="gst" value="5">
+
+<br><br>
+<button class="save" onclick="save()">Save</button>
+
+<script src="config.js"></script>
+
+<script>
+
+let parties=[], fabrics=[];
+
+async function loadLedger(){
+let p = await fetch(API_BASE+"?type=ledger&category=party").then(r=>r.json());
+let f = await fetch(API_BASE+"?type=ledger&category=fabric").then(r=>r.json());
+
+parties = p.map(x=>x.name);
+fabrics = f.map(x=>x.name);
+
+partyList.innerHTML = parties.map(p=>`<option value="${p}">`).join("");
+}
+
+function valid(v,list){ return list.includes(v); }
+
+function addRow(){
+rows.innerHTML += `
+<div class="row">
+<input list="fabricList" class="f">
+<input class="m" type="number" placeholder="Meter">
+<input class="r" type="number" placeholder="Rate">
+</div>`;
+}
+
+function save(){
+
+let ok=true;
+
+document.querySelectorAll(".row").forEach(r=>{
+let f=r.querySelector(".f").value;
+if(!valid(f,fabrics)){
+alert("Invalid Fabric: "+f);
+ok=false;
+}
+});
+
+if(!ok) return;
+
+alert("Saved ✔");
+}
+
+window.onload=()=>{
+date.value=new Date().toISOString().split("T")[0];
+addRow();
+loadLedger();
+};
+
+</script>
+
+</body>
+</html>

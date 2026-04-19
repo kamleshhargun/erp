@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head><title>Stitching</title></head>
+
+<body>
+
+<h2>Stitching</h2>
+
+<select id="labour"></select>
+<input list="skuList" id="sku">
+<datalist id="skuList"></datalist>
+<input id="qty">
+
+<button onclick="save()">Save</button>
+
+<script src="config.js"></script>
+
+<script>
+let labours=[], skus=[];
+
+async function load(){
+let l = await fetch(API_BASE+"?type=ledger&category=labour").then(r=>r.json());
+let s = await fetch(API_BASE+"?type=ledger&category=sku").then(r=>r.json());
+
+labours = l.map(x=>x.name);
+skus = s.map(x=>x.name);
+
+labour.innerHTML = labours.map(x=>`<option>${x}</option>`).join("");
+skuList.innerHTML = skus.map(x=>`<option value="${x}">`).join("");
+}
+
+function save(){
+if(!skus.includes(sku.value)) return alert("Invalid SKU");
+alert("Saved");
+}
+
+load();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Ledger</title>
+
+<style>
+body{font-family:Arial;background:#f4f6f9;padding:20px;}
+.box{background:#fff;padding:15px;border-radius:10px;}
+input,select{padding:8px;margin:5px;}
+button{padding:6px 10px;background:black;color:#fff;border:none;}
+</style>
+
+</head>
+
+<body>
+
+<h2>Ledger</h2>
+
+<input id="val">
+<select id="type">
+<option value="party">Party</option>
+<option value="fabric">Fabric</option>
+<option value="sku">SKU</option>
+<option value="labour">Labour</option>
+</select>
+
+<button onclick="add()">Add</button>
+
+<div id="list"></div>
+
+<script src="config.js"></script>
+
+<script>
+async function load(){
+let res = await fetch(API_BASE+"?type=ledger&category="+type.value);
+let data = await res.json();
+
+list.innerHTML="";
+data.forEach(d=>{
+list.innerHTML += `<p>${d.name}</p>`;
+});
+}
+
+async function add(){
+await fetch(API_BASE,{
+method:"POST",
+body:JSON.stringify({
+type:"ledger",
+action:"add",
+category:type.value,
+name:val.value
+})
+});
+val.value="";
+load();
+}
+
+type.onchange=load;
+load();
+</script>
+
+</body>
+</html>
