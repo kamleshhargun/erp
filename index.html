@@ -1,108 +1,287 @@
 <!DOCTYPE html>
+
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI';
+}
 
-/* BODY */
-body {
-  margin: 0;
-  font-family: 'Segoe UI', Arial;
-  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
+/* ===== LAYOUT ===== */
+body{
+  display:flex;
+  height:100vh;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:70px;
+  background:#0b0f2f;
+  color:#fff;
+  transition:0.3s;
+  overflow:hidden;
+}
+
+.sidebar.open{
+  width:220px;
+}
+
+/* LOGO */
+.logo{
+  text-align:center;
+  padding:15px;
+  cursor:pointer;
+}
+
+.logo img{
+  width:40px;
+  transition:0.3s;
+}
+
+.logo:hover img{
+  transform:scale(1.1);
+}
+
+/* MENU */
+.menu{
+  margin-top:20px;
+}
+
+.menu a{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  margin:5px;
+  color:#fff;
+  text-decoration:none;
+  border-radius:8px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+/* ICON */
+.menu a span.icon{
+  font-size:18px;
+  min-width:30px;
+  text-align:center;
+}
+
+/* TEXT */
+.menu a span.text{
+  display:none;
+}
+
+.sidebar.open .menu a span.text{
+  display:inline;
+}
+
+/* ACTIVE */
+.menu a.active,
+.menu a:hover{
+  background:#007bff;
+}
+
+/* ===== MAIN ===== */
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
 }
 
 /* HEADER */
-.header {
-  background: linear-gradient(135deg, #1f2937, #111827);
-  color: #fff;
-  padding: 14px;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+.header{
+  background:#fff;
+  padding:10px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* NAVBAR */
-nav {
-  display: flex;
-  flex-wrap: wrap;
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+/* DASHBOARD */
+.dashboard{
+  padding:20px;
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+  gap:15px;
 }
 
-/* NAV BUTTON */
-nav a {
-  flex: 1;
-  padding: 12px;
-  text-align: center;
-  text-decoration: none;
-  font-size: 13px;
-  color: #333;
-  border: 1px solid #eee;
-  transition: 0.3s;
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+  text-align:center;
 }
 
-/* HOVER */
-nav a:hover {
-  background: #007bff;
-  color: #fff;
+.big{
+  font-size:24px;
+  font-weight:bold;
+  color:#007bff;
 }
 
-/* ACTIVE TAB */
-nav a.active {
-  background: #007bff;
-  color: #fff;
-  font-weight: bold;
-}
-
-/* FRAME */
-iframe {
-  width: 100%;
-  height: calc(100vh - 105px);
-  border: none;
-  background: transparent;
+/* IFRAME */
+iframe{
+  flex:1;
+  width:100%;
+  border:none;
+  display:none;
 }
 
 /* MOBILE */
-@media (max-width: 768px) {
-  nav a {
-    flex: 50%;
-    font-size: 12px;
-    padding: 10px;
+@media(max-width:768px){
+  .sidebar.open{
+    width:180px;
   }
 }
-
 </style>
+
 </head>
 
 <body>
 
-<div class="header">📦 KONE ERP SYSTEM</div>
+<!-- ===== SIDEBAR ===== -->
 
-<nav>
-  <a href="dashboard.html" target="frame" onclick="setActive(this)" class="active">Home</a>
-  <a href="daily.html" target="frame" onclick="setActive(this)">Daily</a>
-  <a href="lookup.html" target="frame" onclick="setActive(this)">Lookup</a>
-  <a href="tracking.html" target="frame" onclick="setActive(this)">Tracking</a>
-  <a href="return-request.html" target="frame" onclick="setActive(this)">Return</a>
-  <a href="fabric.html" target="frame" onclick="setActive(this)">Fabric</a>
-  <a href="cutting.html" target="frame" onclick="setActive(this)">Cutting</a>
-  <a href="stitching.html" target="frame" onclick="setActive(this)">Stitching</a>
-  <a href="finished.html" target="frame" onclick="setActive(this)">Finished</a>
-</nav>
+<div class="sidebar" id="sidebar">
 
-<!-- IFRAME -->
-<iframe name="frame" src="dashboard.html"></iframe>
+  <!-- LOGO -->
+
+  <div class="logo" onclick="toggleMenu()">
+    <img src="assets/fevi.png">
+  </div>
+
+  <!-- MENU -->
+
+  <div class="menu">
+
+
+<a class="active" onclick="showHome(this)">
+  <span class="icon">🏠</span>
+  <span class="text">Home</span>
+</a>
+
+<a onclick="openPage('daily.html', this)">
+  <span class="icon">📦</span>
+  <span class="text">Daily Scan</span>
+</a>
+
+<a onclick="openPage('production/production.html', this)">
+  <span class="icon">🏭</span>
+  <span class="text">Production</span>
+</a>
+
+<a onclick="openPage('return-request.html', this)">
+  <span class="icon">↩️</span>
+  <span class="text">Return Request</span>
+</a>
+
+
+  </div>
+
+</div>
+
+<!-- ===== MAIN ===== -->
+
+<div class="main">
+
+  <div class="header">
+    <h3 id="title">Dashboard</h3>
+  </div>
+
+  <!-- DASHBOARD -->
+
+  <div id="home" class="dashboard">
+
+
+<div class="card">
+  <h3>📦 Today Pickup</h3>
+  <div class="big" id="pickup_today">0</div>
+</div>
+
+<div class="card">
+  <h3>🔁 Today Return</h3>
+  <div class="big" id="return_today">0</div>
+</div>
+
+<div class="card">
+  <h3>📊 Total Pickup</h3>
+  <div class="big" id="pickup_total">0</div>
+</div>
+
+<div class="card">
+  <h3>📊 Total Return</h3>
+  <div class="big" id="return_total">0</div>
+</div>
+
+
+  </div>
+
+  <!-- IFRAME -->
+
+  <iframe id="frame"></iframe>
+
+</div>
+
+<script src="config.js"></script>
 
 <script>
 
-// ACTIVE TAB HIGHLIGHT
-function setActive(el){
-  document.querySelectorAll("nav a").forEach(a=>a.classList.remove("active"));
-  el.classList.add("active");
+// ===== SIDEBAR TOGGLE =====
+function toggleMenu(){
+  document.getElementById("sidebar").classList.toggle("open");
 }
+
+// ===== OPEN PAGE =====
+function openPage(page, el){
+
+  document.getElementById("frame").style.display = "block";
+  document.getElementById("home").style.display = "none";
+
+  document.getElementById("frame").src = page;
+
+  document.querySelectorAll(".menu a").forEach(a=>a.classList.remove("active"));
+  el.classList.add("active");
+
+  document.getElementById("title").innerText = el.querySelector(".text").innerText;
+
+  document.getElementById("sidebar").classList.remove("open");
+}
+
+// ===== HOME =====
+function showHome(el){
+
+  document.getElementById("frame").style.display = "none";
+  document.getElementById("home").style.display = "grid";
+
+  document.querySelectorAll(".menu a").forEach(a=>a.classList.remove("active"));
+  el.classList.add("active");
+
+  document.getElementById("title").innerText = "Dashboard";
+
+  document.getElementById("sidebar").classList.remove("open");
+}
+
+// ===== LOAD DASHBOARD =====
+async function loadDashboard(){
+  try{
+    let res = await fetch(API.stats);
+    let d = await res.json();
+
+    document.getElementById("pickup_today").innerText = d.todayPickup || 0;
+    document.getElementById("return_today").innerText = d.todayReturn || 0;
+    document.getElementById("pickup_total").innerText = d.totalPickup || 0;
+    document.getElementById("return_total").innerText = d.totalReturn || 0;
+
+  }catch(err){
+    console.error("Dashboard Error:", err);
+  }
+}
+
+// INIT
+loadDashboard();
 
 </script>
 
