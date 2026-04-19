@@ -5,55 +5,102 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-body {
-  font-family: 'Segoe UI', Arial;
-  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
-  text-align: center;
-  margin: 0;
+body{
+  font-family:'Segoe UI', Arial;
+  background:linear-gradient(135deg,#eef2f7,#dfe9f3);
+  margin:0;
+  text-align:center;
 }
-.container { max-width: 420px; margin: auto; padding: 15px; }
-.card {
-  background:#fff;padding:18px;border-radius:16px;margin-bottom:15px;
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:15px;
+}
+.card{
+  background:#fff;
+  padding:15px;
+  border-radius:14px;
+  margin-bottom:12px;
   box-shadow:0 6px 18px rgba(0,0,0,0.08);
 }
-button {
-  padding:11px;margin:6px;border:none;border-radius:10px;
-  font-weight:600;cursor:pointer;
+button{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border:none;
+  border-radius:10px;
+  font-weight:600;
+  cursor:pointer;
 }
 .start{background:#28a745;color:#fff;}
-.next{background:#007bff;color:#fff;}
 .stop{background:#dc3545;color:#fff;}
 .manual{background:#444;color:#fff;}
 .search{background:#6f42c1;color:#fff;}
-.mode-btn{padding:12px;margin:5px;background:#eee;}
+.mode-btn{background:#eee;}
 .mode-btn.active{background:#007bff;color:#fff;}
-input{padding:11px;width:92%;margin:6px 0;border-radius:8px;border:1px solid #ccc;}
+input{
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
 .stat{display:flex;justify-content:space-between;}
-.stat div{flex:1;background:#f8f9fa;margin:3px;padding:8px;border-radius:8px;}
-.stat span{font-size:18px;font-weight:bold;color:#007bff;}
-#manualBox{display:none;}
+.stat div{
+  flex:1;
+  background:#f8f9fa;
+  margin:3px;
+  padding:8px;
+  border-radius:8px;
+}
+.stat span{font-weight:bold;color:#007bff;}
+#manualBox,#extraBox,#saveBtn{display:none;}
+.toggle-group{
+  display:flex;
+  gap:15px;
+  margin-top:15px;
+  margin-bottom:15px;
+}
+
+/* DEFAULT (UNSELECTED) */
+.toggle-btn{
+  flex:1;
+  padding:12px;
+  text-align:center;
+  background:#e0e0e0;
+  border-radius:10px; /* square */
+  font-weight:bold;
+  cursor:pointer;
+
+  transition:all 0.35s ease;
+  transform:scale(0.95);
+}
+
+/* HOVER EFFECT */
+.toggle-btn:hover{
+  transform:scale(1);
+}
+
+/* ACTIVE (SELECTED) */
+.toggle-btn.active{
+  background:#007bff;
+  color:#fff;
+  border-radius:50px; /* round */
+  transform:scale(1.05);
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
 </style>
 </head>
 
 <body>
+
 <div class="container">
 
-<h2>📦 Daily Scan</h2>
-<button onclick="refreshPage()" style="
-position:fixed;
-top:10px;
-right:10px;
-padding:8px 12px;
-background:#007bff;
-color:#fff;
-border:none;
-border-radius:6px;
-cursor:pointer;
-z-index:999;
-">
-🔄 Refresh
-</button>
-<!-- DASHBOARD -->
+<h2>📦 Daily System</h2>
+
+<button onclick="refreshPage()">🔄 Refresh</button>
+
+<!-- ===== DASHBOARD ===== -->
 <div class="card">
 <h3>📊 Dashboard</h3>
 
@@ -68,92 +115,129 @@ z-index:999;
 </div>
 
 <div class="stat">
-<div>Total Pickup <span id="pickup_total">0</span></div>
-<div>Total Return <span id="return_total">0</span></div>
+<div>Total Pickup<span id="pickup_total">0</span></div>
+<div>Total Return<span id="return_total">0</span></div>
 </div>
 </div>
 
-<!-- MODE -->
-<div class="card">
-<button id="pickupBtn" class="mode-btn active" onclick="setMode('Pickup')">Pickup</button>
-<button id="returnBtn" class="mode-btn" onclick="setMode('Return')">Return</button>
+<!-- ===== MODE ===== -->
+<div class="toggle-group">
+
+  <div id="pickupBtn" class="toggle-btn active" onclick="selectMode('pickup')">
+    Pickup
+  </div>
+
+  <div id="returnBtn" class="toggle-btn" onclick="selectMode('return')">
+    Return
+  </div>
+
 </div>
 
-<!-- CAMERA -->
+<!-- 🔊 SOUND -->
+<audio id="clickSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+
+<!-- ===== SCANNER ===== -->
 <div class="card">
 <div id="reader"></div>
+
 <button class="start" onclick="startOrder()">Start</button>
 <button class="stop" onclick="stopScan()">Stop</button>
 <button class="manual" onclick="openManual()">Manual</button>
-<div id="status">Ready</div>
+
+<div id="status">Ready...</div>
 </div>
 
-<!-- MANUAL -->
+<!-- ===== MANUAL ===== -->
 <div class="card" id="manualBox">
 <input id="manualOrder" placeholder="Order ID">
 <input id="manualTracking" placeholder="Tracking ID">
 <button onclick="submitManual()">Submit</button>
 </div>
 
+<!-- ===== LOOKUP ===== -->
+<div class="card">
+<h3>🔍 Lookup</h3>
+<input id="lookupOrder" placeholder="Order ID">
+<button class="search" onclick="lookup()">Search</button>
+<div id="lookupResult">Enter Order ID</div>
 </div>
+
+<!-- ===== TRACKING ===== -->
+<div class="card">
+<h3>📦 Tracking</h3>
+
+<input id="trackOrderId" placeholder="Order ID">
+<input id="trackWaybill" placeholder="Tracking">
+
+<button class="search" onclick="trackOrder()">Track</button>
+
+<div id="trackResult"></div>
+
+<div id="extraBox">
+<label>Settled Amount</label>
+<input id="settledAmount" readonly>
+
+<label>Date</label>
+<input type="date" id="settledDate">
+</div>
+
+<button id="saveBtn" class="start" onclick="saveTracking()">Save</button>
+</div>
+
+</div>
+
 <script src="config.js"></script>
 <script>
 
-let html5QrCode, orderId="", mode="Pickup", trackingData=null;
-let step = "order"; // 🔥 step control
+// ===== GLOBAL =====
+let html5QrCode, orderId="", trackingData=null;
+let step="order";
+let mode="pickup"; // ✅ SINGLE SOURCE
 
 const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
-// MODE
-function setMode(m){
-mode=m;
-pickupBtn.classList.remove("active");
-returnBtn.classList.remove("active");
-if(m==="Pickup") pickupBtn.classList.add("active");
-else returnBtn.classList.add("active");
-resetFlow();
+// ===== TOGGLE BUTTON =====
+function selectMode(type){
+
+  mode = type.toLowerCase();
+
+  document.getElementById("pickupBtn").classList.remove("active");
+  document.getElementById("returnBtn").classList.remove("active");
+
+  document.getElementById(type+"Btn").classList.add("active");
+
+  // 🔊 sound
+  let sound = document.getElementById("clickSound");
+  sound.currentTime = 0;
+  sound.play().catch(()=>{});
 }
 
-// 🔥 START BUTTON CONTROL
+// ===== SCAN FLOW =====
 function startOrder(){
 
-// STEP 1 → ORDER SCAN
-if(step === "order"){
+if(step==="order"){
 
 html5QrCode=new Html5Qrcode("reader");
 
-html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:250},
+html5QrCode.start({facingMode:"environment"},{fps:20,qrbox:250},
 text=>{
 orderId=text;
 stopScan();
-
 status.innerText="Order Scanned ✅";
-
-// 🔥 CHANGE BUTTON
 document.querySelector(".start").innerText="Next";
-
-step = "tracking";
+step="tracking";
 });
 
-}
-
-// STEP 2 → TRACKING SCAN
-else if(step === "tracking"){
+}else{
 
 html5QrCode=new Html5Qrcode("reader");
 
-html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:250},
+html5QrCode.start({facingMode:"environment"},{fps:20,qrbox:250},
 text=>{
 stopScan();
-
 beep.play();
-
-// 🔥 SEND DATA
 sendData(orderId,text);
-
 status.innerText="Done ✅";
-
-// 🔥 RESET FLOW AFTER SHORT DELAY
 setTimeout(resetFlow,800);
 });
 
@@ -162,10 +246,12 @@ setTimeout(resetFlow,800);
 }
 
 function stopScan(){
-if(html5QrCode) html5QrCode.stop().catch(()=>{});
+if(html5QrCode){
+html5QrCode.stop().catch(()=>{});
+}
 }
 
-// MANUAL
+// ===== MANUAL =====
 function openManual(){
 manualBox.style.display="block";
 setTimeout(()=>manualOrder.focus(),100);
@@ -174,34 +260,36 @@ setTimeout(()=>manualOrder.focus(),100);
 function submitManual(){
 let o=manualOrder.value.trim();
 let t=manualTracking.value.trim();
-if(!o||!t){alert("Fill both");return;}
+
+if(!o||!t){
+alert("Fill both");
+return;
+}
 
 beep.play();
 sendData(o,t);
 resetFlow();
 }
 
-// 🔥 RESET
+// ===== RESET =====
 function resetFlow(){
 orderId="";
 manualOrder.value="";
 manualTracking.value="";
 manualBox.style.display="none";
-
 status.innerText="Ready...";
-
-// 🔥 RESET BUTTON + STEP
+status.style.color="black";
 document.querySelector(".start").innerText="Start";
-step = "order";
+step="order";
 }
 
-// SEND
+// ===== SEND =====
 function sendData(o,t){
 
 fetch(API.post,{
 method:"POST",
 body:JSON.stringify({
-mode:mode.toLowerCase(),
+mode:mode, // ✅ FIXED
 order_id:o,
 tracking:t
 })
@@ -210,30 +298,26 @@ tracking:t
 .then(res=>{
 
 if(res.error === "Already Saved"){
-  status.innerHTML = "❌ Already Saved";
-  status.style.color = "red";
-  beep.play();
-  return;
+status.innerHTML="❌ Already Saved";
+status.style.color="red";
+return;
 }
 
 if(res.duplicate){
-  status.innerHTML = "⚠️ Duplicate Tracking";
-  status.style.color = "orange";
-  beep.play();
-  return;
+status.innerHTML="⚠️ Duplicate";
+status.style.color="orange";
+return;
 }
 
-// ✅ SUCCESS
-status.innerHTML = "✅ Saved";
-status.style.color = "green";
-beep.play();
+status.innerHTML="✅ Saved";
+status.style.color="green";
 
 loadDashboard();
 
 });
 }
 
-// DASHBOARD
+// ===== DASHBOARD =====
 function loadDashboard(){
 fetch(API.stats)
 .then(r=>r.json())
@@ -247,10 +331,51 @@ return_total.innerText=d.totalReturn||0;
 });
 }
 
-// TRACK
+// ===== LOOKUP =====
+function lookup(){
+
+let order=lookupOrder.value.trim();
+if(!order){
+alert("Enter Order");
+return;
+}
+
+lookupResult.innerHTML="Loading...";
+
+fetch(API.lookup(order))
+.then(r=>r.json())
+.then(data=>{
+
+if(!Array.isArray(data)) data=[];
+
+let html="", total=0;
+
+data.forEach(i=>{
+let qty=Number(i.qty)||0;
+total+=qty;
+
+html+=`
+<b>${i.sku}</b><br>
+${i.product}<br>
+Qty: ${qty}<hr>`;
+});
+
+lookupResult.innerHTML=html + `<b>Total Qty: ${total}</b>`;
+});
+}
+
+// ===== TRACK =====
 function trackOrder(){
+
 let o=trackOrderId.value.trim();
 let t=trackWaybill.value.trim();
+
+if(!o||!t){
+alert("Enter Order & Tracking");
+return;
+}
+
+trackResult.innerHTML="Loading...";
 
 fetch(API.track(o,t))
 .then(r=>r.json())
@@ -263,10 +388,9 @@ return;
 
 trackingData=d;
 
-// PREPAID CALC
-let finalAmount = d.amount;
+let finalAmount=d.amount||0;
 if(d.payment==="Prepaid"){
-finalAmount = d.amount - (d.amount*0.025*1.18);
+finalAmount=finalAmount-(finalAmount*0.025*1.18);
 }
 
 trackResult.innerHTML=`
@@ -276,24 +400,48 @@ Payment: ${d.payment}<br>
 Amount: ₹${finalAmount.toFixed(2)}
 `;
 
+settledAmount.value=finalAmount.toFixed(2);
+settledDate.value=new Date().toISOString().split('T')[0];
+
+extraBox.style.display="block";
 saveBtn.style.display="block";
+
 });
 }
 
-// SAVE
+// ===== SAVE =====
 function saveTracking(){
-fetch(API.post,{
-method:"POST",
-body:JSON.stringify({type:"saveTracking",...trackingData})
-})
-.then(()=>alert("Saved ✅"));
+
+if(!trackingData){
+alert("No data");
+return;
 }
 
-// AUTO REFRESH
-setInterval(loadDashboard,3000);
-loadDashboard();
+fetch(API.post,{
+method:"POST",
+body:JSON.stringify({
+type:"saveTracking",
+...trackingData,
+settled_amount:settledAmount.value,
+settled_date:settledDate.value
+})
+})
+.then(r=>r.json())
+.then(res=>{
+if(res.duplicate){
+alert("Already saved");
+return;
+}
+alert("Saved ✅");
+});
+}
 
-// ENTER FLOW
+// ===== REFRESH =====
+function refreshPage(){
+location.reload();
+}
+
+// ===== ENTER SUPPORT =====
 manualOrder.addEventListener("keypress",e=>{
 if(e.key==="Enter") manualTracking.focus();
 });
@@ -301,35 +449,11 @@ if(e.key==="Enter") manualTracking.focus();
 manualTracking.addEventListener("keypress",e=>{
 if(e.key==="Enter") submitManual();
 });
-function refreshPage(){
-  // HTML REFRESH
-  // ✅ Return Request Page
-  if (typeof loadData === "function") {
-    loadData();
-    console.log("Return data refreshed");
-  }
 
-  // ✅ Scanner Dashboard
-  if (typeof loadDashboard === "function") {
-    loadDashboard();
-    console.log("Dashboard refreshed");
-  }
+// INIT
+loadDashboard();
+setInterval(loadDashboard,3000);
 
-  // ✅ Tracking Page
-  if (typeof trackOrder === "function" && trackingData) {
-    trackOrder();
-    console.log("Tracking refreshed");
-  }
-
-  // ✅ Extra safety (agar kuch bhi na mile)
-  if (
-    typeof loadData !== "function" &&
-    typeof loadDashboard !== "function"
-  ){
-    console.log("Fallback reload");
-    location.reload(); // last option
-  }
-}
 </script>
 
 </body>
