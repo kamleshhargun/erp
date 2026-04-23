@@ -351,14 +351,15 @@ if(!Array.isArray(data)) data=[];
 let html="", total=0;
 
 data.forEach(i=>{
-let qty=Number(i.qty)||0;
-total+=qty;
+let qty = Number(i.qty) || 0;
+let amount = Number(i.amount) || 0;
 
-html+=`
+total += qty;
+
+html += `
 <b>${i.sku}</b><br>
-${i.product}<br>
+Amount: ₹${amount}<br>
 Qty: ${qty}<hr>`;
-});
 
 lookupResult.innerHTML=html + `<b>Total Qty: ${total}</b>`;
 });
