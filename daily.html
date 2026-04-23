@@ -3,7 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- 🔒 FIXED VERSION -->
+<!-- QR LIB LOCKED -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
 
 <style>
@@ -12,6 +12,7 @@ body{
   background:linear-gradient(135deg,#eef2f7,#dfe9f3);
   margin:0;
   text-align:center;
+  transition:0.2s;
 }
 
 .container{
@@ -41,6 +42,15 @@ button{
 .stop{background:#dc3545;color:#fff;}
 .manual{background:#444;color:#fff;}
 
+input{
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+/* DASHBOARD */
 .stat{
   display:flex;
   justify-content:space-between;
@@ -62,8 +72,6 @@ button{
   display:flex;
   gap:10px;
   margin:15px 0;
-  z-index:10;
-  position:relative;
 }
 .toggle-btn{
   flex:1;
@@ -72,8 +80,6 @@ button{
   border-radius:10px;
   font-weight:bold;
   cursor:pointer;
-  transition:0.3s;
-  touch-action:manipulation;
 }
 .toggle-btn.active{
   background:#007bff;
@@ -82,18 +88,14 @@ button{
 }
 
 /* SCANNER FIX */
-#reader{ position:relative; z-index:1; }
+#reader{ position:relative; }
 #reader video{ width:100%; pointer-events:none; }
 
-#manualBox{ display:none; }
+/* FLASH */
+body.flash-success{ background:#d4edda !important; }
+body.flash-error{ background:#f8d7da !important; }
 
-input{
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
+#manualBox{ display:none; }
 </style>
 </head>
 
@@ -107,8 +109,8 @@ input{
 <div class="card">
 <h3>📊 Dashboard</h3>
 <div class="stat">
-<div>Today Pickup <span id="pickup_today">0</span></div>
-<div>Today Return <span id="return_today">0</span></div>
+<div>Pickup <span id="pickup_today">0</span></div>
+<div>Return <span id="return_today">0</span></div>
 </div>
 </div>
 
@@ -122,7 +124,7 @@ input{
 <div class="card">
 <div id="reader"></div>
 
-<button class="start" onclick="startOrder()">Start</button>
+<button class="start" onclick="startScan()">Start</button>
 <button class="stop" onclick="stopScan()">Stop</button>
 <button class="manual" onclick="openManual()">Manual</button>
 
@@ -139,8 +141,8 @@ input{
 </div>
 
 <script src="config.js"></script>
-<script>
 
+<script>
 // ===== GLOBAL =====
 let html5QrCode;
 let step="order";
@@ -149,27 +151,21 @@ let mode="pickup";
 
 const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
-// ===== MODE SELECT =====
+// ===== MODE =====
 function selectMode(type){
-
   mode = type;
 
   pickupBtn.classList.remove("active");
   returnBtn.classList.remove("active");
 
-  if(type==="pickup"){
-    pickupBtn.classList.add("active");
-  }else{
-    returnBtn.classList.add("active");
-  }
+  type==="pickup" ? pickupBtn.classList.add("active") : returnBtn.classList.add("active");
 
-  // 🔥 AUTO FOCUS
   openManual();
   setTimeout(()=>manualOrder.focus(),100);
 }
 
-// ===== START SCAN =====
-function startOrder(){
+// ===== SCAN =====
+function startScan(){
 
   if(!html5QrCode){
     html5QrCode = new Html5Qrcode("reader");
@@ -180,32 +176,22 @@ function startOrder(){
     { fps:15, qrbox:250 },
     text=>{
 
-      // ===== STEP 1: ORDER =====
       if(step==="order"){
-        orderId = text;
-
-        // 🔥 AUTO FILL + MOVE NEXT
-        manualOrder.value = text;
+        orderId=text;
+        manualOrder.value=text;
         manualTracking.focus();
-
         step="tracking";
         return;
       }
 
-      // ===== STEP 2: TRACKING =====
       if(step==="tracking"){
-
-        manualTracking.value = text;
-
+        manualTracking.value=text;
         stopScan();
-
-        // 🔥 AUTO SUBMIT
         submitManual();
       }
 
     }
   );
-
 }
 
 // ===== STOP =====
@@ -215,34 +201,28 @@ function stopScan(){
   }
 }
 
-// ===== MANUAL OPEN =====
+// ===== MANUAL =====
 function openManual(){
   manualBox.style.display="block";
 }
 
-// ===== SUBMIT =====
 function submitManual(){
 
-  let o = manualOrder.value.trim();
-  let t = manualTracking.value.trim();
+  let o=manualOrder.value.trim();
+  let t=manualTracking.value.trim();
 
-  if(!o || !t){
+  if(!o||!t){
     alert("Fill both");
     return;
   }
 
-  // 🔊 SOUND
   beep.play();
 
   sendData(o,t);
 
-  // 🔥 RESET + AUTO NEXT
   resetFlow();
 
-  // auto focus next
-  setTimeout(()=>{
-    manualOrder.focus();
-  },200);
+  setTimeout(()=>manualOrder.focus(),200);
 }
 
 // ===== RESET =====
@@ -252,6 +232,20 @@ function resetFlow(){
   manualOrder.value="";
   manualTracking.value="";
   status.innerText="Ready...";
+}
+
+// ===== FLASH =====
+function flash(type){
+
+  document.body.classList.add(type==="success"?"flash-success":"flash-error");
+
+  setTimeout(()=>{
+    document.body.classList.remove("flash-success","flash-error");
+  },300);
+
+  if(navigator.vibrate){
+    navigator.vibrate(type==="success"?100:[200,100,200]);
+  }
 }
 
 // ===== SEND =====
@@ -270,15 +264,46 @@ function sendData(o,t){
 
     if(res.duplicate){
       status.innerText="Duplicate ⚠️";
+      flash("error");
       return;
     }
 
     status.innerText="Saved ✅";
+    flash("success");
 
     loadDashboard();
   });
-
 }
+
+// ===== COUNT ANIMATION =====
+function animateValue(el, start, end, duration){
+  let startTime=null;
+
+  function step(timestamp){
+    if(!startTime) startTime=timestamp;
+    let progress=Math.min((timestamp-startTime)/duration,1);
+    el.innerText=Math.floor(progress*(end-start)+start);
+    if(progress<1) requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
+}
+
+// ===== DASHBOARD =====
+function loadDashboard(){
+  fetch(API.stats)
+  .then(r=>r.json())
+  .then(d=>{
+
+    animateValue(pickup_today, Number(pickup_today.innerText)||0, d.todayPickup||0, 300);
+    animateValue(return_today, Number(return_today.innerText)||0, d.todayReturn||0, 300);
+
+  });
+}
+
+// INIT
+loadDashboard();
+setInterval(loadDashboard,4000);
 
 </script>
 
