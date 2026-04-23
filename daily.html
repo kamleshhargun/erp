@@ -141,6 +141,7 @@ input{
 <script src="config.js"></script>
 <script>
 
+// ===== GLOBAL =====
 let html5QrCode;
 let step="order";
 let orderId="";
@@ -148,8 +149,9 @@ let mode="pickup";
 
 const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
-// MODE
+// ===== MODE SELECT =====
 function selectMode(type){
+
   mode = type;
 
   pickupBtn.classList.remove("active");
@@ -160,9 +162,13 @@ function selectMode(type){
   }else{
     returnBtn.classList.add("active");
   }
+
+  // 🔥 AUTO FOCUS
+  openManual();
+  setTimeout(()=>manualOrder.focus(),100);
 }
 
-// START SCAN
+// ===== START SCAN =====
 function startOrder(){
 
   if(!html5QrCode){
@@ -174,17 +180,27 @@ function startOrder(){
     { fps:15, qrbox:250 },
     text=>{
 
+      // ===== STEP 1: ORDER =====
       if(step==="order"){
-        orderId=text;
-        status.innerText="Order Scanned ✅";
-        stopScan();
+        orderId = text;
+
+        // 🔥 AUTO FILL + MOVE NEXT
+        manualOrder.value = text;
+        manualTracking.focus();
+
         step="tracking";
-      }else{
-        beep.play();
-        sendData(orderId,text);
-        status.innerText="Saved ✅";
+        return;
+      }
+
+      // ===== STEP 2: TRACKING =====
+      if(step==="tracking"){
+
+        manualTracking.value = text;
+
         stopScan();
-        setTimeout(resetFlow,800);
+
+        // 🔥 AUTO SUBMIT
+        submitManual();
       }
 
     }
@@ -192,42 +208,53 @@ function startOrder(){
 
 }
 
-// STOP
+// ===== STOP =====
 function stopScan(){
   if(html5QrCode){
     html5QrCode.stop().catch(()=>{});
   }
 }
 
-// MANUAL
+// ===== MANUAL OPEN =====
 function openManual(){
   manualBox.style.display="block";
 }
 
+// ===== SUBMIT =====
 function submitManual(){
-  let o=manualOrder.value.trim();
-  let t=manualTracking.value.trim();
 
-  if(!o||!t){
+  let o = manualOrder.value.trim();
+  let t = manualTracking.value.trim();
+
+  if(!o || !t){
     alert("Fill both");
     return;
   }
 
+  // 🔊 SOUND
+  beep.play();
+
   sendData(o,t);
+
+  // 🔥 RESET + AUTO NEXT
   resetFlow();
+
+  // auto focus next
+  setTimeout(()=>{
+    manualOrder.focus();
+  },200);
 }
 
-// RESET
+// ===== RESET =====
 function resetFlow(){
   step="order";
   orderId="";
-  status.innerText="Ready...";
-  manualBox.style.display="none";
   manualOrder.value="";
   manualTracking.value="";
+  status.innerText="Ready...";
 }
 
-// SEND DATA
+// ===== SEND =====
 function sendData(o,t){
 
   fetch(API.post,{
@@ -240,29 +267,18 @@ function sendData(o,t){
   })
   .then(r=>r.json())
   .then(res=>{
+
     if(res.duplicate){
       status.innerText="Duplicate ⚠️";
       return;
     }
+
     status.innerText="Saved ✅";
+
     loadDashboard();
   });
 
 }
-
-// DASHBOARD
-function loadDashboard(){
-  fetch(API.stats)
-  .then(r=>r.json())
-  .then(d=>{
-    pickup_today.innerText=d.todayPickup||0;
-    return_today.innerText=d.todayReturn||0;
-  });
-}
-
-// INIT
-loadDashboard();
-setInterval(loadDashboard,5000);
 
 </script>
 
