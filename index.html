@@ -257,7 +257,7 @@ button:active{
 // 🔊 Beep sound
 const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
-// ===== SAFE ELEMENT GET =====
+// ===== ELEMENTS =====
 const orderId = document.getElementById("orderId");
 const trackingId = document.getElementById("trackingId");
 const mode = document.getElementById("mode");
@@ -274,59 +274,47 @@ const trackResult = document.getElementById("trackResult");
 function showSection(id, el){
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("activeSection"));
   document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
-
   document.getElementById(id).classList.add("activeSection");
   if(el) el.classList.add("active");
 }
 
-// ===== COUNT ANIMATION =====
-function animateValue(el, start, end, duration){
-  let startTime=null;
+// ================= STATS =================
+async function loadDashboard(){
+  try{
 
-  function step(timestamp){
-    if(!startTime) startTime=timestamp;
-    let progress=Math.min((timestamp-startTime)/duration,1);
-    el.innerText=Math.floor(progress*(end-start)+start);
-    if(progress<1) requestAnimationFrame(step);
+    const res = await fetch(API.stats() + "&_=" + Date.now()); // ✅ FIX
+    const d = await res.json();
+
+    console.log("Stats:", d);
+
+    document.getElementById("todayPickup").innerText = d.todayPickup || 0;
+    document.getElementById("todayReturn").innerText = d.todayReturn || 0;
+    document.getElementById("yestPickup").innerText = d.yesterdayPickup || 0;
+    document.getElementById("yestReturn").innerText = d.yesterdayReturn || 0;
+    document.getElementById("totalPickup").innerText = d.totalPickup || 0;
+    document.getElementById("totalReturn").innerText = d.totalReturn || 0;
+
+  }catch(e){
+    console.log("Stats Error:", e);
   }
-
-  requestAnimationFrame(step);
-}
-
-// ===== DASHBOARD =====
-function loadDashboard(){
-  fetch(API.stats)
-  .then(r=>r.json())
-  .then(d=>{
-
-    animateValue(pickup_today, Number(pickup_today.innerText)||0, d.todayPickup||0, 300);
-    animateValue(return_today, Number(return_today.innerText)||0, d.todayReturn||0, 300);
-    animateValue(pickup_yesterday, Number(pickup_yesterday.innerText)||0, d.yesterdayPickup||0, 300);
-    animateValue(return_yesterday, Number(return_yesterday.innerText)||0, d.yesterdayReturn||0, 300);
-    animateValue(pickup_total, Number(pickup_total.innerText)||0, d.totalPickup||0, 300);
-    animateValue(return_total, Number(return_total.innerText)||0, d.totalReturn||0, 300);
-
-  });
 }
 
 // INIT
-loadDashboard();
-setInterval(loadDashboard,4000);
-
+document.addEventListener("DOMContentLoaded", ()=>{
+  loadDashboard();
+  setInterval(loadDashboard, 4000);
+  orderId.focus();
+});
 
 // ================= SCANNER FLOW =================
-
-// mode change → वापस order पे
 mode.addEventListener("change", resetFlow);
 
-// order scan → tracking
 orderId.addEventListener("change", ()=>{
   if(orderId.value.trim()){
     trackingId.focus();
   }
 });
 
-// tracking scan → auto submit
 trackingId.addEventListener("change", ()=>{
   if(trackingId.value.trim()){
     submitScan();
@@ -361,7 +349,7 @@ async function submitScan(){
       beep.play();
       status.innerText="Saved ✅";
 
-      loadStats(); // 🔥 update stats
+      loadDashboard(); // 🔥 stats refresh
 
       resetFlow();
     }else{
