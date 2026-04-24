@@ -8,11 +8,12 @@
 
 <style>
 body{
-  font-family: system-ui;
+  font-family: system-ui, -apple-system, Arial;
   background:#e9ecef;
   margin:0;
 }
 
+/* ===== APP CONTAINER ===== */
 .app{
   max-width:420px;
   margin:auto;
@@ -20,16 +21,35 @@ body{
   min-height:100vh;
 }
 
-header{
-  padding:15px;
-  text-align:center;
-  font-weight:600;
-  border-bottom:1px solid #ddd;
+/* DESKTOP CENTER LOOK */
+@media (min-width:768px){
+  .app{
+    max-width:420px;
+    margin-top:20px;
+    margin-bottom:20px;
+    border-radius:16px;
+    box-shadow:0 5px 25px rgba(0,0,0,0.1);
+  }
 }
 
+/* ===== HEADER ===== */
+header{
+  padding:16px;
+  text-align:center;
+  font-weight:600;
+  font-size:16px;
+  border-bottom:1px solid #eee;
+  background:#fff;
+}
+
+/* ===== NAV ===== */
 .nav{
   display:flex;
-  border-bottom:1px solid #ddd;
+  border-bottom:1px solid #eee;
+  background:#fff;
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 
 .nav button{
@@ -37,32 +57,52 @@ header{
   padding:12px;
   border:none;
   background:#fff;
+  color:#555;
+  font-size:14px;
+  font-weight:500;
 }
 
-.nav .active{
+.nav button.active{
   color:#1a73e8;
   border-bottom:2px solid #1a73e8;
 }
 
-.section{display:none;padding:15px;}
-.activeSection{display:block;}
-
-.card{
-  background:#fff;
-  padding:15px;
-  margin-bottom:12px;
-  border-radius:12px;
-  box-shadow:0 1px 3px rgba(0,0,0,0.1);
+/* ===== SECTIONS ===== */
+.section{
+  display:none;
+  padding:14px;
 }
 
-input,select{
+.activeSection{
+  display:block;
+}
+
+/* ===== CARD ===== */
+.card{
+  background:#fff;
+  padding:14px;
+  margin-bottom:12px;
+  border-radius:12px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ===== INPUT ===== */
+input, select{
   width:100%;
   padding:12px;
   margin-top:10px;
   border-radius:10px;
   border:1px solid #ddd;
+  font-size:14px;
+  outline:none;
 }
 
+input:focus, select:focus{
+  border-color:#1a73e8;
+  box-shadow:0 0 0 2px rgba(26,115,232,0.1);
+}
+
+/* ===== BUTTON ===== */
 button{
   width:100%;
   padding:12px;
@@ -71,10 +111,58 @@ button{
   border-radius:10px;
   background:#1a73e8;
   color:#fff;
+  font-size:15px;
+  font-weight:500;
+  cursor:pointer;
+}
+
+button:active{
+  transform:scale(0.98);
+}
+
+/* ===== STATS ===== */
+.stats{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
+.stats div{
+  flex:1;
+  background:#f8f9fa;
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+  font-size:13px;
+}
+
+.big{
+  font-size:18px;
+  font-weight:600;
+  margin-top:4px;
+}
+
+/* ===== RESULT BOX ===== */
+#lookupResult div,
+#trackResult{
+  background:#f8f9fa;
+  padding:10px;
+  border-radius:10px;
+  margin-top:10px;
+  font-size:14px;
+}
+
+/* ===== STATUS TEXT ===== */
+#status{
+  margin-top:10px;
+  font-size:14px;
+  font-weight:500;
 }
 
 /* hidden manual button */
-#manualBtn{display:none;}
+#manualBtn{
+  display:none;
+}
 </style>
 
 </head>
@@ -83,6 +171,8 @@ button{
 <div class="app">
 
 <header>HARSIDHI VENTURES</header>
+
+<!-- ===== STATS ===== -->
 <div class="card">
   <h3>Daily Stats</h3>
 
@@ -101,23 +191,27 @@ button{
     <div>Total Return<br><span id="totalReturn" class="big">0</span></div>
   </div>
 </div>
+
+<!-- ===== NAV ===== -->
 <div class="nav">
-  <button class="tab active" onclick="showSection('scan')">Scan</button>
-  <button class="tab" onclick="showSection('lookup')">Lookup</button>
-  <button class="tab" onclick="showSection('tracking')">Tracking</button>
+  <button class="tab active" onclick="showSection('scan', this)">Scan</button>
+  <button class="tab" onclick="showSection('lookup', this)">Lookup</button>
+  <button class="tab" onclick="showSection('tracking', this)">Tracking</button>
 </div>
 
 <!-- ================= SCAN ================= -->
 <div id="scan" class="section activeSection">
 
 <div class="card">
+<h3>Scan Pickup / Return</h3>
+
 <select id="mode">
   <option value="pickup">Pickup</option>
   <option value="return">Return</option>
 </select>
 
-<input id="orderId" placeholder="Scan Order ID">
-<input id="trackingId" placeholder="Scan Tracking ID">
+<input id="orderId" placeholder="Scan Order ID" autocomplete="off">
+<input id="trackingId" placeholder="Scan Tracking ID" autocomplete="off">
 
 <button id="manualBtn" onclick="submitScan()">Submit</button>
 
@@ -128,21 +222,32 @@ button{
 
 <!-- ================= LOOKUP ================= -->
 <div id="lookup" class="section">
+
 <div class="card">
+<h3>Order Lookup</h3>
+
 <input id="searchOrder" placeholder="Order ID">
 <button onclick="lookup()">Search</button>
+
 <div id="lookupResult"></div>
 </div>
+
 </div>
 
 <!-- ================= TRACK ================= -->
 <div id="tracking" class="section">
+
 <div class="card">
+<h3>Order Tracking</h3>
+
 <input id="trackOrder" placeholder="Order ID">
-<input id="trackWaybill" placeholder="Tracking">
+<input id="trackWaybill" placeholder="Tracking ID">
+
 <button onclick="track()">Track</button>
+
 <div id="trackResult"></div>
 </div>
+
 </div>
 
 </div>
@@ -152,17 +257,32 @@ button{
 // 🔊 Beep sound
 const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
-// NAV
-function showSection(id){
+// ===== SAFE ELEMENT GET =====
+const orderId = document.getElementById("orderId");
+const trackingId = document.getElementById("trackingId");
+const mode = document.getElementById("mode");
+const status = document.getElementById("status");
+
+const searchOrder = document.getElementById("searchOrder");
+const lookupResult = document.getElementById("lookupResult");
+
+const trackOrder = document.getElementById("trackOrder");
+const trackWaybill = document.getElementById("trackWaybill");
+const trackResult = document.getElementById("trackResult");
+
+// ================= NAV =================
+function showSection(id, el){
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("activeSection"));
   document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+
   document.getElementById(id).classList.add("activeSection");
-  event.target.classList.add("active");
+  if(el) el.classList.add("active");
 }
+
+// ================= STATS =================
 async function loadStats(){
   try{
-
-    let res = await fetch(API.stats()); // 👈 () जरूरी है
+    let res = await fetch(API.stats());
     let d = await res.json();
 
     document.getElementById("todayPickup").innerText = d.todayPickup || 0;
@@ -176,42 +296,40 @@ async function loadStats(){
     console.log("Stats Error:", e);
   }
 }
-// ================= SCANNER FLOW =================
 
-// page load focus
+// ================= PAGE LOAD =================
 window.onload = ()=>{
   orderId.focus();
+  loadStats(); // 🔥 important
 };
 
+// ================= SCANNER FLOW =================
+
 // mode change → वापस order पे
-mode.addEventListener("change",()=>{
-  resetFlow();
-});
+mode.addEventListener("change", resetFlow);
 
 // order scan → tracking
-orderId.addEventListener("change",()=>{
+orderId.addEventListener("change", ()=>{
   if(orderId.value.trim()){
     trackingId.focus();
   }
 });
 
 // tracking scan → auto submit
-trackingId.addEventListener("change",()=>{
+trackingId.addEventListener("change", ()=>{
   if(trackingId.value.trim()){
     submitScan();
   }
 });
 
-// submit
+// ================= SUBMIT =================
 async function submitScan(){
 
   let order = orderId.value.trim();
   let tracking = trackingId.value.trim();
   let m = mode.value;
 
-  if(!order || !tracking){
-    return;
-  }
+  if(!order || !tracking) return;
 
   status.innerText = "Saving...";
 
@@ -229,8 +347,11 @@ async function submitScan(){
     let data = await res.json();
 
     if(data.status==="success"){
-      beep.play(); // 🔊 SOUND
+      beep.play();
       status.innerText="Saved ✅";
+
+      loadStats(); // 🔥 update stats
+
       resetFlow();
     }else{
       status.innerText="Error ❌";
@@ -241,44 +362,51 @@ async function submitScan(){
   }
 }
 
-// reset
+// ================= RESET =================
 function resetFlow(){
   orderId.value="";
   trackingId.value="";
-  setTimeout(()=>{
-    orderId.focus();
-  },100);
+  setTimeout(()=>orderId.focus(),100);
 }
 
 // ================= LOOKUP =================
 async function lookup(){
-  let res = await fetch(API.lookup(searchOrder.value));
-  let data = await res.json();
+  try{
+    let res = await fetch(API.lookup(searchOrder.value));
+    let data = await res.json();
 
-  let html="";
-  data.forEach(d=>{
-    html += `<div>${d.order_id} | ${d.sku} | ₹${d.amount}</div>`;
-  });
+    let html="";
+    data.forEach(d=>{
+      html += `<div>${d.order_id} | ${d.sku} | ₹${d.amount}</div>`;
+    });
 
-  lookupResult.innerHTML = html || "No Data";
+    lookupResult.innerHTML = html || "No Data";
+
+  }catch(e){
+    lookupResult.innerText = "Error";
+  }
 }
 
 // ================= TRACK =================
 async function track(){
+  try{
+    let res = await fetch(API.track(trackOrder.value,trackWaybill.value));
+    let d = await res.json();
 
-  let res = await fetch(API.track(trackOrder.value,trackWaybill.value));
-  let d = await res.json();
+    if(d.error){
+      trackResult.innerText = d.error;
+      return;
+    }
 
-  if(d.error){
-    trackResult.innerText=d.error;
-    return;
+    trackResult.innerHTML = `
+      <b>Status:</b> ${d.status}<br>
+      <b>Location:</b> ${d.location}<br>
+      <b>Customer:</b> ${d.customer}
+    `;
+
+  }catch(e){
+    trackResult.innerText = "Error";
   }
-
-  trackResult.innerHTML = `
-    ${d.status}<br>
-    ${d.location}<br>
-    ${d.customer}
-  `;
 }
 
 </script>
