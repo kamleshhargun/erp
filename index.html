@@ -279,28 +279,37 @@ function showSection(id, el){
   if(el) el.classList.add("active");
 }
 
+// ================= INIT =================
+document.addEventListener("DOMContentLoaded", () => {
+
+  console.log("Page Loaded ✅");
+
+  loadStats();
+
+  document.getElementById("orderId").focus();
+
+});
+
 // ================= STATS =================
 async function loadStats(){
   try{
 
     const res = await fetch(API.stats() + "&_=" + Date.now());
-    const d = await res.json();
+    const data = await res.json();
 
-    console.log("Stats:", d);
+    console.log("Stats Data:", data);
 
-    // 🔥 SAFE DOM UPDATE
-    setValue("todayPickup", d.todayPickup);
-    setValue("todayReturn", d.todayReturn);
-    setValue("yestPickup", d.yesterdayPickup);
-    setValue("yestReturn", d.yesterdayReturn);
-    setValue("totalPickup", d.totalPickup);
-    setValue("totalReturn", d.totalReturn);
+    document.getElementById("todayPickup").innerText = data.todayPickup || 0;
+    document.getElementById("todayReturn").innerText = data.todayReturn || 0;
+    document.getElementById("yestPickup").innerText = data.yesterdayPickup || 0;
+    document.getElementById("yestReturn").innerText = data.yesterdayReturn || 0;
+    document.getElementById("totalPickup").innerText = data.totalPickup || 0;
+    document.getElementById("totalReturn").innerText = data.totalReturn || 0;
 
   }catch(e){
     console.log("Stats Error:", e);
   }
 }
-
 // 🔥 SAFE SET FUNCTION
 function setValue(id, value){
   const el = document.getElementById(id);
