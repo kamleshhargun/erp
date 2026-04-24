@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Return Scanner</title>
+
+<script src="config.js"></script>
+
+<style>
+body{
+  font-family: system-ui;
+  background:#fdecea;
+  margin:0;
+}
+
+.app{
+  max-width:420px;
+  margin:auto;
+  background:#ffffff;
+  min-height:100vh;
+  border-radius:16px;
+  overflow:hidden;
+}
+
+header{
+  background:#d93025;
+  color:#fff;
+  padding:16px;
+  text-align:center;
+  font-weight:600;
+}
+
+.card{
+  padding:20px;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  font-size:15px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:15px;
+  border:none;
+  border-radius:12px;
+  background:#d93025;
+  color:#fff;
+  font-size:16px;
+}
+
+#status{
+  margin-top:15px;
+  text-align:center;
+  font-weight:500;
+}
+</style>
+
+</head>
+<body>
+
+<div class="app">
+
+<header>Return Scanner</header>
+
+<div class="card">
+
+<input id="orderId" placeholder="Scan Order ID" autofocus>
+<input id="trackingId" placeholder="Scan Tracking ID">
+
+<div id="status"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+
+const orderId = document.getElementById("orderId");
+const trackingId = document.getElementById("trackingId");
+const status = document.getElementById("status");
+
+orderId.addEventListener("change", ()=>{
+  if(orderId.value.trim()){
+    trackingId.focus();
+  }
+});
+
+trackingId.addEventListener("change", ()=>{
+  if(trackingId.value.trim()){
+    submitScan();
+  }
+});
+
+async function submitScan(){
+
+  let order = orderId.value.trim();
+  let tracking = trackingId.value.trim();
+
+  if(!order || !tracking) return;
+
+  status.innerText = "Saving...";
+
+  try{
+
+    let res = await fetch(API.post,{
+      method:"POST",
+      body:JSON.stringify({
+        mode:"return",
+        order_id:order,
+        tracking:tracking
+      })
+    });
+
+    let data = await res.json();
+
+    if(data.status==="success"){
+      beep.play();
+      status.innerText="Saved ✅";
+      reset();
+    }else{
+      status.innerText="Error ❌";
+    }
+
+  }catch(e){
+    status.innerText="Network Error";
+  }
+}
+
+function reset(){
+  orderId.value="";
+  trackingId.value="";
+  setTimeout(()=>orderId.focus(),100);
+}
+
+</script>
+
+</body>
+</html>
