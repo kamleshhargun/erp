@@ -21,8 +21,33 @@ header{
   font-size:20px;
 }
 
-.container{
+/* NAV BUTTONS */
+.nav{
+  display:flex;
+  background:#222;
+}
+
+.nav button{
+  flex:1;
+  padding:12px;
+  border:none;
+  background:#222;
+  color:#fff;
+  cursor:pointer;
+}
+
+.nav button.active{
+  background:#000;
+}
+
+/* SECTIONS */
+.section{
+  display:none;
   padding:15px;
+}
+
+.activeSection{
+  display:block;
 }
 
 .card{
@@ -32,8 +57,6 @@ header{
   border-radius:10px;
   box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
-
-h2{margin-top:0;}
 
 input,select,button{
   width:100%;
@@ -46,7 +69,6 @@ input,select,button{
 button{
   background:#000;
   color:#fff;
-  cursor:pointer;
 }
 
 .stats{
@@ -69,34 +91,40 @@ button{
 </head>
 <body>
 
-<header>NX SKIN ERP</header>
+<header>HARSIDHI VENTURES</header>
 
-<div class="container">
+<!-- ================= NAV ================= -->
+<div class="nav">
+  <button class="tab active" onclick="showSection('scan')">Daily Scan</button>
+  <button class="tab" onclick="showSection('lookup')">Lookup</button>
+  <button class="tab" onclick="showSection('tracking')">Tracking</button>
+</div>
 
-<!-- ================= STATS ================= -->
+<!-- ================= DAILY SCAN ================= -->
+<div id="scan" class="section activeSection">
+
 <div class="card">
 <h2>Daily Stats</h2>
 
 <div class="stats">
-  <div>Today Pickup<br><span class="big" id="todayPickup">0</span></div>
-  <div>Today Return<br><span class="big" id="todayReturn">0</span></div>
+  <div>Today Pickup<br><span id="todayPickup" class="big">0</span></div>
+  <div>Today Return<br><span id="todayReturn" class="big">0</span></div>
 </div>
 
 <div class="stats">
-  <div>Yesterday Pickup<br><span class="big" id="yestPickup">0</span></div>
-  <div>Yesterday Return<br><span class="big" id="yestReturn">0</span></div>
+  <div>Yesterday Pickup<br><span id="yestPickup" class="big">0</span></div>
+  <div>Yesterday Return<br><span id="yestReturn" class="big">0</span></div>
 </div>
 
 <div class="stats">
-  <div>Total Pickup<br><span class="big" id="totalPickup">0</span></div>
-  <div>Total Return<br><span class="big" id="totalReturn">0</span></div>
+  <div>Total Pickup<br><span id="totalPickup" class="big">0</span></div>
+  <div>Total Return<br><span id="totalReturn" class="big">0</span></div>
 </div>
 
 </div>
 
-<!-- ================= SCANNER ================= -->
 <div class="card">
-<h2>Pickup / Return Scan</h2>
+<h2>Scan Pickup / Return</h2>
 
 <select id="mode">
   <option value="pickup">Pickup</option>
@@ -111,7 +139,11 @@ button{
 <div id="scanStatus"></div>
 </div>
 
+</div>
+
 <!-- ================= LOOKUP ================= -->
+<div id="lookup" class="section">
+
 <div class="card">
 <h2>Order Lookup</h2>
 
@@ -121,7 +153,11 @@ button{
 <div id="lookupResult"></div>
 </div>
 
+</div>
+
 <!-- ================= TRACKING ================= -->
+<div id="tracking" class="section">
+
 <div class="card">
 <h2>Order Tracking</h2>
 
@@ -136,6 +172,21 @@ button{
 </div>
 
 <script>
+
+// ================= NAV SWITCH =================
+function showSection(id){
+
+  document.querySelectorAll(".section").forEach(s=>{
+    s.classList.remove("activeSection");
+  });
+
+  document.querySelectorAll(".tab").forEach(b=>{
+    b.classList.remove("active");
+  });
+
+  document.getElementById(id).classList.add("activeSection");
+  event.target.classList.add("active");
+}
 
 // ================= LOAD STATS =================
 async function loadStats(){
@@ -152,15 +203,15 @@ async function loadStats(){
 
 loadStats();
 
-// ================= SCAN SAVE =================
+// ================= SAVE SCAN =================
 async function saveScan(){
 
-  let order = document.getElementById("orderId").value.trim();
-  let tracking = document.getElementById("trackingId").value.trim();
-  let mode = document.getElementById("mode").value;
+  let order = orderId.value.trim();
+  let tracking = trackingId.value.trim();
+  let mode = mode.value;
 
   if(!order || !tracking){
-    alert("Scan both Order & Tracking");
+    alert("Enter both values");
     return;
   }
 
@@ -176,31 +227,29 @@ async function saveScan(){
   let data = await res.json();
 
   if(data.status==="success"){
-    document.getElementById("scanStatus").innerText="Saved ✅";
-    document.getElementById("orderId").value="";
-    document.getElementById("trackingId").value="";
-    document.getElementById("orderId").focus();
+    scanStatus.innerText="Saved ✅";
+    orderId.value="";
+    trackingId.value="";
+    orderId.focus();
     loadStats();
-  }else{
-    alert("Error");
   }
 }
 
 // AUTO FLOW
-document.getElementById("orderId").focus();
+orderId.focus();
 
-document.getElementById("orderId").addEventListener("change",()=>{
-  document.getElementById("trackingId").focus();
+orderId.addEventListener("change",()=>{
+  trackingId.focus();
 });
 
-document.getElementById("trackingId").addEventListener("change",()=>{
+trackingId.addEventListener("change",()=>{
   saveScan();
 });
 
 // ================= LOOKUP =================
 async function lookup(){
 
-  let order = document.getElementById("searchOrder").value;
+  let order = searchOrder.value;
 
   let res = await fetch(API.lookup(order));
   let data = await res.json();
@@ -218,24 +267,24 @@ async function lookup(){
     `;
   });
 
-  document.getElementById("lookupResult").innerHTML = html || "No Data";
+  lookupResult.innerHTML = html || "No Data";
 }
 
 // ================= TRACK =================
 async function track(){
 
-  let order = document.getElementById("trackOrder").value;
-  let waybill = document.getElementById("trackWaybill").value;
+  let order = trackOrder.value;
+  let waybill = trackWaybill.value;
 
   let res = await fetch(API.track(order,waybill));
   let d = await res.json();
 
   if(d.error){
-    document.getElementById("trackResult").innerText=d.error;
+    trackResult.innerText=d.error;
     return;
   }
 
-  document.getElementById("trackResult").innerHTML = `
+  trackResult.innerHTML = `
     <b>Status:</b> ${d.status}<br>
     <b>Location:</b> ${d.location}<br>
     <b>Customer:</b> ${d.customer}<br>
