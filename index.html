@@ -7,6 +7,24 @@
 <script src="config.js"></script>
 
 <style>
+  /* CENTER APP */
+.app{
+  max-width:420px;   /* mobile width */
+  margin:auto;
+  background:#fff;
+  min-height:100vh;
+  box-shadow:0 0 15px rgba(0,0,0,0.08);
+}
+
+/* DESKTOP CENTER WIDTH CONTROL */
+@media (min-width:768px){
+  .app{
+    max-width:40%;
+    border-radius:16px;
+    margin-top:20px;
+    margin-bottom:20px;
+  }
+}
 body{
   font-family: system-ui, -apple-system, Arial;
   background:#f1f3f4;
@@ -138,7 +156,7 @@ button{
 
 </head>
 <body>
-
+<div class="app">
 <header>HARSIDHI VENTURES</header>
 
 <!-- ================= NAV ================= -->
@@ -218,7 +236,7 @@ button{
 </div>
 
 </div>
-
+</div>
 <script>
 
 // ================= NAV SWITCH =================
