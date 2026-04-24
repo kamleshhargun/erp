@@ -282,8 +282,15 @@ function showSection(id, el){
 // ================= STATS =================
 async function loadStats(){
   try{
-    let res = await fetch(API.stats());
-    let d = await res.json();
+
+    // 🔥 cache bypass (VERY IMPORTANT)
+    let url = API.stats() + "&_=" + Date.now();
+
+    let res = await fetch(url);
+    let text = await res.text();   // पहले text लो
+    console.log("RAW:", text);     // debug
+
+    let d = JSON.parse(text);      // फिर parse करो
 
     document.getElementById("todayPickup").innerText = d.todayPickup || 0;
     document.getElementById("todayReturn").innerText = d.todayReturn || 0;
@@ -298,10 +305,11 @@ async function loadStats(){
 }
 
 // ================= PAGE LOAD =================
-window.onload = ()=>{
+window.addEventListener("DOMContentLoaded", ()=>{
   orderId.focus();
-  loadStats(); // 🔥 important
-};
+  loadStats(); // 🔥 अब 100% चलेगा
+});
+
 
 // ================= SCANNER FLOW =================
 
