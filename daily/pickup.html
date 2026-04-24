@@ -2,9 +2,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Pickup Scanner</title>
+<title>Pickup Scanner PRO</title>
 
 <script src="config.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 body{
@@ -13,25 +14,49 @@ body{
   margin:0;
 }
 
+/* APP */
 .app{
   max-width:420px;
   margin:auto;
-  background:#ffffff;
+  background:#fff;
   min-height:100vh;
   border-radius:16px;
   overflow:hidden;
 }
 
+/* HEADER */
 header{
   background:#34a853;
   color:#fff;
-  padding:16px;
+  padding:14px;
   text-align:center;
   font-weight:600;
 }
 
+/* STATS */
+.stats{
+  display:flex;
+  gap:10px;
+  padding:10px;
+}
+
+.stats div{
+  flex:1;
+  background:#f1f8f4;
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+  font-size:13px;
+}
+
+.big{
+  font-size:18px;
+  font-weight:600;
+}
+
+/* CARD */
 .card{
-  padding:20px;
+  padding:15px;
 }
 
 input{
@@ -40,24 +65,32 @@ input{
   margin-top:12px;
   border-radius:12px;
   border:1px solid #ccc;
-  font-size:15px;
 }
 
-button{
-  width:100%;
-  padding:14px;
-  margin-top:15px;
-  border:none;
-  border-radius:12px;
+/* FLOAT BUTTON */
+.scanBtn{
+  position:fixed;
+  bottom:20px;
+  right:20px;
   background:#34a853;
   color:#fff;
-  font-size:16px;
+  border:none;
+  border-radius:50%;
+  width:60px;
+  height:60px;
+  font-size:22px;
+}
+
+/* CAMERA BOX */
+#reader{
+  width:100%;
+  display:none;
+  margin-top:10px;
 }
 
 #status{
-  margin-top:15px;
+  margin-top:10px;
   text-align:center;
-  font-weight:500;
 }
 </style>
 
@@ -66,81 +99,112 @@ button{
 
 <div class="app">
 
-<header>Pickup Scanner</header>
+<header>Pickup PRO</header>
+
+<!-- STATS -->
+<div class="stats">
+  <div>Today Pickup<br><span id="todayPickup" class="big">0</span></div>
+  <div>Today Return<br><span id="todayReturn" class="big">0</span></div>
+</div>
 
 <div class="card">
 
-<input id="orderId" placeholder="Scan Order ID" autofocus>
+<input id="orderId" placeholder="Scan Order ID">
 <input id="trackingId" placeholder="Scan Tracking ID">
 
+<div id="reader"></div>
 <div id="status"></div>
 
 </div>
 
 </div>
 
+<button class="scanBtn" onclick="startScan()">📷</button>
+
 <script>
 
 const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
-const orderId = document.getElementById("orderId");
-const trackingId = document.getElementById("trackingId");
-const status = document.getElementById("status");
+let html5QrCode;
+let step = "order";
 
-// order → tracking
-orderId.addEventListener("change", ()=>{
-  if(orderId.value.trim()){
-    trackingId.focus();
+// ===== STATS =====
+async function loadStats(){
+  let res = await fetch(API.stats());
+  let d = await res.json();
+
+  document.getElementById("todayPickup").innerText = d.todayPickup || 0;
+  document.getElementById("todayReturn").innerText = d.todayReturn || 0;
+}
+
+// ===== CAMERA START =====
+function startScan(){
+
+  document.getElementById("reader").style.display="block";
+
+  if(!html5QrCode){
+    html5QrCode = new Html5Qrcode("reader");
   }
-});
 
-// tracking → submit
-trackingId.addEventListener("change", ()=>{
-  if(trackingId.value.trim()){
-    submitScan();
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 20, qrbox: 250 },
+    onScanSuccess
+  );
+}
+
+// ===== SCAN FLOW =====
+function onScanSuccess(text){
+
+  if(step==="order"){
+    document.getElementById("orderId").value = text;
+    step="tracking";
+  }else{
+    document.getElementById("trackingId").value = text;
+    submit();
+    step="order";
   }
-});
+}
 
-async function submitScan(){
+// ===== SUBMIT =====
+async function submit(){
 
-  let order = orderId.value.trim();
-  let tracking = trackingId.value.trim();
+  let order = orderId.value;
+  let tracking = trackingId.value;
 
   if(!order || !tracking) return;
 
-  status.innerText = "Saving...";
+  status.innerText="Saving...";
 
-  try{
+  let res = await fetch(API.post,{
+    method:"POST",
+    body:JSON.stringify({
+      mode:"pickup",
+      order_id:order,
+      tracking:tracking
+    })
+  });
 
-    let res = await fetch(API.post,{
-      method:"POST",
-      body:JSON.stringify({
-        mode:"pickup",
-        order_id:order,
-        tracking:tracking
-      })
-    });
+  let d = await res.json();
 
-    let data = await res.json();
-
-    if(data.status==="success"){
-      beep.play();
-      status.innerText="Saved ✅";
-      reset();
-    }else{
-      status.innerText="Error ❌";
-    }
-
-  }catch(e){
-    status.innerText="Network Error";
+  if(d.status==="success"){
+    beep.play();
+    status.innerText="Saved ✅";
+    reset();
+    loadStats();
+  }else{
+    status.innerText="Error";
   }
 }
 
+// ===== RESET =====
 function reset(){
   orderId.value="";
   trackingId.value="";
-  setTimeout(()=>orderId.focus(),100);
 }
+
+// INIT
+loadStats();
 
 </script>
 
