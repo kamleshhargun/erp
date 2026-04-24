@@ -8,83 +8,131 @@
 
 <style>
 body{
-  font-family: Arial;
-  background:#f4f4f4;
+  font-family: system-ui, -apple-system, Arial;
+  background:#f1f3f4;
   margin:0;
 }
 
+/* HEADER */
 header{
-  background:#000;
-  color:#fff;
-  padding:15px;
+  background:#ffffff;
+  color:#111;
+  padding:14px;
   text-align:center;
-  font-size:20px;
+  font-size:18px;
+  font-weight:600;
+  border-bottom:1px solid #ddd;
 }
 
-/* NAV BUTTONS */
+/* NAV */
 .nav{
   display:flex;
-  background:#222;
+  background:#fff;
+  border-bottom:1px solid #ddd;
 }
 
 .nav button{
   flex:1;
   padding:12px;
   border:none;
-  background:#222;
-  color:#fff;
+  background:#fff;
+  color:#555;
+  font-weight:500;
   cursor:pointer;
 }
 
 .nav button.active{
-  background:#000;
+  color:#1a73e8;
+  border-bottom:2px solid #1a73e8;
 }
 
-/* SECTIONS */
+/* SECTION */
 .section{
   display:none;
-  padding:15px;
+  padding:12px;
 }
 
 .activeSection{
   display:block;
 }
 
+/* CARD */
 .card{
   background:#fff;
-  padding:15px;
-  margin-bottom:15px;
-  border-radius:10px;
-  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+  padding:14px;
+  margin-bottom:12px;
+  border-radius:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08);
 }
 
-input,select,button{
+/* INPUT */
+input, select{
   width:100%;
-  padding:10px;
+  padding:12px;
   margin-top:10px;
-  border-radius:8px;
-  border:1px solid #ccc;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:14px;
+  outline:none;
 }
 
+input:focus, select:focus{
+  border-color:#1a73e8;
+}
+
+/* BUTTON */
 button{
-  background:#000;
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border:none;
+  border-radius:10px;
+  background:#1a73e8;
   color:#fff;
+  font-size:15px;
+  font-weight:500;
+  cursor:pointer;
 }
 
+/* STATS */
 .stats{
   display:flex;
-  justify-content:space-between;
+  gap:8px;
   margin-top:10px;
 }
 
 .stats div{
   flex:1;
+  background:#f8f9fa;
+  padding:10px;
+  border-radius:10px;
   text-align:center;
 }
 
 .big{
-  font-size:20px;
-  font-weight:bold;
+  font-size:18px;
+  font-weight:600;
+  margin-top:5px;
+}
+
+/* RESULT TEXT */
+#lookupResult div,
+#trackResult{
+  background:#f8f9fa;
+  padding:10px;
+  border-radius:10px;
+  margin-top:10px;
+}
+
+/* MOBILE TWEAK */
+@media (max-width:480px){
+  header{
+    font-size:16px;
+  }
+
+  button{
+    font-size:14px;
+  }
 }
 </style>
 
