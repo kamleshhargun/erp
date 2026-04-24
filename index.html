@@ -279,58 +279,39 @@ function showSection(id, el){
   if(el) el.classList.add("active");
 }
 
-// ================= INIT =================
-document.addEventListener("DOMContentLoaded", () => {
+// ===== COUNT ANIMATION =====
+function animateValue(el, start, end, duration){
+  let startTime=null;
 
-  console.log("Page Loaded ✅");
-
-  loadStats();
-
-  document.getElementById("orderId").focus();
-
-});
-
-// ================= STATS =================
-async function loadStats(){
-  try{
-
-    const res = await fetch(API.stats() + "&_=" + Date.now());
-    const data = await res.json();
-
-    console.log("Stats Data:", data);
-
-    document.getElementById("todayPickup").innerText = data.todayPickup || 0;
-    document.getElementById("todayReturn").innerText = data.todayReturn || 0;
-    document.getElementById("yestPickup").innerText = data.yesterdayPickup || 0;
-    document.getElementById("yestReturn").innerText = data.yesterdayReturn || 0;
-    document.getElementById("totalPickup").innerText = data.totalPickup || 0;
-    document.getElementById("totalReturn").innerText = data.totalReturn || 0;
-
-  }catch(e){
-    console.log("Stats Error:", e);
+  function step(timestamp){
+    if(!startTime) startTime=timestamp;
+    let progress=Math.min((timestamp-startTime)/duration,1);
+    el.innerText=Math.floor(progress*(end-start)+start);
+    if(progress<1) requestAnimationFrame(step);
   }
-}
-// 🔥 SAFE SET FUNCTION
-function setValue(id, value){
-  const el = document.getElementById(id);
-  if(el){
-    el.innerText = value || 0;
-  }else{
-    console.log("Missing ID:", id);
-  }
+
+  requestAnimationFrame(step);
 }
 
-// ================= PAGE LOAD =================
-document.addEventListener("DOMContentLoaded", function(){
+// ===== DASHBOARD =====
+function loadDashboard(){
+  fetch(API.stats)
+  .then(r=>r.json())
+  .then(d=>{
 
-  console.log("DOM Ready ✅");
+    animateValue(pickup_today, Number(pickup_today.innerText)||0, d.todayPickup||0, 300);
+    animateValue(return_today, Number(return_today.innerText)||0, d.todayReturn||0, 300);
+    animateValue(pickup_yesterday, Number(pickup_yesterday.innerText)||0, d.yesterdayPickup||0, 300);
+    animateValue(return_yesterday, Number(return_yesterday.innerText)||0, d.yesterdayReturn||0, 300);
+    animateValue(pickup_total, Number(pickup_total.innerText)||0, d.totalPickup||0, 300);
+    animateValue(return_total, Number(return_total.innerText)||0, d.totalReturn||0, 300);
 
-  loadStats();
+  });
+}
 
-  const order = document.getElementById("orderId");
-  if(order) order.focus();
-
-});
+// INIT
+loadDashboard();
+setInterval(loadDashboard,4000);
 
 
 // ================= SCANNER FLOW =================
