@@ -83,7 +83,24 @@ button{
 <div class="app">
 
 <header>HARSIDHI VENTURES</header>
+<div class="card">
+  <h3>Daily Stats</h3>
 
+  <div class="stats">
+    <div>Today Pickup<br><span id="todayPickup" class="big">0</span></div>
+    <div>Today Return<br><span id="todayReturn" class="big">0</span></div>
+  </div>
+
+  <div class="stats">
+    <div>Yesterday Pickup<br><span id="yestPickup" class="big">0</span></div>
+    <div>Yesterday Return<br><span id="yestReturn" class="big">0</span></div>
+  </div>
+
+  <div class="stats">
+    <div>Total Pickup<br><span id="totalPickup" class="big">0</span></div>
+    <div>Total Return<br><span id="totalReturn" class="big">0</span></div>
+  </div>
+</div>
 <div class="nav">
   <button class="tab active" onclick="showSection('scan')">Scan</button>
   <button class="tab" onclick="showSection('lookup')">Lookup</button>
@@ -142,7 +159,23 @@ function showSection(id){
   document.getElementById(id).classList.add("activeSection");
   event.target.classList.add("active");
 }
+async function loadStats(){
+  try{
 
+    let res = await fetch(API.stats()); // 👈 () जरूरी है
+    let d = await res.json();
+
+    document.getElementById("todayPickup").innerText = d.todayPickup || 0;
+    document.getElementById("todayReturn").innerText = d.todayReturn || 0;
+    document.getElementById("yestPickup").innerText = d.yesterdayPickup || 0;
+    document.getElementById("yestReturn").innerText = d.yesterdayReturn || 0;
+    document.getElementById("totalPickup").innerText = d.totalPickup || 0;
+    document.getElementById("totalReturn").innerText = d.totalReturn || 0;
+
+  }catch(e){
+    console.log("Stats Error:", e);
+  }
+}
 // ================= SCANNER FLOW =================
 
 // page load focus
