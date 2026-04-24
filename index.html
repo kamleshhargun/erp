@@ -283,31 +283,44 @@ function showSection(id, el){
 async function loadStats(){
   try{
 
-    // 🔥 cache bypass (VERY IMPORTANT)
-    let url = API.stats() + "&_=" + Date.now();
+    const res = await fetch(API.stats() + "&_=" + Date.now());
+    const d = await res.json();
 
-    let res = await fetch(url);
-    let text = await res.text();   // पहले text लो
-    console.log("RAW:", text);     // debug
+    console.log("Stats:", d);
 
-    let d = JSON.parse(text);      // फिर parse करो
-
-    document.getElementById("todayPickup").innerText = d.todayPickup || 0;
-    document.getElementById("todayReturn").innerText = d.todayReturn || 0;
-    document.getElementById("yestPickup").innerText = d.yesterdayPickup || 0;
-    document.getElementById("yestReturn").innerText = d.yesterdayReturn || 0;
-    document.getElementById("totalPickup").innerText = d.totalPickup || 0;
-    document.getElementById("totalReturn").innerText = d.totalReturn || 0;
+    // 🔥 SAFE DOM UPDATE
+    setValue("todayPickup", d.todayPickup);
+    setValue("todayReturn", d.todayReturn);
+    setValue("yestPickup", d.yesterdayPickup);
+    setValue("yestReturn", d.yesterdayReturn);
+    setValue("totalPickup", d.totalPickup);
+    setValue("totalReturn", d.totalReturn);
 
   }catch(e){
     console.log("Stats Error:", e);
   }
 }
 
+// 🔥 SAFE SET FUNCTION
+function setValue(id, value){
+  const el = document.getElementById(id);
+  if(el){
+    el.innerText = value || 0;
+  }else{
+    console.log("Missing ID:", id);
+  }
+}
+
 // ================= PAGE LOAD =================
-window.addEventListener("DOMContentLoaded", ()=>{
-  orderId.focus();
-  loadStats(); // 🔥 अब 100% चलेगा
+document.addEventListener("DOMContentLoaded", function(){
+
+  console.log("DOM Ready ✅");
+
+  loadStats();
+
+  const order = document.getElementById("orderId");
+  if(order) order.focus();
+
 });
 
 
