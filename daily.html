@@ -3,15 +3,13 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- QR LIB -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
 <script src="config.js"></script>
 
 <style>
 body{
-  font-family:'Segoe UI', Arial;
+  font-family:'Segoe UI';
   background:linear-gradient(135deg,#eef2f7,#dfe9f3);
-  margin:0;
   text-align:center;
 }
 
@@ -24,73 +22,44 @@ body{
 .card{
   background:#fff;
   padding:15px;
-  border-radius:14px;
+  border-radius:12px;
   margin-bottom:12px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.08);
 }
 
 button{
   width:100%;
-  padding:10px;
+  padding:12px;
   margin-top:8px;
   border:none;
   border-radius:10px;
-  font-weight:600;
+  font-weight:bold;
 }
 
 .start{background:#28a745;color:#fff;}
 .stop{background:#dc3545;color:#fff;}
-.manual{background:#444;color:#fff;}
 
-input{
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-
-.stat{
-  display:flex;
-  justify-content:space-between;
-}
-.stat div{
-  flex:1;
-  background:#f8f9fa;
-  margin:3px;
-  padding:8px;
-  border-radius:8px;
-}
-.stat span{
-  font-weight:bold;
-  color:#007bff;
-}
-
-.toggle-group{
+.toggle{
   display:flex;
   gap:10px;
-  margin:15px 0;
 }
-.toggle-btn{
+.toggle div{
   flex:1;
-  padding:12px;
-  background:#e0e0e0;
-  border-radius:10px;
-  font-weight:bold;
+  padding:10px;
+  background:#ddd;
+  border-radius:20px;
   cursor:pointer;
 }
-.toggle-btn.active{
+.active{
   background:#007bff;
   color:#fff;
-  border-radius:50px;
 }
 
-#reader video{ width:100%; pointer-events:none; }
+#reader video{ width:100%; }
 
-body.flash-success{ background:#d4edda !important; }
-body.flash-error{ background:#f8d7da !important; }
-
-#manualBox{ display:none; }
+.status{
+  margin-top:10px;
+  font-weight:bold;
+}
 </style>
 </head>
 
@@ -98,39 +67,22 @@ body.flash-error{ background:#f8d7da !important; }
 
 <div class="container">
 
-<h2>📦 Pickup / Return System</h2>
-
-<!-- DASHBOARD -->
-<div class="card">
-<h3>📊 Dashboard</h3>
-<div class="stat">
-<div>Pickup <span id="pickup_today">0</span></div>
-<div>Return <span id="return_today">0</span></div>
-</div>
-</div>
+<h2>📦 Scanner</h2>
 
 <!-- MODE -->
-<div class="toggle-group">
-  <div id="pickupBtn" class="toggle-btn active" onclick="selectMode('pickup')">Pickup</div>
-  <div id="returnBtn" class="toggle-btn" onclick="selectMode('return')">Return</div>
+<div class="toggle">
+  <div id="pickupBtn" class="active" onclick="setMode('pickup')">Pickup</div>
+  <div id="returnBtn" onclick="setMode('return')">Return</div>
 </div>
 
 <!-- SCANNER -->
 <div class="card">
-<div id="reader"></div>
+  <div id="reader"></div>
 
-<button class="start" onclick="startScan()">Start</button>
-<button class="stop" onclick="stopScan()">Stop</button>
-<button class="manual" onclick="openManual()">Manual</button>
+  <button class="start" onclick="startScan()">Start Scan</button>
+  <button class="stop" onclick="stopScan()">Stop</button>
 
-<div id="status">Ready...</div>
-</div>
-
-<!-- MANUAL -->
-<div class="card" id="manualBox">
-<input id="manualOrder" placeholder="Order ID">
-<input id="manualTracking" placeholder="Tracking ID">
-<button onclick="submitManual()">Submit</button>
+  <div class="status" id="status">Ready...</div>
 </div>
 
 </div>
@@ -139,104 +91,122 @@ body.flash-error{ background:#f8d7da !important; }
 
 // ===== GLOBAL =====
 let html5QrCode;
-let step="order";
-let mode="pickup";
+let mode = "pickup";
+let step = "order";
 
-const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+let orderId = "";
+let trackingId = "";
+
+const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
 // ===== MODE =====
-function selectMode(m){
-  mode=m;
-  step="order";
-  manualOrder.value="";
-  manualTracking.value="";
+function setMode(m){
+  mode = m;
+  step = "order";
+  orderId = "";
+  trackingId = "";
+
+  pickupBtn.classList.remove("active");
+  returnBtn.classList.remove("active");
+
+  if(m==="pickup") pickupBtn.classList.add("active");
+  else returnBtn.classList.add("active");
+
+  status.innerText = "Mode: " + m.toUpperCase();
 }
 
-// ===== START SCAN =====
+// ===== START =====
 function startScan(){
 
-  html5QrCode = new Html5Qrcode("reader");
+  if(!html5QrCode){
+    html5QrCode = new Html5Qrcode("reader");
+  }
 
   html5QrCode.start(
     { facingMode:"environment" },
     { fps:10, qrbox:250 },
-    (text)=>{
-
-      beep.play();
-
-      if(step==="order"){
-        manualOrder.value=text;
-        step="tracking";
-        status.innerText="Scan Tracking...";
-        return;
-      }
-
-      if(step==="tracking"){
-        manualTracking.value=text;
-        html5QrCode.stop();
-        submitManual();
-      }
-
-    }
+    onScan
   );
+
+  status.innerText = "Scan Order ID...";
 }
 
-// ===== SUBMIT =====
-function submitManual(){
+// ===== STOP =====
+function stopScan(){
+  if(html5QrCode){
+    html5QrCode.stop().catch(()=>{});
+  }
+}
 
-  let o=manualOrder.value.trim();
-  let t=manualTracking.value.trim();
+// ===== SCAN LOGIC =====
+function onScan(text){
 
-  if(!o || !t){
-    alert("Missing data");
+  beep.play();
+
+  // STEP 1 → ORDER
+  if(step==="order"){
+    orderId = text;
+    step = "tracking";
+    status.innerText = "Order: " + orderId + " ✅ | Scan Tracking...";
     return;
   }
 
-  status.innerText="Saving...";
+  // STEP 2 → TRACKING
+  if(step==="tracking"){
+    trackingId = text;
+
+    stopScan();
+
+    status.innerText = "Saving...";
+    sendData();
+  }
+}
+
+// ===== SEND DATA =====
+function sendData(){
 
   fetch(API.post,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      mode:mode,
-      order_id:o,
-      tracking:t
+    body: JSON.stringify({
+      mode: mode,
+      order_id: orderId,
+      tracking: trackingId
     })
   })
   .then(r=>r.json())
   .then(res=>{
 
-    if(res.duplicate){
-      status.innerText="Duplicate ⚠️";
-      return;
+    if(res.status==="success"){
+      status.innerText = "Saved ✅";
+
+      document.body.style.background="#d4edda";
+
+      setTimeout(resetFlow,1000);
     }
-
-    status.innerText="Saved ✅";
-
-    loadDashboard();
-
-    manualOrder.value="";
-    manualTracking.value="";
-    step="order";
+    else{
+      status.innerText = "Error ❌";
+    }
 
   })
   .catch(()=>{
-    status.innerText="Error ❌";
+    status.innerText = "Network Error ❌";
   });
 }
 
-// ===== DASHBOARD =====
-function loadDashboard(){
-  fetch(API.stats())
-  .then(r=>r.json())
-  .then(d=>{
-    pickup_today.innerText=d.todayPickup||0;
-    return_today.innerText=d.todayReturn||0;
-  });
-}
+// ===== RESET =====
+function resetFlow(){
 
-loadDashboard();
-setInterval(loadDashboard,4000);
+  document.body.style.background="";
+
+  step = "order";
+  orderId = "";
+  trackingId = "";
+
+  status.innerText = "Scan Next Order...";
+
+  startScan();
+}
 
 </script>
 
