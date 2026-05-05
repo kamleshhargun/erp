@@ -139,136 +139,64 @@ body.flash-error{ background:#f8d7da !important; }
 
 // ===== GLOBAL =====
 let html5QrCode;
-let step = "order";
-let mode = "pickup";
-let lastScan = "";
-let scanLock = false;
+let step="order";
+let mode="pickup";
 
-const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
 // ===== MODE =====
-function selectMode(type){
-  mode = type;
-
-  pickupBtn.classList.remove("active");
-  returnBtn.classList.remove("active");
-
-  type==="pickup" ? pickupBtn.classList.add("active") : returnBtn.classList.add("active");
-
-  openManual();
-  resetFlow();
-
-  setTimeout(()=>manualOrder.focus(),100);
+function selectMode(m){
+  mode=m;
+  step="order";
+  manualOrder.value="";
+  manualTracking.value="";
 }
 
-// ===== SCAN START =====
+// ===== START SCAN =====
 function startScan(){
 
-  if(!html5QrCode){
-    html5QrCode = new Html5Qrcode("reader");
-  }
+  html5QrCode = new Html5Qrcode("reader");
 
   html5QrCode.start(
     { facingMode:"environment" },
-    { fps:15, qrbox:250 },
-    onScanSuccess
-  ).catch(()=>{
-    status.innerText="Camera Error ❌";
-  });
+    { fps:10, qrbox:250 },
+    (text)=>{
+
+      beep.play();
+
+      if(step==="order"){
+        manualOrder.value=text;
+        step="tracking";
+        status.innerText="Scan Tracking...";
+        return;
+      }
+
+      if(step==="tracking"){
+        manualTracking.value=text;
+        html5QrCode.stop();
+        submitManual();
+      }
+
+    }
+  );
 }
 
-// ===== SCAN HANDLER =====
-function onScanSuccess(text){
-
-  // 🔒 prevent double scan
-  if(scanLock || text === lastScan) return;
-
-  scanLock = true;
-  lastScan = text;
-
-  setTimeout(()=>{ scanLock = false; }, 800);
-
-  beep.play();
-
-  // STEP 1 → ORDER
-  if(step === "order"){
-    manualOrder.value = text;
-    status.innerText = "Order Scanned ✅";
-
-    step = "tracking";
-
-    setTimeout(()=>manualTracking.focus(),200);
-    return;
-  }
-
-  // STEP 2 → TRACKING
-  if(step === "tracking"){
-    manualTracking.value = text;
-    status.innerText = "Tracking Scanned ✅";
-
-    stopScan();
-    submitManual();
-  }
-}
-
-// ===== STOP =====
-function stopScan(){
-  if(html5QrCode){
-    html5QrCode.stop().catch(()=>{});
-  }
-}
-
-// ===== MANUAL =====
-function openManual(){
-  manualBox.style.display="block";
-}
-
+// ===== SUBMIT =====
 function submitManual(){
 
-  let o = manualOrder.value.trim();
-  let t = manualTracking.value.trim();
+  let o=manualOrder.value.trim();
+  let t=manualTracking.value.trim();
 
   if(!o || !t){
-    status.innerText="Fill both ❌";
+    alert("Missing data");
     return;
   }
-
-  sendData(o,t);
-}
-
-// ===== RESET =====
-function resetFlow(){
-  step = "order";
-  lastScan = "";
-  manualOrder.value = "";
-  manualTracking.value = "";
-  status.innerText = "Ready...";
-}
-
-// ===== FLASH =====
-function flash(type){
-
-  document.body.classList.add(type==="success"?"flash-success":"flash-error");
-
-  setTimeout(()=>{
-    document.body.classList.remove("flash-success","flash-error");
-  },300);
-
-  if(navigator.vibrate){
-    navigator.vibrate(type==="success"?100:[200,100,200]);
-  }
-}
-
-// ===== SEND =====
-function sendData(o,t){
 
   status.innerText="Saving...";
 
   fetch(API.post,{
     method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
+    headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
       mode:mode,
       order_id:o,
@@ -280,28 +208,20 @@ function sendData(o,t){
 
     if(res.duplicate){
       status.innerText="Duplicate ⚠️";
-      flash("error");
       return;
     }
 
-    if(res.status==="success"){
-      status.innerText="Saved ✅";
-      flash("success");
+    status.innerText="Saved ✅";
 
-      loadDashboard();
-      resetFlow();
+    loadDashboard();
 
-      setTimeout(()=>manualOrder.focus(),200);
-
-    }else{
-      status.innerText="Error ❌";
-      flash("error");
-    }
+    manualOrder.value="";
+    manualTracking.value="";
+    step="order";
 
   })
   .catch(()=>{
-    status.innerText="Network Error ❌";
-    flash("error");
+    status.innerText="Error ❌";
   });
 }
 
@@ -310,31 +230,11 @@ function loadDashboard(){
   fetch(API.stats())
   .then(r=>r.json())
   .then(d=>{
-
-    let pickup = d.todayPickup ?? d.today_pickup ?? 0;
-    let ret = d.todayReturn ?? d.today_return ?? 0;
-
-    animateValue(pickup_today, Number(pickup_today.innerText)||0, pickup, 300);
-    animateValue(return_today, Number(return_today.innerText)||0, ret, 300);
-
+    pickup_today.innerText=d.todayPickup||0;
+    return_today.innerText=d.todayReturn||0;
   });
 }
 
-// ===== ANIMATION =====
-function animateValue(el, start, end, duration){
-  let startTime=null;
-
-  function stepFn(timestamp){
-    if(!startTime) startTime=timestamp;
-    let progress=Math.min((timestamp-startTime)/duration,1);
-    el.innerText=Math.floor(progress*(end-start)+start);
-    if(progress<1) requestAnimationFrame(stepFn);
-  }
-
-  requestAnimationFrame(stepFn);
-}
-
-// INIT
 loadDashboard();
 setInterval(loadDashboard,4000);
 
