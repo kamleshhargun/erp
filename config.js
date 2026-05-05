@@ -1,24 +1,40 @@
 // 🔥 SINGLE SOURCE API CONFIG
 const API_BASE = "https://script.google.com/macros/s/AKfycbzRNSkMcVfTNAgp83pfgdhSuPPNCHLs9OX9vg3OXIHX2v4NXCU-dg-ek1uA6GzSLhSo7A/exec";
 
+// 🔥 HELPER (cache bust safe)
+function withNoCache(url){
+  return url + (url.includes("?") ? "&" : "?") + "_=" + Date.now();
+}
+
 // 🔥 ALL ENDPOINTS
 const API = {
-  stats: API_BASE + "?type=stats",
 
+  // ✅ STATS (FIXED)
+  stats: () => withNoCache(API_BASE + "?type=stats"),
+
+  // ✅ LOOKUP
   lookup: (order) =>
-    API_BASE + "?type=lookup&order_id=" + encodeURIComponent(order),
+    withNoCache(
+      API_BASE + "?type=lookup&order_id=" + encodeURIComponent(order)
+    ),
 
+  // ✅ TRACK
   track: (order, tracking) =>
-    API_BASE + "?type=track&order_id=" + encodeURIComponent(order) +
-    "&tracking=" + encodeURIComponent(tracking),
+    withNoCache(
+      API_BASE +
+      "?type=track&order_id=" + encodeURIComponent(order) +
+      "&tracking=" + encodeURIComponent(tracking)
+    ),
 
   // ✅ LEDGER GET
   ledgerGet: (category) =>
-    API_BASE + "?type=ledger&category=" + category,
+    withNoCache(
+      API_BASE + "?type=ledger&category=" + encodeURIComponent(category)
+    ),
 
-  // ✅ LEDGER POST (add/edit/delete)
-  ledgerPost: API_BASE,
+  // ✅ POST (COMMON)
+  post: API_BASE,
 
-  // COMMON POST
-  post: API_BASE
+  // ✅ LEDGER POST
+  ledgerPost: API_BASE
 };
