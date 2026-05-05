@@ -127,7 +127,7 @@ function stopScan(){
   }
 }
 
-// ================= SAVE =================
+// ================= SAVE (UPDATED GET METHOD) =================
 function saveData(orderId, trackingId){
 
   const statusEl = document.getElementById("status");
@@ -139,40 +139,32 @@ function saveData(orderId, trackingId){
 
   statusEl.innerText = "Saving...";
 
-  console.log("Sending:", orderId, trackingId);
+  const url =
+    API.post +
+    "?mode=pickup" +
+    "&order_id=" + encodeURIComponent(orderId) +
+    "&tracking=" + encodeURIComponent(trackingId);
 
-  fetch(API.post,{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      mode:"pickup",
-      order_id:orderId,
-      tracking:trackingId
-    })
-  })
-  .then(res => res.text()) // 🔥 important
-  .then(text => {
-    console.log("RAW RESPONSE:", text);
+  console.log("GET URL:", url);
 
-    let res;
-    try {
-      res = JSON.parse(text);
-    } catch(e){
-      throw new Error("Invalid JSON: " + text);
-    }
+  fetch(url)
+  .then(res => res.json())
+  .then(res => {
+
+    console.log("RESPONSE:", res);
 
     if(res.status === "success"){
       document.getElementById("beep").play();
-      statusEl.innerText = "Saved ✅";
+      statusEl.innerText = "Saved in Sheet ✅";
     }else{
-      statusEl.innerText = "Error: " + (res.message || "Unknown");
+      statusEl.innerText = "Error ❌";
     }
 
     resetFlow();
     loadStats();
   })
   .catch(err=>{
-    console.error(err);
+    console.error("ERROR:", err);
     statusEl.innerText = "Network / API Error ❌";
     resetFlow();
   });
@@ -188,6 +180,7 @@ function resetFlow(){
   document.getElementById("trackingInput").value = "";
 
   document.getElementById("orderInput").focus();
+  document.getElementById("status").innerText = "Ready for next Order";
 }
 
 // ================= MANUAL =================
