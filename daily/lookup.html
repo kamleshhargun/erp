@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="config.js"></script>
+
+<style>
+body{font-family:Arial;background:#eef2f7;text-align:center;}
+.container{max-width:420px;margin:auto;padding:15px;}
+.card{background:#fff;padding:15px;border-radius:12px;margin-bottom:12px;}
+input{width:100%;padding:10px;margin-top:10px;}
+button{width:100%;padding:10px;margin-top:10px;background:#007bff;color:#fff;border:none;}
+.back{background:#333;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🔍 Order Lookup</h2>
+
+<div class="card">
+<input id="order" placeholder="Enter Order ID">
+<button onclick="search()">Search</button>
+<div id="result"></div>
+</div>
+
+<button class="back" onclick="goHome()">⬅ Home</button>
+
+</div>
+
+<script>
+function search(){
+  fetch(API.lookup(order.value))
+  .then(r=>r.json())
+  .then(data=>{
+    let html="";
+    data.forEach(d=>{
+      html+=`<div>${d.order_id} | ${d.sku} | ₹${d.amount}</div>`;
+    });
+    result.innerHTML=html||"No Data";
+  });
+}
+
+function goHome(){ location.href="index.html"; }
+</script>
+
+</body>
+</html>
