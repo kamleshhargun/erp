@@ -37,6 +37,7 @@ button{
 
 .start{background:#28a745;color:#fff;}
 .stop{background:#dc3545;color:#fff;}
+.manualBtn{background:#444;color:#fff;}
 
 .toggle{
   display:flex;
@@ -54,12 +55,22 @@ button{
   color:#fff;
 }
 
+input{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
 #reader video{ width:100%; }
 
 .status{
   margin-top:10px;
   font-weight:bold;
 }
+
+#manualBox{ display:none; }
 </style>
 </head>
 
@@ -81,8 +92,17 @@ button{
 
   <button class="start" onclick="startScan()">Start Scan</button>
   <button class="stop" onclick="stopScan()">Stop</button>
+  <button class="manualBtn" onclick="toggleManual()">Manual Entry</button>
 
   <div class="status" id="status">Ready...</div>
+</div>
+
+<!-- MANUAL -->
+<div class="card" id="manualBox">
+  <h3 id="manualTitle">Manual Entry</h3>
+  <input id="manualOrder" placeholder="Order ID">
+  <input id="manualTracking" placeholder="Tracking ID">
+  <button onclick="submitManual()">Submit</button>
 </div>
 
 </div>
@@ -102,9 +122,7 @@ const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_w
 // ===== MODE =====
 function setMode(m){
   mode = m;
-  step = "order";
-  orderId = "";
-  trackingId = "";
+  resetFlow();
 
   pickupBtn.classList.remove("active");
   returnBtn.classList.remove("active");
@@ -112,7 +130,15 @@ function setMode(m){
   if(m==="pickup") pickupBtn.classList.add("active");
   else returnBtn.classList.add("active");
 
+  manualTitle.innerText = m.toUpperCase() + " Manual Entry";
+
   status.innerText = "Mode: " + m.toUpperCase();
+}
+
+// ===== MANUAL TOGGLE =====
+function toggleManual(){
+  manualBox.style.display =
+    manualBox.style.display === "none" ? "block" : "none";
 }
 
 // ===== START =====
@@ -138,12 +164,12 @@ function stopScan(){
   }
 }
 
-// ===== SCAN LOGIC =====
+// ===== SCAN =====
 function onScan(text){
 
   beep.play();
 
-  // STEP 1 → ORDER
+  // ORDER
   if(step==="order"){
     orderId = text;
     step = "tracking";
@@ -151,27 +177,25 @@ function onScan(text){
     return;
   }
 
-  // STEP 2 → TRACKING
+  // TRACKING
   if(step==="tracking"){
     trackingId = text;
-
     stopScan();
-
     status.innerText = "Saving...";
-    sendData();
+    sendData(orderId, trackingId);
   }
 }
 
-// ===== SEND DATA =====
-function sendData(){
+// ===== SEND =====
+function sendData(o, t){
 
   fetch(API.post,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
       mode: mode,
-      order_id: orderId,
-      tracking: trackingId
+      order_id: o,
+      tracking: t
     })
   })
   .then(r=>r.json())
@@ -179,7 +203,6 @@ function sendData(){
 
     if(res.status==="success"){
       status.innerText = "Saved ✅";
-
       document.body.style.background="#d4edda";
 
       setTimeout(resetFlow,1000);
@@ -194,6 +217,21 @@ function sendData(){
   });
 }
 
+// ===== MANUAL SUBMIT =====
+function submitManual(){
+
+  let o = manualOrder.value.trim();
+  let t = manualTracking.value.trim();
+
+  if(!o || !t){
+    alert("Enter both values");
+    return;
+  }
+
+  status.innerText = "Saving...";
+  sendData(o,t);
+}
+
 // ===== RESET =====
 function resetFlow(){
 
@@ -203,8 +241,12 @@ function resetFlow(){
   orderId = "";
   trackingId = "";
 
-  status.innerText = "Scan Next Order...";
+  manualOrder.value = "";
+  manualTracking.value = "";
 
+  status.innerText = "Scan Order ID...";
+
+  stopScan();
   startScan();
 }
 
