@@ -9,37 +9,11 @@
 <script src="config.js"></script>
 
 <style>
-body{
-  font-family:Arial;
-  background:#eef2f7;
-  margin:0;
-  text-align:center;
-}
-
-.container{
-  max-width:420px;
-  margin:auto;
-  padding:15px;
-}
-
-.card{
-  background:#fff;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:12px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.05);
-}
-
-button{
-  width:100%;
-  padding:12px;
-  margin-top:8px;
-  border:none;
-  border-radius:8px;
-  font-size:14px;
-}
-
-.start{background:#007bff;color:#fff;}
+body{font-family:Arial;background:#eef2f7;margin:0;text-align:center;}
+.container{max-width:420px;margin:auto;padding:15px;}
+.card{background:#fff;padding:15px;border-radius:12px;margin-bottom:12px;}
+button{width:100%;padding:12px;margin-top:8px;border:none;border-radius:8px;font-size:14px;}
+.start{background:#28a745;color:#fff;}
 .stop{background:#dc3545;color:#fff;}
 .back{background:#333;color:#fff;}
 
@@ -59,24 +33,22 @@ input{
 
 <div class="container">
 
-<h2>🔄 Return Scanner</h2>
+<h2>📦 Scanner</h2>
 
 <div class="card">
-Today Return: <b id="count">0</b>
+Today Count: <b id="count">0</b>
 </div>
 
 <div class="card">
 
-<!-- INPUT DISPLAY -->
-
-<input id="orderInput" placeholder="Order ID" readonly>
-<input id="trackingInput" placeholder="Tracking ID" readonly>
+<input id="orderInput" placeholder="Scan / Enter Order ID">
+<input id="trackingInput" placeholder="Scan / Enter Tracking ID">
 
 <div id="reader" style="margin-top:10px;"></div>
 
 <button class="start" onclick="startScan()">▶ Start Scan</button> <button class="stop" onclick="stopScan()">⛔ Stop</button>
 
-<div id="status" style="margin-top:10px;">Ready to scan Order ID</div>
+<div id="status">Ready...</div>
 
 </div>
 
@@ -89,8 +61,9 @@ Today Return: <b id="count">0</b>
 let html5QrCode;
 let step = "order";
 let order = "";
+let lastScan = ""; // duplicate block
 
-// START SCAN
+// ================= START SCAN =================
 function startScan(){
 
   if(html5QrCode) return;
@@ -98,22 +71,26 @@ function startScan(){
   html5QrCode = new Html5Qrcode("reader");
 
   html5QrCode.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
+    { facingMode:"environment" },
+    { fps:10, qrbox:250 },
     (text)=>{
 
-      // STEP 1: ORDER
+      // BLOCK SAME SCAN
+      if(text === lastScan) return;
+      lastScan = text;
+
+      // ORDER STEP
       if(step === "order"){
         order = text;
         orderInput.value = text;
 
         step = "tracking";
-        status.innerText = "Now scan Tracking ID";
+        status.innerText = "Scan Tracking ID";
 
         return;
       }
 
-      // STEP 2: TRACKING
+      // TRACKING STEP
       if(step === "tracking"){
         trackingInput.value = text;
 
@@ -125,7 +102,7 @@ function startScan(){
   );
 }
 
-// STOP
+// ================= STOP =================
 function stopScan(){
   if(html5QrCode){
     html5QrCode.stop().catch(()=>{});
@@ -133,8 +110,13 @@ function stopScan(){
   }
 }
 
-// SAVE
+// ================= SAVE =================
 function saveData(orderId, trackingId){
+
+  if(!orderId || !trackingId){
+    status.innerText = "Missing data ❌";
+    return;
+  }
 
   status.innerText = "Saving...";
 
@@ -142,7 +124,7 @@ function saveData(orderId, trackingId){
     method:"POST",
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
-      mode:"return",
+      mode:"return", // 🔁 CHANGE TO return IN RETURN PAGE
       order_id:orderId,
       tracking:trackingId
     })
@@ -155,6 +137,8 @@ function saveData(orderId, trackingId){
     // RESET
     step = "order";
     order = "";
+    lastScan = "";
+
     orderInput.value = "";
     trackingInput.value = "";
 
@@ -165,18 +149,42 @@ function saveData(orderId, trackingId){
   });
 }
 
-// LOAD COUNT
+// ================= MANUAL INPUT =================
+
+// ENTER on Order → move to tracking
+orderInput.addEventListener("keypress", function(e){
+  if(e.key === "Enter"){
+    order = this.value.trim();
+    if(!order) return;
+
+    step = "tracking";
+    status.innerText = "Enter Tracking ID";
+    trackingInput.focus();
+  }
+});
+
+// ENTER on Tracking → SAVE
+trackingInput.addEventListener("keypress", function(e){
+  if(e.key === "Enter"){
+    const tracking = this.value.trim();
+    if(!tracking) return;
+
+    saveData(order, tracking);
+  }
+});
+
+// ================= LOAD =================
 function loadStats(){
   fetch(API.stats())
   .then(r=>r.json())
   .then(d=>{
-    count.innerText = d.todayReturn || d.today_return || 0;
+    count.innerText = d.todayPickup || d.todayReturn || 0;
   });
 }
 
-// NAV
+// ================= NAV =================
 function goHome(){
-  location.href = "index.html";
+  location.href="index.html";
 }
 
 // INIT
