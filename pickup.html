@@ -80,7 +80,7 @@ let lastScan = "";
 
 // INIT
 window.onload = () => {
-  orderInput.focus(); // cursor direct
+  document.getElementById("orderInput").focus();
   loadStats();
 };
 
@@ -101,16 +101,16 @@ function startScan(){
 
       if(step === "order"){
         order = text;
-        orderInput.value = text;
+        document.getElementById("orderInput").value = text;
 
         step = "tracking";
-        status.innerText = "Scan Tracking ID";
-        trackingInput.focus();
+        document.getElementById("status").innerText = "Scan Tracking ID";
+        document.getElementById("trackingInput").focus();
         return;
       }
 
       if(step === "tracking"){
-        trackingInput.value = text;
+        document.getElementById("trackingInput").value = text;
         stopScan();
         saveData(order, text);
       }
@@ -130,12 +130,16 @@ function stopScan(){
 // ================= SAVE =================
 function saveData(orderId, trackingId){
 
+  const statusEl = document.getElementById("status");
+
   if(!orderId || !trackingId){
-    status.innerText = "Missing data ❌";
+    statusEl.innerText = "Missing data ❌";
     return;
   }
 
-  status.innerText = "Saving to Sheet...";
+  statusEl.innerText = "Saving...";
+
+  console.log("Sending:", orderId, trackingId);
 
   fetch(API.post,{
     method:"POST",
@@ -146,22 +150,30 @@ function saveData(orderId, trackingId){
       tracking:trackingId
     })
   })
-  .then(r=>r.json())
-  .then(res=>{
+  .then(res => res.text()) // 🔥 important
+  .then(text => {
+    console.log("RAW RESPONSE:", text);
+
+    let res;
+    try {
+      res = JSON.parse(text);
+    } catch(e){
+      throw new Error("Invalid JSON: " + text);
+    }
 
     if(res.status === "success"){
       document.getElementById("beep").play();
-      status.innerText = "Saved in Sheet ✅";
+      statusEl.innerText = "Saved ✅";
     }else{
-      status.innerText = "Error ❌";
+      statusEl.innerText = "Error: " + (res.message || "Unknown");
     }
 
     resetFlow();
     loadStats();
-
   })
-  .catch(()=>{
-    status.innerText = "Network Error ❌";
+  .catch(err=>{
+    console.error(err);
+    statusEl.innerText = "Network / API Error ❌";
     resetFlow();
   });
 }
@@ -172,26 +184,25 @@ function resetFlow(){
   order = "";
   lastScan = "";
 
-  orderInput.value = "";
-  trackingInput.value = "";
+  document.getElementById("orderInput").value = "";
+  document.getElementById("trackingInput").value = "";
 
-  orderInput.focus();
-  status.innerText = "Ready for next Order";
+  document.getElementById("orderInput").focus();
 }
 
 // ================= MANUAL =================
-orderInput.addEventListener("keypress", function(e){
+document.getElementById("orderInput").addEventListener("keypress", function(e){
   if(e.key === "Enter"){
     order = this.value.trim();
     if(!order) return;
 
     step = "tracking";
-    status.innerText = "Enter Tracking ID";
-    trackingInput.focus();
+    document.getElementById("status").innerText = "Enter Tracking ID";
+    document.getElementById("trackingInput").focus();
   }
 });
 
-trackingInput.addEventListener("keypress", function(e){
+document.getElementById("trackingInput").addEventListener("keypress", function(e){
   if(e.key === "Enter"){
     const tracking = this.value.trim();
     if(!tracking) return;
@@ -205,8 +216,9 @@ function loadStats(){
   fetch(API.stats())
   .then(r=>r.json())
   .then(d=>{
-    count.innerText = d.todayPickup || 0;
-  });
+    document.getElementById("count").innerText = d.todayPickup || 0;
+  })
+  .catch(()=>{});
 }
 
 // ================= NAV =================
