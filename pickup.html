@@ -1,11 +1,9 @@
 <!DOCTYPE html>
-
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
-
 <script src="config.js"></script>
 
 <style>
@@ -57,7 +55,8 @@ Today Pickup: <b id="count">0</b>
 
 <div id="reader" style="margin-top:10px;"></div>
 
-<button class="start" onclick="startScan()">▶ Start Scan</button> <button class="stop" onclick="stopScan()">⛔ Stop</button>
+<button class="start" onclick="startScan()">▶ Start Scan</button>
+<button class="stop" onclick="stopScan()">⛔ Stop</button>
 
 <div id="status">Ready to scan Order ID</div>
 
@@ -66,8 +65,6 @@ Today Pickup: <b id="count">0</b>
 <button class="back" onclick="goHome()">⬅ Home</button>
 
 </div>
-
-<!-- 🔊 BEEP SOUND -->
 
 <audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
 
@@ -127,7 +124,7 @@ function stopScan(){
   }
 }
 
-// ================= SAVE (UPDATED GET METHOD) =================
+// ================= SAVE (FINAL FIXED) =================
 function saveData(orderId, trackingId){
 
   const statusEl = document.getElementById("status");
@@ -139,15 +136,10 @@ function saveData(orderId, trackingId){
 
   statusEl.innerText = "Saving...";
 
-  const url =
-    API.post +
-    "?mode=pickup" +
-    "&order_id=" + encodeURIComponent(orderId) +
-    "&tracking=" + encodeURIComponent(trackingId);
+  console.log("Sending:", orderId, trackingId);
 
-  console.log("GET URL:", url);
-
-  fetch(url)
+  // 🔥 FINAL FIX
+  fetch(API.pickup(orderId, trackingId))
   .then(res => res.json())
   .then(res => {
 
