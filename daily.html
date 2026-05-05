@@ -8,7 +8,7 @@
 <style>
 body{
   font-family:'Segoe UI';
-  background:linear-gradient(135deg,#eef2f7,#dfe9f3);
+  background:#eef2f7;
   text-align:center;
 }
 
@@ -22,7 +22,6 @@ body{
   background:#fff;
   padding:15px;
   border-radius:12px;
-  margin-bottom:12px;
 }
 
 .toggle{
@@ -33,9 +32,8 @@ body{
   flex:1;
   padding:12px;
   background:#ddd;
-  border-radius:25px;
+  border-radius:20px;
   cursor:pointer;
-  font-weight:bold;
 }
 .active{
   background:#007bff;
@@ -44,20 +42,16 @@ body{
 
 input{
   width:100%;
-  padding:14px;
+  padding:12px;
   margin-top:10px;
-  border-radius:10px;
+  border-radius:8px;
   border:1px solid #ccc;
-  font-size:16px;
 }
 
 .status{
   margin-top:15px;
   font-weight:bold;
 }
-
-.success{ color:green; }
-.error{ color:red; }
 
 </style>
 </head>
@@ -68,19 +62,17 @@ input{
 
 <h2>📦 Manual Scanner</h2>
 
-<!-- MODE -->
 <div class="toggle">
   <div id="pickupBtn" class="active" onclick="setMode('pickup')">Pickup</div>
   <div id="returnBtn" onclick="setMode('return')">Return</div>
 </div>
 
-<!-- INPUT -->
 <div class="card">
 
-<input id="orderInput" placeholder="Enter / Scan Order ID" autofocus>
-<input id="trackingInput" placeholder="Enter / Scan Tracking ID">
+<input id="orderInput" placeholder="Order ID" autofocus>
+<input id="trackingInput" placeholder="Tracking ID">
 
-<div class="status" id="status">Ready...</div>
+<div id="status" class="status">Ready...</div>
 
 </div>
 
@@ -100,24 +92,24 @@ function setMode(m){
   if(m==="pickup") pickupBtn.classList.add("active");
   else returnBtn.classList.add("active");
 
-  status.innerText = "Mode: " + m.toUpperCase();
-
+  updateStatus("Mode: " + m.toUpperCase());
   reset();
 }
 
 // ===== ENTER FLOW =====
-
-// ORDER → ENTER → TRACKING
 orderInput.addEventListener("keypress", function(e){
-  if(e.key === "Enter"){
-    if(!orderInput.value.trim()) return;
+  if(e.key==="Enter"){
+    if(!orderInput.value.trim()){
+      updateStatus("Enter Order ID ❌");
+      return;
+    }
+    updateStatus("Order OK → Enter Tracking");
     trackingInput.focus();
   }
 });
 
-// TRACKING → ENTER → SAVE
 trackingInput.addEventListener("keypress", function(e){
-  if(e.key === "Enter"){
+  if(e.key==="Enter"){
     submitData();
   }
 });
@@ -129,13 +121,17 @@ function submitData(){
   let tracking = trackingInput.value.trim();
 
   if(!order || !tracking){
-    status.innerText = "Missing data ❌";
-    status.className="status error";
+    updateStatus("Missing data ❌");
     return;
   }
 
-  status.innerText = "Saving...";
-  status.className="status";
+  updateStatus("Sending data...");
+
+  console.log("Sending:", {
+    mode,
+    order_id: order,
+    tracking
+  });
 
   fetch(API.post,{
     method:"POST",
@@ -146,26 +142,30 @@ function submitData(){
       tracking: tracking
     })
   })
-  .then(r=>r.json())
   .then(res=>{
+    console.log("Raw response:", res);
+    return res.json();
+  })
+  .then(data=>{
 
-    if(res.status==="success"){
-      status.innerText = "Saved ✅";
-      status.className="status success";
+    console.log("Response JSON:", data);
+
+    if(data.status==="success"){
+      updateStatus("Saved ✅");
 
       setTimeout(()=>{
         reset();
-      },600);
+        updateStatus("Ready for next...");
+      },800);
 
     }else{
-      status.innerText = "Error ❌";
-      status.className="status error";
+      updateStatus("Error: " + JSON.stringify(data));
     }
 
   })
-  .catch(()=>{
-    status.innerText = "Network Error ❌";
-    status.className="status error";
+  .catch(err=>{
+    console.error(err);
+    updateStatus("Network / CORS Error ❌");
   });
 }
 
@@ -174,6 +174,11 @@ function reset(){
   orderInput.value="";
   trackingInput.value="";
   orderInput.focus();
+}
+
+// ===== STATUS =====
+function updateStatus(msg){
+  document.getElementById("status").innerText = msg;
 }
 
 </script>
