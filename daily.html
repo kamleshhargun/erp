@@ -3,8 +3,9 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- QR LIB LOCKED -->
+<!-- QR LIB -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
+<script src="config.js"></script>
 
 <style>
 body{
@@ -12,7 +13,6 @@ body{
   background:linear-gradient(135deg,#eef2f7,#dfe9f3);
   margin:0;
   text-align:center;
-  transition:0.2s;
 }
 
 .container{
@@ -50,7 +50,6 @@ input{
   border:1px solid #ccc;
 }
 
-/* DASHBOARD */
 .stat{
   display:flex;
   justify-content:space-between;
@@ -67,7 +66,6 @@ input{
   color:#007bff;
 }
 
-/* TOGGLE */
 .toggle-group{
   display:flex;
   gap:10px;
@@ -87,11 +85,8 @@ input{
   border-radius:50px;
 }
 
-/* SCANNER FIX */
-#reader{ position:relative; }
 #reader video{ width:100%; pointer-events:none; }
 
-/* FLASH */
 body.flash-success{ background:#d4edda !important; }
 body.flash-error{ background:#f8d7da !important; }
 
@@ -140,13 +135,11 @@ body.flash-error{ background:#f8d7da !important; }
 
 </div>
 
-<script src="config.js"></script>
-
 <script>
+
 // ===== GLOBAL =====
 let html5QrCode;
 let step="order";
-let orderId="";
 let mode="pickup";
 
 const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
@@ -177,7 +170,6 @@ function startScan(){
     text=>{
 
       if(step==="order"){
-        orderId=text;
         manualOrder.value=text;
         manualTracking.focus();
         step="tracking";
@@ -191,7 +183,9 @@ function startScan(){
       }
 
     }
-  );
+  ).catch(err=>{
+    status.innerText="Camera Error ❌";
+  });
 }
 
 // ===== STOP =====
@@ -228,7 +222,6 @@ function submitManual(){
 // ===== RESET =====
 function resetFlow(){
   step="order";
-  orderId="";
   manualOrder.value="";
   manualTracking.value="";
   status.innerText="Ready...";
@@ -253,6 +246,9 @@ function sendData(o,t){
 
   fetch(API.post,{
     method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
     body:JSON.stringify({
       mode:mode,
       order_id:o,
@@ -268,14 +264,23 @@ function sendData(o,t){
       return;
     }
 
-    status.innerText="Saved ✅";
-    flash("success");
+    if(res.status==="success"){
+      status.innerText="Saved ✅";
+      flash("success");
+      loadDashboard();
+    }else{
+      status.innerText="Error ❌";
+      flash("error");
+    }
 
-    loadDashboard();
+  })
+  .catch(()=>{
+    status.innerText="Network Error ❌";
+    flash("error");
   });
 }
 
-// ===== COUNT ANIMATION =====
+// ===== ANIMATION =====
 function animateValue(el, start, end, duration){
   let startTime=null;
 
@@ -291,13 +296,19 @@ function animateValue(el, start, end, duration){
 
 // ===== DASHBOARD =====
 function loadDashboard(){
-  fetch(API.stats)
+  fetch(API.stats()) // ✅ FIX
   .then(r=>r.json())
   .then(d=>{
 
-    animateValue(pickup_today, Number(pickup_today.innerText)||0, d.todayPickup||0, 300);
-    animateValue(return_today, Number(return_today.innerText)||0, d.todayReturn||0, 300);
+    let pickup = d.todayPickup ?? d.today_pickup ?? 0;
+    let ret = d.todayReturn ?? d.today_return ?? 0;
 
+    animateValue(pickup_today, Number(pickup_today.innerText)||0, pickup, 300);
+    animateValue(return_today, Number(return_today.innerText)||0, ret, 300);
+
+  })
+  .catch(()=>{
+    console.log("Stats load error");
   });
 }
 
