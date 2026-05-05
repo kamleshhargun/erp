@@ -3,7 +3,6 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
 <script src="config.js"></script>
 
 <style>
@@ -26,29 +25,17 @@ body{
   margin-bottom:12px;
 }
 
-button{
-  width:100%;
-  padding:12px;
-  margin-top:8px;
-  border:none;
-  border-radius:10px;
-  font-weight:bold;
-}
-
-.start{background:#28a745;color:#fff;}
-.stop{background:#dc3545;color:#fff;}
-.manualBtn{background:#444;color:#fff;}
-
 .toggle{
   display:flex;
   gap:10px;
 }
 .toggle div{
   flex:1;
-  padding:10px;
+  padding:12px;
   background:#ddd;
-  border-radius:20px;
+  border-radius:25px;
   cursor:pointer;
+  font-weight:bold;
 }
 .active{
   background:#007bff;
@@ -57,20 +44,21 @@ button{
 
 input{
   width:100%;
-  padding:10px;
-  margin-top:8px;
-  border-radius:8px;
+  padding:14px;
+  margin-top:10px;
+  border-radius:10px;
   border:1px solid #ccc;
+  font-size:16px;
 }
 
-#reader video{ width:100%; }
-
 .status{
-  margin-top:10px;
+  margin-top:15px;
   font-weight:bold;
 }
 
-#manualBox{ display:none; }
+.success{ color:green; }
+.error{ color:red; }
+
 </style>
 </head>
 
@@ -78,7 +66,7 @@ input{
 
 <div class="container">
 
-<h2>📦 Scanner</h2>
+<h2>📦 Manual Scanner</h2>
 
 <!-- MODE -->
 <div class="toggle">
@@ -86,43 +74,25 @@ input{
   <div id="returnBtn" onclick="setMode('return')">Return</div>
 </div>
 
-<!-- SCANNER -->
+<!-- INPUT -->
 <div class="card">
-  <div id="reader"></div>
 
-  <button class="start" onclick="startScan()">Start Scan</button>
-  <button class="stop" onclick="stopScan()">Stop</button>
-  <button class="manualBtn" onclick="toggleManual()">Manual Entry</button>
+<input id="orderInput" placeholder="Enter / Scan Order ID" autofocus>
+<input id="trackingInput" placeholder="Enter / Scan Tracking ID">
 
-  <div class="status" id="status">Ready...</div>
-</div>
+<div class="status" id="status">Ready...</div>
 
-<!-- MANUAL -->
-<div class="card" id="manualBox">
-  <h3 id="manualTitle">Manual Entry</h3>
-  <input id="manualOrder" placeholder="Order ID">
-  <input id="manualTracking" placeholder="Tracking ID">
-  <button onclick="submitManual()">Submit</button>
 </div>
 
 </div>
 
 <script>
 
-// ===== GLOBAL =====
-let html5QrCode;
 let mode = "pickup";
-let step = "order";
-
-let orderId = "";
-let trackingId = "";
-
-const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
 // ===== MODE =====
 function setMode(m){
   mode = m;
-  resetFlow();
 
   pickupBtn.classList.remove("active");
   returnBtn.classList.remove("active");
@@ -130,72 +100,50 @@ function setMode(m){
   if(m==="pickup") pickupBtn.classList.add("active");
   else returnBtn.classList.add("active");
 
-  manualTitle.innerText = m.toUpperCase() + " Manual Entry";
-
   status.innerText = "Mode: " + m.toUpperCase();
+
+  reset();
 }
 
-// ===== MANUAL TOGGLE =====
-function toggleManual(){
-  manualBox.style.display =
-    manualBox.style.display === "none" ? "block" : "none";
-}
+// ===== ENTER FLOW =====
 
-// ===== START =====
-function startScan(){
-
-  if(!html5QrCode){
-    html5QrCode = new Html5Qrcode("reader");
+// ORDER → ENTER → TRACKING
+orderInput.addEventListener("keypress", function(e){
+  if(e.key === "Enter"){
+    if(!orderInput.value.trim()) return;
+    trackingInput.focus();
   }
+});
 
-  html5QrCode.start(
-    { facingMode:"environment" },
-    { fps:10, qrbox:250 },
-    onScan
-  );
-
-  status.innerText = "Scan Order ID...";
-}
-
-// ===== STOP =====
-function stopScan(){
-  if(html5QrCode){
-    html5QrCode.stop().catch(()=>{});
+// TRACKING → ENTER → SAVE
+trackingInput.addEventListener("keypress", function(e){
+  if(e.key === "Enter"){
+    submitData();
   }
-}
+});
 
-// ===== SCAN =====
-function onScan(text){
+// ===== SAVE =====
+function submitData(){
 
-  beep.play();
+  let order = orderInput.value.trim();
+  let tracking = trackingInput.value.trim();
 
-  // ORDER
-  if(step==="order"){
-    orderId = text;
-    step = "tracking";
-    status.innerText = "Order: " + orderId + " ✅ | Scan Tracking...";
+  if(!order || !tracking){
+    status.innerText = "Missing data ❌";
+    status.className="status error";
     return;
   }
 
-  // TRACKING
-  if(step==="tracking"){
-    trackingId = text;
-    stopScan();
-    status.innerText = "Saving...";
-    sendData(orderId, trackingId);
-  }
-}
-
-// ===== SEND =====
-function sendData(o, t){
+  status.innerText = "Saving...";
+  status.className="status";
 
   fetch(API.post,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
       mode: mode,
-      order_id: o,
-      tracking: t
+      order_id: order,
+      tracking: tracking
     })
   })
   .then(r=>r.json())
@@ -203,51 +151,29 @@ function sendData(o, t){
 
     if(res.status==="success"){
       status.innerText = "Saved ✅";
-      document.body.style.background="#d4edda";
+      status.className="status success";
 
-      setTimeout(resetFlow,1000);
-    }
-    else{
+      setTimeout(()=>{
+        reset();
+      },600);
+
+    }else{
       status.innerText = "Error ❌";
+      status.className="status error";
     }
 
   })
   .catch(()=>{
     status.innerText = "Network Error ❌";
+    status.className="status error";
   });
 }
 
-// ===== MANUAL SUBMIT =====
-function submitManual(){
-
-  let o = manualOrder.value.trim();
-  let t = manualTracking.value.trim();
-
-  if(!o || !t){
-    alert("Enter both values");
-    return;
-  }
-
-  status.innerText = "Saving...";
-  sendData(o,t);
-}
-
 // ===== RESET =====
-function resetFlow(){
-
-  document.body.style.background="";
-
-  step = "order";
-  orderId = "";
-  trackingId = "";
-
-  manualOrder.value = "";
-  manualTracking.value = "";
-
-  status.innerText = "Scan Order ID...";
-
-  stopScan();
-  startScan();
+function reset(){
+  orderInput.value="";
+  trackingInput.value="";
+  orderInput.focus();
 }
 
 </script>
