@@ -282,17 +282,34 @@ function showSection(id, el){
 async function loadDashboard(){
   try{
 
-    const res = await fetch(API.stats() + "&_=" + Date.now()); // ✅ FIX
+    let url = API.stats();
+
+    // ✅ cache bust safe
+    url += (url.includes("?") ? "&" : "?") + "_=" + Date.now();
+
+    const res = await fetch(url);
     const d = await res.json();
 
     console.log("Stats:", d);
 
-    document.getElementById("todayPickup").innerText = d.todayPickup || 0;
-    document.getElementById("todayReturn").innerText = d.todayReturn || 0;
-    document.getElementById("yestPickup").innerText = d.yesterdayPickup || 0;
-    document.getElementById("yestReturn").innerText = d.yesterdayReturn || 0;
-    document.getElementById("totalPickup").innerText = d.totalPickup || 0;
-    document.getElementById("totalReturn").innerText = d.totalReturn || 0;
+    // ✅ support BOTH formats (important fix)
+    document.getElementById("todayPickup").innerText =
+      d.todayPickup ?? d.today_pickup ?? 0;
+
+    document.getElementById("todayReturn").innerText =
+      d.todayReturn ?? d.today_return ?? 0;
+
+    document.getElementById("yestPickup").innerText =
+      d.yesterdayPickup ?? d.yesterday_pickup ?? 0;
+
+    document.getElementById("yestReturn").innerText =
+      d.yesterdayReturn ?? d.yesterday_return ?? 0;
+
+    document.getElementById("totalPickup").innerText =
+      d.totalPickup ?? d.total_pickup ?? 0;
+
+    document.getElementById("totalReturn").innerText =
+      d.totalReturn ?? d.total_return ?? 0;
 
   }catch(e){
     console.log("Stats Error:", e);
@@ -336,6 +353,9 @@ async function submitScan(){
 
     let res = await fetch(API.post,{
       method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
       body:JSON.stringify({
         mode:m,
         order_id:order,
@@ -349,7 +369,7 @@ async function submitScan(){
       beep.play();
       status.innerText="Saved ✅";
 
-      loadDashboard(); // 🔥 stats refresh
+      loadDashboard(); // 🔥 refresh
 
       resetFlow();
     }else{
@@ -357,6 +377,7 @@ async function submitScan(){
     }
 
   }catch(e){
+    console.log(e);
     status.innerText="Network Error";
   }
 }
@@ -375,13 +396,17 @@ async function lookup(){
     let data = await res.json();
 
     let html="";
-    data.forEach(d=>{
-      html += `<div>${d.order_id} | ${d.sku} | ₹${d.amount}</div>`;
-    });
+
+    if(Array.isArray(data)){
+      data.forEach(d=>{
+        html += `<div>${d.order_id || "-"} | ${d.sku || "-"} | ₹${d.amount || 0}</div>`;
+      });
+    }
 
     lookupResult.innerHTML = html || "No Data";
 
   }catch(e){
+    console.log(e);
     lookupResult.innerText = "Error";
   }
 }
@@ -398,12 +423,13 @@ async function track(){
     }
 
     trackResult.innerHTML = `
-      <b>Status:</b> ${d.status}<br>
-      <b>Location:</b> ${d.location}<br>
-      <b>Customer:</b> ${d.customer}
+      <b>Status:</b> ${d.status || "-"}<br>
+      <b>Location:</b> ${d.location || "-"}<br>
+      <b>Customer:</b> ${d.customer || "-"}
     `;
 
   }catch(e){
+    console.log(e);
     trackResult.innerText = "Error";
   }
 }
