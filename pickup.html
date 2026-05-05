@@ -124,7 +124,7 @@ function stopScan(){
   }
 }
 
-// ================= SAVE (FINAL FIXED) =================
+// ================= SAVE (FINAL CLEAN) =================
 function saveData(orderId, trackingId){
 
   const statusEl = document.getElementById("status");
@@ -163,29 +163,6 @@ function saveData(orderId, trackingId){
   })
   .catch(err=>{
     console.error(err);
-    statusEl.innerText = "Network Error ❌";
-  });
-}
-
-  // 🔥 FINAL FIX
-  fetch(API.pickup(orderId, trackingId))
-  .then(res => res.json())
-  .then(res => {
-
-    console.log("RESPONSE:", res);
-
-    if(res.status === "success"){
-      document.getElementById("beep").play();
-      statusEl.innerText = "Saved in Sheet ✅";
-    }else{
-      statusEl.innerText = "Error ❌";
-    }
-
-    resetFlow();
-    loadStats();
-  })
-  .catch(err=>{
-    console.error("ERROR:", err);
     statusEl.innerText = "Network / API Error ❌";
     resetFlow();
   });
