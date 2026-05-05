@@ -136,7 +136,36 @@ function saveData(orderId, trackingId){
 
   statusEl.innerText = "Saving...";
 
-  console.log("Sending:", orderId, trackingId);
+  const url =
+    API_BASE +
+    "?mode=pickup" +
+    "&order_id=" + encodeURIComponent(orderId) +
+    "&tracking=" + encodeURIComponent(trackingId) +
+    "&_=" + Date.now();
+
+  console.log("URL:", url);
+
+  fetch(url)
+  .then(res => res.json())
+  .then(res => {
+
+    console.log("RESPONSE:", res);
+
+    if(res.status === "success"){
+      document.getElementById("beep").play();
+      statusEl.innerText = "Saved in Sheet ✅";
+    }else{
+      statusEl.innerText = "Error ❌";
+    }
+
+    resetFlow();
+    loadStats();
+  })
+  .catch(err=>{
+    console.error(err);
+    statusEl.innerText = "Network Error ❌";
+  });
+}
 
   // 🔥 FINAL FIX
   fetch(API.pickup(orderId, trackingId))
