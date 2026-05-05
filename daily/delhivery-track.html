@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="config.js"></script>
+
+<style>
+body{font-family:Arial;background:#eef2f7;text-align:center;}
+.container{max-width:420px;margin:auto;padding:15px;}
+.card{background:#fff;padding:15px;border-radius:12px;margin-bottom:12px;}
+input{width:100%;padding:10px;margin-top:10px;}
+button{width:100%;padding:10px;margin-top:10px;background:#28a745;color:#fff;border:none;}
+.back{background:#333;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🚚 Delhivery Tracking</h2>
+
+<div class="card">
+<input id="order" placeholder="Order ID">
+<input id="tracking" placeholder="Tracking ID">
+<button onclick="track()">Track</button>
+
+<div id="result"></div>
+</div>
+
+<button class="back" onclick="goHome()">⬅ Home</button>
+
+</div>
+
+<script>
+function track(){
+  fetch(API.track(order.value,tracking.value))
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.error){
+      result.innerText=d.error;
+      return;
+    }
+
+    result.innerHTML=`
+      Status: ${d.status}<br>
+      Location: ${d.location}<br>
+      Customer: ${d.customer}<br>
+      Payment: ${d.payment}<br>
+      Amount: ₹${d.amount}
+    `;
+  });
+}
+
+function goHome(){ location.href="index.html"; }
+</script>
+
+</body>
+</html>
