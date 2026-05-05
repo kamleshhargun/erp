@@ -1,11 +1,9 @@
 <!DOCTYPE html>
-
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
-
 <script src="config.js"></script>
 
 <style>
@@ -57,7 +55,8 @@ Today Return: <b id="count">0</b>
 
 <div id="reader" style="margin-top:10px;"></div>
 
-<button class="start" onclick="startScan()">▶ Start Scan</button> <button class="stop" onclick="stopScan()">⛔ Stop</button>
+<button class="start" onclick="startScan()">▶ Start Scan</button>
+<button class="stop" onclick="stopScan()">⛔ Stop</button>
 
 <div id="status">Ready to scan Order ID</div>
 
@@ -66,8 +65,6 @@ Today Return: <b id="count">0</b>
 <button class="back" onclick="goHome()">⬅ Home</button>
 
 </div>
-
-<!-- 🔊 BEEP SOUND -->
 
 <audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
 
@@ -80,7 +77,7 @@ let lastScan = "";
 
 // INIT
 window.onload = () => {
-  orderInput.focus(); // cursor direct
+  document.getElementById("orderInput").focus();
   loadStats();
 };
 
@@ -101,16 +98,16 @@ function startScan(){
 
       if(step === "order"){
         order = text;
-        orderInput.value = text;
+        document.getElementById("orderInput").value = text;
 
         step = "tracking";
-        status.innerText = "Scan Tracking ID";
-        trackingInput.focus();
+        document.getElementById("status").innerText = "Scan Tracking ID";
+        document.getElementById("trackingInput").focus();
         return;
       }
 
       if(step === "tracking"){
-        trackingInput.value = text;
+        document.getElementById("trackingInput").value = text;
         stopScan();
         saveData(order, text);
       }
@@ -127,41 +124,46 @@ function stopScan(){
   }
 }
 
-// ================= SAVE =================
+// ================= SAVE (FINAL FIXED) =================
 function saveData(orderId, trackingId){
 
+  const statusEl = document.getElementById("status");
+
   if(!orderId || !trackingId){
-    status.innerText = "Missing data ❌";
+    statusEl.innerText = "Missing data ❌";
     return;
   }
 
-  status.innerText = "Saving to Sheet...";
+  statusEl.innerText = "Saving...";
 
-  fetch(API.post,{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      mode:"return",
-      order_id:orderId,
-      tracking:trackingId
-    })
-  })
-  .then(r=>r.json())
-  .then(res=>{
+  const url =
+    API_BASE +
+    "?mode=return" +
+    "&order_id=" + encodeURIComponent(orderId) +
+    "&tracking=" + encodeURIComponent(trackingId) +
+    "&_=" + Date.now();
+
+  console.log("URL:", url);
+
+  fetch(url)
+  .then(res => res.json())
+  .then(res => {
+
+    console.log("RESPONSE:", res);
 
     if(res.status === "success"){
       document.getElementById("beep").play();
-      status.innerText = "Saved in Sheet ✅";
+      statusEl.innerText = "Saved in Sheet ✅";
     }else{
-      status.innerText = "Error ❌";
+      statusEl.innerText = "Error ❌";
     }
 
     resetFlow();
     loadStats();
-
   })
-  .catch(()=>{
-    status.innerText = "Network Error ❌";
+  .catch(err=>{
+    console.error(err);
+    statusEl.innerText = "Network / API Error ❌";
     resetFlow();
   });
 }
@@ -172,26 +174,26 @@ function resetFlow(){
   order = "";
   lastScan = "";
 
-  orderInput.value = "";
-  trackingInput.value = "";
+  document.getElementById("orderInput").value = "";
+  document.getElementById("trackingInput").value = "";
 
-  orderInput.focus();
-  status.innerText = "Ready for next Order";
+  document.getElementById("orderInput").focus();
+  document.getElementById("status").innerText = "Ready for next Order";
 }
 
 // ================= MANUAL =================
-orderInput.addEventListener("keypress", function(e){
+document.getElementById("orderInput").addEventListener("keypress", function(e){
   if(e.key === "Enter"){
     order = this.value.trim();
     if(!order) return;
 
     step = "tracking";
-    status.innerText = "Enter Tracking ID";
-    trackingInput.focus();
+    document.getElementById("status").innerText = "Enter Tracking ID";
+    document.getElementById("trackingInput").focus();
   }
 });
 
-trackingInput.addEventListener("keypress", function(e){
+document.getElementById("trackingInput").addEventListener("keypress", function(e){
   if(e.key === "Enter"){
     const tracking = this.value.trim();
     if(!tracking) return;
@@ -205,8 +207,9 @@ function loadStats(){
   fetch(API.stats())
   .then(r=>r.json())
   .then(d=>{
-    count.innerText = d.todayReturn || 0;
-  });
+    document.getElementById("count").innerText = d.todayReturn || 0;
+  })
+  .catch(()=>{});
 }
 
 // ================= NAV =================
