@@ -1,212 +1,90 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Pickup Scanner PRO</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
 <script src="config.js"></script>
-<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-body{
-  font-family: system-ui;
-  background:#e6f4ea;
-  margin:0;
-}
-
-/* APP */
-.app{
-  max-width:420px;
-  margin:auto;
-  background:#fff;
-  min-height:100vh;
-  border-radius:16px;
-  overflow:hidden;
-}
-
-/* HEADER */
-header{
-  background:#34a853;
-  color:#fff;
-  padding:14px;
-  text-align:center;
-  font-weight:600;
-}
-
-/* STATS */
-.stats{
-  display:flex;
-  gap:10px;
-  padding:10px;
-}
-
-.stats div{
-  flex:1;
-  background:#f1f8f4;
-  padding:10px;
-  border-radius:10px;
-  text-align:center;
-  font-size:13px;
-}
-
-.big{
-  font-size:18px;
-  font-weight:600;
-}
-
-/* CARD */
-.card{
-  padding:15px;
-}
-
-input{
-  width:100%;
-  padding:14px;
-  margin-top:12px;
-  border-radius:12px;
-  border:1px solid #ccc;
-}
-
-/* FLOAT BUTTON */
-.scanBtn{
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  background:#34a853;
-  color:#fff;
-  border:none;
-  border-radius:50%;
-  width:60px;
-  height:60px;
-  font-size:22px;
-}
-
-/* CAMERA BOX */
-#reader{
-  width:100%;
-  display:none;
-  margin-top:10px;
-}
-
-#status{
-  margin-top:10px;
-  text-align:center;
-}
+body{font-family:Arial;background:#eef2f7;text-align:center;margin:0;}
+.container{max-width:420px;margin:auto;padding:15px;}
+.card{background:#fff;padding:15px;border-radius:12px;margin-bottom:12px;}
+button{width:100%;padding:12px;margin-top:8px;border:none;border-radius:8px;}
+.start{background:#28a745;color:#fff;}
+.back{background:#333;color:#fff;}
 </style>
-
 </head>
+
 <body>
+<div class="container">
 
-<div class="app">
+<h2>📦 Pickup</h2>
 
-<header>Pickup PRO</header>
-
-<!-- STATS -->
-<div class="stats">
-  <div>Today Pickup<br><span id="todayPickup" class="big">0</span></div>
-  <div>Today Return<br><span id="todayReturn" class="big">0</span></div>
+<div class="card">
+Today Pickup: <b id="count">0</b>
 </div>
 
 <div class="card">
-
-<input id="orderId" placeholder="Scan Order ID">
-<input id="trackingId" placeholder="Scan Tracking ID">
-
 <div id="reader"></div>
-<div id="status"></div>
-
+<button class="start" onclick="startScan()">Start</button>
+<button onclick="stopScan()">Stop</button>
+<div id="status">Ready...</div>
 </div>
 
-</div>
+<button class="back" onclick="goHome()">⬅ Home</button>
 
-<button class="scanBtn" onclick="startScan()">📷</button>
+</div>
 
 <script>
+let html5QrCode, step="order", order="";
 
-const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
-
-let html5QrCode;
-let step = "order";
-
-// ===== STATS =====
-async function loadStats(){
-  let res = await fetch(API.stats());
-  let d = await res.json();
-
-  document.getElementById("todayPickup").innerText = d.todayPickup || 0;
-  document.getElementById("todayReturn").innerText = d.todayReturn || 0;
-}
-
-// ===== CAMERA START =====
 function startScan(){
+  html5QrCode=new Html5Qrcode("reader");
 
-  document.getElementById("reader").style.display="block";
+  html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:250},txt=>{
+    if(step==="order"){
+      order=txt;
+      step="tracking";
+      status.innerText="Scan Tracking...";
+      return;
+    }
 
-  if(!html5QrCode){
-    html5QrCode = new Html5Qrcode("reader");
-  }
-
-  html5QrCode.start(
-    { facingMode: "environment" },
-    { fps: 20, qrbox: 250 },
-    onScanSuccess
-  );
+    if(step==="tracking"){
+      stopScan();
+      send(order,txt);
+    }
+  });
 }
 
-// ===== SCAN FLOW =====
-function onScanSuccess(text){
-
-  if(step==="order"){
-    document.getElementById("orderId").value = text;
-    step="tracking";
-  }else{
-    document.getElementById("trackingId").value = text;
-    submit();
-    step="order";
-  }
+function stopScan(){
+  if(html5QrCode) html5QrCode.stop().catch(()=>{});
 }
 
-// ===== SUBMIT =====
-async function submit(){
-
-  let order = orderId.value;
-  let tracking = trackingId.value;
-
-  if(!order || !tracking) return;
-
+function send(o,t){
   status.innerText="Saving...";
 
-  let res = await fetch(API.post,{
+  fetch(API.post,{
     method:"POST",
-    body:JSON.stringify({
-      mode:"pickup",
-      order_id:order,
-      tracking:tracking
-    })
-  });
-
-  let d = await res.json();
-
-  if(d.status==="success"){
-    beep.play();
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({mode:"pickup",order_id:o,tracking:t})
+  })
+  .then(r=>r.json())
+  .then(()=>{
     status.innerText="Saved ✅";
-    reset();
-    loadStats();
-  }else{
-    status.innerText="Error";
-  }
+    step="order";
+    load();
+  });
 }
 
-// ===== RESET =====
-function reset(){
-  orderId.value="";
-  trackingId.value="";
+function load(){
+  fetch(API.stats())
+  .then(r=>r.json())
+  .then(d=> count.innerText=d.todayPickup||0);
 }
 
-// INIT
-loadStats();
+function goHome(){ location.href="index.html"; }
 
+load(); setInterval(load,4000);
 </script>
-
 </body>
 </html>
