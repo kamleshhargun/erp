@@ -12,19 +12,30 @@
 body{font-family:Arial;background:#eef2f7;margin:0;text-align:center;}
 .container{max-width:420px;margin:auto;padding:15px;}
 .card{background:#fff;padding:15px;border-radius:12px;margin-bottom:12px;}
-button{width:100%;padding:12px;margin-top:8px;border:none;border-radius:8px;font-size:14px;}
-.start{background:#28a745;color:#fff;}
-.stop{background:#dc3545;color:#fff;}
-.back{background:#333;color:#fff;}
 
 input{
   width:100%;
-  padding:10px;
+  padding:12px;
   margin-top:8px;
   border-radius:8px;
   border:1px solid #ccc;
   font-size:14px;
 }
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border:none;
+  border-radius:8px;
+  font-size:14px;
+}
+
+.start{background:#28a745;color:#fff;}
+.stop{background:#dc3545;color:#fff;}
+.back{background:#333;color:#fff;}
+
+#status{margin-top:10px;font-weight:500;}
 </style>
 
 </head>
@@ -33,22 +44,22 @@ input{
 
 <div class="container">
 
-<h2>📦 Scanner</h2>
+<h2>📦 Return Scanner</h2>
 
 <div class="card">
-Today Count: <b id="count">0</b>
+Today Return: <b id="count">0</b>
 </div>
 
 <div class="card">
 
-<input id="orderInput" placeholder="Scan / Enter Order ID">
-<input id="trackingInput" placeholder="Scan / Enter Tracking ID">
+<input id="orderInput" placeholder="Order ID">
+<input id="trackingInput" placeholder="Tracking ID">
 
 <div id="reader" style="margin-top:10px;"></div>
 
 <button class="start" onclick="startScan()">▶ Start Scan</button> <button class="stop" onclick="stopScan()">⛔ Stop</button>
 
-<div id="status">Ready...</div>
+<div id="status">Ready to scan Order ID</div>
 
 </div>
 
@@ -56,14 +67,24 @@ Today Count: <b id="count">0</b>
 
 </div>
 
+<!-- 🔊 BEEP SOUND -->
+
+<audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+
 <script>
 
 let html5QrCode;
 let step = "order";
 let order = "";
-let lastScan = ""; // duplicate block
+let lastScan = "";
 
-// ================= START SCAN =================
+// INIT
+window.onload = () => {
+  orderInput.focus(); // cursor direct
+  loadStats();
+};
+
+// ================= SCAN =================
 function startScan(){
 
   if(html5QrCode) return;
@@ -75,25 +96,21 @@ function startScan(){
     { fps:10, qrbox:250 },
     (text)=>{
 
-      // BLOCK SAME SCAN
       if(text === lastScan) return;
       lastScan = text;
 
-      // ORDER STEP
       if(step === "order"){
         order = text;
         orderInput.value = text;
 
         step = "tracking";
         status.innerText = "Scan Tracking ID";
-
+        trackingInput.focus();
         return;
       }
 
-      // TRACKING STEP
       if(step === "tracking"){
         trackingInput.value = text;
-
         stopScan();
         saveData(order, text);
       }
@@ -118,40 +135,51 @@ function saveData(orderId, trackingId){
     return;
   }
 
-  status.innerText = "Saving...";
+  status.innerText = "Saving to Sheet...";
 
   fetch(API.post,{
     method:"POST",
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
-      mode:"return", // 🔁 CHANGE TO return IN RETURN PAGE
+      mode:"return",
       order_id:orderId,
       tracking:trackingId
     })
   })
   .then(r=>r.json())
-  .then(()=>{
+  .then(res=>{
 
-    status.innerText = "Saved ✅";
+    if(res.status === "success"){
+      document.getElementById("beep").play();
+      status.innerText = "Saved in Sheet ✅";
+    }else{
+      status.innerText = "Error ❌";
+    }
 
-    // RESET
-    step = "order";
-    order = "";
-    lastScan = "";
-
-    orderInput.value = "";
-    trackingInput.value = "";
-
+    resetFlow();
     loadStats();
+
   })
   .catch(()=>{
-    status.innerText = "Error ❌";
+    status.innerText = "Network Error ❌";
+    resetFlow();
   });
 }
 
-// ================= MANUAL INPUT =================
+// ================= RESET =================
+function resetFlow(){
+  step = "order";
+  order = "";
+  lastScan = "";
 
-// ENTER on Order → move to tracking
+  orderInput.value = "";
+  trackingInput.value = "";
+
+  orderInput.focus();
+  status.innerText = "Ready for next Order";
+}
+
+// ================= MANUAL =================
 orderInput.addEventListener("keypress", function(e){
   if(e.key === "Enter"){
     order = this.value.trim();
@@ -163,7 +191,6 @@ orderInput.addEventListener("keypress", function(e){
   }
 });
 
-// ENTER on Tracking → SAVE
 trackingInput.addEventListener("keypress", function(e){
   if(e.key === "Enter"){
     const tracking = this.value.trim();
@@ -173,12 +200,12 @@ trackingInput.addEventListener("keypress", function(e){
   }
 });
 
-// ================= LOAD =================
+// ================= STATS =================
 function loadStats(){
   fetch(API.stats())
   .then(r=>r.json())
   .then(d=>{
-    count.innerText = d.todayPickup || d.todayReturn || 0;
+    count.innerText = d.todayReturn || 0;
   });
 }
 
@@ -186,10 +213,6 @@ function loadStats(){
 function goHome(){
   location.href="index.html";
 }
-
-// INIT
-loadStats();
-setInterval(loadStats, 5000);
 
 </script>
 
