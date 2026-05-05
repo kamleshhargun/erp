@@ -1,34 +1,83 @@
 <!DOCTYPE html>
+
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
+
 <script src="config.js"></script>
 
 <style>
-body{font-family:Arial;background:#eef2f7;text-align:center;margin:0;}
-.container{max-width:420px;margin:auto;padding:15px;}
-.card{background:#fff;padding:15px;border-radius:12px;margin-bottom:12px;}
-button{width:100%;padding:12px;margin-top:8px;border:none;border-radius:8px;}
+body{
+  font-family:Arial;
+  background:#eef2f7;
+  margin:0;
+  text-align:center;
+}
+
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:15px;
+}
+
+.card{
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border:none;
+  border-radius:8px;
+  font-size:14px;
+}
+
 .start{background:#007bff;color:#fff;}
+.stop{background:#dc3545;color:#fff;}
 .back{background:#333;color:#fff;}
+
+input{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
 </style>
+
 </head>
 
 <body>
+
 <div class="container">
 
-<h2>🔄 Return</h2>
+<h2>🔄 Return Scanner</h2>
 
 <div class="card">
 Today Return: <b id="count">0</b>
 </div>
 
 <div class="card">
-<div id="reader"></div>
-<button class="start" onclick="startScan()">Start</button>
-<button onclick="stopScan()">Stop</button>
-<div id="status">Ready...</div>
+
+<!-- INPUT DISPLAY -->
+
+<input id="orderInput" placeholder="Order ID" readonly>
+<input id="trackingInput" placeholder="Tracking ID" readonly>
+
+<div id="reader" style="margin-top:10px;"></div>
+
+<button class="start" onclick="startScan()">▶ Start Scan</button> <button class="stop" onclick="stopScan()">⛔ Stop</button>
+
+<div id="status" style="margin-top:10px;">Ready to scan Order ID</div>
+
 </div>
 
 <button class="back" onclick="goHome()">⬅ Home</button>
@@ -36,55 +85,105 @@ Today Return: <b id="count">0</b>
 </div>
 
 <script>
-let html5QrCode, step="order", order="";
 
+let html5QrCode;
+let step = "order";
+let order = "";
+
+// START SCAN
 function startScan(){
-  html5QrCode=new Html5Qrcode("reader");
 
-  html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:250},txt=>{
-    if(step==="order"){
-      order=txt;
-      step="tracking";
-      status.innerText="Scan Tracking...";
-      return;
-    }
+  if(html5QrCode) return;
 
-    if(step==="tracking"){
-      stopScan();
-      send(order,txt);
+  html5QrCode = new Html5Qrcode("reader");
+
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    (text)=>{
+
+      // STEP 1: ORDER
+      if(step === "order"){
+        order = text;
+        orderInput.value = text;
+
+        step = "tracking";
+        status.innerText = "Now scan Tracking ID";
+
+        return;
+      }
+
+      // STEP 2: TRACKING
+      if(step === "tracking"){
+        trackingInput.value = text;
+
+        stopScan();
+        saveData(order, text);
+      }
+
     }
-  });
+  );
 }
 
+// STOP
 function stopScan(){
-  if(html5QrCode) html5QrCode.stop().catch(()=>{});
+  if(html5QrCode){
+    html5QrCode.stop().catch(()=>{});
+    html5QrCode = null;
+  }
 }
 
-function send(o,t){
-  status.innerText="Saving...";
+// SAVE
+function saveData(orderId, trackingId){
+
+  status.innerText = "Saving...";
 
   fetch(API.post,{
     method:"POST",
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({mode:"return",order_id:o,tracking:t})
+    body:JSON.stringify({
+      mode:"return",
+      order_id:orderId,
+      tracking:trackingId
+    })
   })
   .then(r=>r.json())
   .then(()=>{
-    status.innerText="Saved ✅";
-    step="order";
-    load();
+
+    status.innerText = "Saved ✅";
+
+    // RESET
+    step = "order";
+    order = "";
+    orderInput.value = "";
+    trackingInput.value = "";
+
+    loadStats();
+  })
+  .catch(()=>{
+    status.innerText = "Error ❌";
   });
 }
 
-function load(){
+// LOAD COUNT
+function loadStats(){
   fetch(API.stats())
   .then(r=>r.json())
-  .then(d=> count.innerText=d.todayReturn||0);
+  .then(d=>{
+    count.innerText = d.todayReturn || d.today_return || 0;
+  });
 }
 
-function goHome(){ location.href="index.html"; }
+// NAV
+function goHome(){
+  location.href = "index.html";
+}
 
-load(); setInterval(load,4000);
+// INIT
+loadStats();
+setInterval(loadStats, 5000);
+
 </script>
+
 </body>
 </html>
