@@ -1,8 +1,9 @@
 <!DOCTYPE html>
+
 <html>
 <head>
 <meta charset="UTF-8">
-<title>HARSIDHI VENTURES</title>
+<title>HARSIDHI VENTURES ERP</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -12,7 +13,7 @@
 body{
   margin:0;
   font-family:system-ui;
-  background:#f5f5f5;
+  background:#f2f3f7;
 }
 
 .app{
@@ -22,22 +23,31 @@ body{
   min-height:100vh;
 }
 
+/* HEADER */
 header{
   padding:16px;
   text-align:center;
   font-weight:600;
   font-size:18px;
   border-bottom:1px solid #eee;
+  background:#ffffff;
 }
 
+/* CARD */
 .card{
   margin:12px;
   padding:14px;
-  border-radius:12px;
+  border-radius:14px;
   background:#fff;
-  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+  box-shadow:0 3px 10px rgba(0,0,0,0.06);
 }
 
+h3{
+  margin:0 0 10px;
+  font-size:15px;
+}
+
+/* STATS */
 .stats{
   display:flex;
   gap:10px;
@@ -46,11 +56,11 @@ header{
 
 .stats div{
   flex:1;
-  background:#f8f9fa;
+  background:#f8f9fb;
   padding:12px;
   border-radius:10px;
   text-align:center;
-  font-size:13px;
+  font-size:12px;
 }
 
 .big{
@@ -59,12 +69,14 @@ header{
   margin-top:5px;
 }
 
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
 }
 
+/* BUTTON */
 button{
   padding:14px;
   border:none;
@@ -74,12 +86,18 @@ button{
   font-size:14px;
   font-weight:500;
   cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  background:#155cc6;
 }
 
 button:active{
   transform:scale(0.97);
 }
 
+/* FOOTER */
 .footer{
   text-align:center;
   font-size:12px;
@@ -94,30 +112,31 @@ button:active{
 
 <div class="app">
 
-<header>HARSIDHI VENTURES</header>
+<header>HARSIDHI VENTURES ERP</header>
 
-<!-- ===== STATS ===== -->
+<!-- DASHBOARD -->
+
 <div class="card">
   <h3>📊 Dashboard</h3>
 
   <div class="stats">
-    <div>Today Pickup<br><span id="todayPickup" class="big">0</span></div>
-    <div>Today Return<br><span id="todayReturn" class="big">0</span></div>
+    <div>Today Pickup<br><span id="todayPickup" class="big">-</span></div>
+    <div>Today Return<br><span id="todayReturn" class="big">-</span></div>
   </div>
 
   <div class="stats">
-    <div>Yesterday Pickup<br><span id="yestPickup" class="big">0</span></div>
-    <div>Yesterday Return<br><span id="yestReturn" class="big">0</span></div>
+    <div>Yesterday Pickup<br><span id="yestPickup" class="big">-</span></div>
+    <div>Yesterday Return<br><span id="yestReturn" class="big">-</span></div>
   </div>
 
   <div class="stats">
-    <div>Total Pickup<br><span id="totalPickup" class="big">0</span></div>
-    <div>Total Return<br><span id="totalReturn" class="big">0</span></div>
+    <div>Total Pickup<br><span id="totalPickup" class="big">-</span></div>
+    <div>Total Return<br><span id="totalReturn" class="big">-</span></div>
   </div>
-
 </div>
 
-<!-- ===== NAVIGATION ===== -->
+<!-- QUICK ACTION -->
+
 <div class="card">
   <h3>⚡ Quick Actions</h3>
 
@@ -129,13 +148,29 @@ button:active{
   </div>
 </div>
 
-<!-- ===== EXTRA ===== -->
+<!-- PRODUCTION -->
+
+<div class="card">
+  <h3>🏭 Production</h3>
+
+  <div class="grid">
+    <button onclick="go('production/production.html')">Main</button>
+    <button onclick="go('production/cutting.html')">Cutting</button>
+    <button onclick="go('production/fabric.html')">Fabric</button>
+    <button onclick="go('production/stitching.html')">Stitching</button>
+    <button onclick="go('production/finished.html')">Finished</button>
+    <button onclick="go('production/production-ledger.html')">Ledger</button>
+  </div>
+</div>
+
+<!-- EXTRA -->
+
 <div class="card">
   <h3>📂 Other</h3>
 
   <div class="grid">
-    <button onclick="go('production/index.html')">🏭 Production</button>
-    <button onclick="go('daily/index.html')">📊 Reports</button>
+    <button onclick="go('lookup.html')">🔍 Lookup</button>
+    <button onclick="go('delhivery-track.html')">🚚 Track</button>
   </div>
 </div>
 
@@ -147,19 +182,17 @@ button:active{
 
 <script>
 
-// ================= NAV =================
+// NAVIGATION
 function go(page){
   window.location.href = page;
 }
 
-// ================= LOAD STATS =================
+// LOAD DASHBOARD
 async function loadDashboard(){
   try{
 
     const res = await fetch(API.stats());
     const d = await res.json();
-
-    console.log("Stats:", d);
 
     document.getElementById("todayPickup").innerText =
       d.todayPickup ?? d.today_pickup ?? 0;
@@ -181,13 +214,17 @@ async function loadDashboard(){
 
   }catch(e){
     console.log("Stats Error:", e);
+
+    document.querySelectorAll(".big").forEach(el=>{
+      el.innerText = "0";
+    });
   }
 }
 
 // INIT
 document.addEventListener("DOMContentLoaded", ()=>{
   loadDashboard();
-  setInterval(loadDashboard, 5000);
+  setInterval(loadDashboard, 7000);
 });
 
 </script>
