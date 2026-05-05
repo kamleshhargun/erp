@@ -139,10 +139,12 @@ body.flash-error{ background:#f8d7da !important; }
 
 // ===== GLOBAL =====
 let html5QrCode;
-let step="order";
-let mode="pickup";
+let step = "order";
+let mode = "pickup";
+let lastScan = "";
+let scanLock = false;
 
-const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
 // ===== MODE =====
 function selectMode(type){
@@ -154,10 +156,12 @@ function selectMode(type){
   type==="pickup" ? pickupBtn.classList.add("active") : returnBtn.classList.add("active");
 
   openManual();
+  resetFlow();
+
   setTimeout(()=>manualOrder.focus(),100);
 }
 
-// ===== SCAN =====
+// ===== SCAN START =====
 function startScan(){
 
   if(!html5QrCode){
@@ -167,25 +171,44 @@ function startScan(){
   html5QrCode.start(
     { facingMode:"environment" },
     { fps:15, qrbox:250 },
-    text=>{
-
-      if(step==="order"){
-        manualOrder.value=text;
-        manualTracking.focus();
-        step="tracking";
-        return;
-      }
-
-      if(step==="tracking"){
-        manualTracking.value=text;
-        stopScan();
-        submitManual();
-      }
-
-    }
-  ).catch(err=>{
+    onScanSuccess
+  ).catch(()=>{
     status.innerText="Camera Error ❌";
   });
+}
+
+// ===== SCAN HANDLER =====
+function onScanSuccess(text){
+
+  // 🔒 prevent double scan
+  if(scanLock || text === lastScan) return;
+
+  scanLock = true;
+  lastScan = text;
+
+  setTimeout(()=>{ scanLock = false; }, 800);
+
+  beep.play();
+
+  // STEP 1 → ORDER
+  if(step === "order"){
+    manualOrder.value = text;
+    status.innerText = "Order Scanned ✅";
+
+    step = "tracking";
+
+    setTimeout(()=>manualTracking.focus(),200);
+    return;
+  }
+
+  // STEP 2 → TRACKING
+  if(step === "tracking"){
+    manualTracking.value = text;
+    status.innerText = "Tracking Scanned ✅";
+
+    stopScan();
+    submitManual();
+  }
 }
 
 // ===== STOP =====
@@ -202,29 +225,24 @@ function openManual(){
 
 function submitManual(){
 
-  let o=manualOrder.value.trim();
-  let t=manualTracking.value.trim();
+  let o = manualOrder.value.trim();
+  let t = manualTracking.value.trim();
 
-  if(!o||!t){
-    alert("Fill both");
+  if(!o || !t){
+    status.innerText="Fill both ❌";
     return;
   }
 
-  beep.play();
-
   sendData(o,t);
-
-  resetFlow();
-
-  setTimeout(()=>manualOrder.focus(),200);
 }
 
 // ===== RESET =====
 function resetFlow(){
-  step="order";
-  manualOrder.value="";
-  manualTracking.value="";
-  status.innerText="Ready...";
+  step = "order";
+  lastScan = "";
+  manualOrder.value = "";
+  manualTracking.value = "";
+  status.innerText = "Ready...";
 }
 
 // ===== FLASH =====
@@ -243,6 +261,8 @@ function flash(type){
 
 // ===== SEND =====
 function sendData(o,t){
+
+  status.innerText="Saving...";
 
   fetch(API.post,{
     method:"POST",
@@ -267,7 +287,12 @@ function sendData(o,t){
     if(res.status==="success"){
       status.innerText="Saved ✅";
       flash("success");
+
       loadDashboard();
+      resetFlow();
+
+      setTimeout(()=>manualOrder.focus(),200);
+
     }else{
       status.innerText="Error ❌";
       flash("error");
@@ -280,23 +305,9 @@ function sendData(o,t){
   });
 }
 
-// ===== ANIMATION =====
-function animateValue(el, start, end, duration){
-  let startTime=null;
-
-  function step(timestamp){
-    if(!startTime) startTime=timestamp;
-    let progress=Math.min((timestamp-startTime)/duration,1);
-    el.innerText=Math.floor(progress*(end-start)+start);
-    if(progress<1) requestAnimationFrame(step);
-  }
-
-  requestAnimationFrame(step);
-}
-
 // ===== DASHBOARD =====
 function loadDashboard(){
-  fetch(API.stats()) // ✅ FIX
+  fetch(API.stats())
   .then(r=>r.json())
   .then(d=>{
 
@@ -306,10 +317,21 @@ function loadDashboard(){
     animateValue(pickup_today, Number(pickup_today.innerText)||0, pickup, 300);
     animateValue(return_today, Number(return_today.innerText)||0, ret, 300);
 
-  })
-  .catch(()=>{
-    console.log("Stats load error");
   });
+}
+
+// ===== ANIMATION =====
+function animateValue(el, start, end, duration){
+  let startTime=null;
+
+  function stepFn(timestamp){
+    if(!startTime) startTime=timestamp;
+    let progress=Math.min((timestamp-startTime)/duration,1);
+    el.innerText=Math.floor(progress*(end-start)+start);
+    if(progress<1) requestAnimationFrame(stepFn);
+  }
+
+  requestAnimationFrame(stepFn);
 }
 
 // INIT
