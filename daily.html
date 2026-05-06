@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Daily Scanner FINAL</title>
+<title>Daily Scanner Simple</title>
 
 <style>
 body {
@@ -36,14 +36,13 @@ input {
 #status {
   margin-top: 15px;
   font-weight: bold;
-  font-size: 18px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📦 Daily Scanner FINAL</h2>
+<h2>📦 Scanner Simple (Manual + Scanner)</h2>
 
 <button class="btn pickup" onclick="start('pickup')">Pickup</button>
 <button class="btn return" onclick="start('return')">Return</button>
@@ -51,32 +50,27 @@ input {
 
 <br><br>
 
-<input id="orderInput" placeholder="Scan Order ID" style="display:none;">
-<input id="trackingInput" placeholder="Scan Tracking ID" style="display:none;">
+<input id="orderInput" placeholder="Scan / Enter Order ID" style="display:none;">
+<input id="trackingInput" placeholder="Scan / Enter Tracking ID" style="display:none;">
 
 <div id="status">Ready</div>
 
-<audio id="beepSound" src="https://www.soundjay.com/buttons/sounds/beep-01a.mp3"></audio>
+<audio id="beep" src="https://www.soundjay.com/buttons/sounds/beep-01a.mp3"></audio>
 
 <script>
 
 const API = "https://script.google.com/macros/s/AKfycbzS_hbdRujRjoK0IN9pDUoZuVKegKlD4vsskOehLG3YZgV-NEVR2YmkVI0RXl-gfgRfdg/exec";
 
-// ELEMENTS
 const orderInput = document.getElementById("orderInput");
 const trackingInput = document.getElementById("trackingInput");
 const statusBox = document.getElementById("status");
-const beep = document.getElementById("beepSound");
+const beep = document.getElementById("beep");
 
 let mode = "";
-let step = "order";
-let timer;
-let saving = false;
 
-// START
+// ===== START =====
 function start(type){
   mode = type;
-  step = "order";
 
   orderInput.style.display = "block";
   trackingInput.style.display = "block";
@@ -89,52 +83,34 @@ function start(type){
   orderInput.focus();
 }
 
-// DETECT COMPLETE SCAN (ENTER + NO ENTER BOTH)
-function detect(type){
-
-  clearTimeout(timer);
-
-  timer = setTimeout(()=>{
-
-    if(type === "order" && orderInput.value.trim() !== ""){
-      step = "tracking";
-      trackingInput.focus();
-      statusBox.innerText = "Scan Tracking";
+// ===== ORDER ENTER / SCAN =====
+orderInput.addEventListener("keydown", function(e){
+  if(e.key === "Enter"){
+    if(!orderInput.value.trim()){
+      statusBox.innerText = "❌ Enter Order ID";
+      return;
     }
 
-    if(type === "tracking" && trackingInput.value.trim() !== ""){
-      saveData();
-    }
-
-  }, 250); // stable delay
-
-}
-
-// INPUT EVENTS
-orderInput.addEventListener("input", ()=> detect("order"));
-trackingInput.addEventListener("input", ()=> detect("tracking"));
-
-// ENTER SUPPORT
-orderInput.addEventListener("keydown", e=>{
-  if(e.key === "Enter") detect("order");
+    trackingInput.focus();
+    statusBox.innerText = "Scan Tracking";
+  }
 });
 
-trackingInput.addEventListener("keydown", e=>{
-  if(e.key === "Enter") detect("tracking");
+// ===== TRACKING ENTER / SCAN =====
+trackingInput.addEventListener("keydown", function(e){
+  if(e.key === "Enter"){
+    saveData();
+  }
 });
 
-// SAVE
+// ===== SAVE =====
 function saveData(){
-
-  if(saving) return;
-  saving = true;
 
   let order = orderInput.value.trim();
   let tracking = trackingInput.value.trim();
 
   if(!order || !tracking){
     statusBox.innerText = "❌ Missing Data";
-    saving = false;
     return;
   }
 
@@ -150,31 +126,27 @@ function saveData(){
       beep.play();
     }
     else if(data.status === "duplicate"){
-      statusBox.innerText = "⚠ Duplicate";
+      statusBox.innerText = "⚠ Already Saved";
     }
     else{
       statusBox.innerText = "❌ Error";
     }
 
-    // RESET FOR NEXT SCAN
+    // NEXT ENTRY
     orderInput.value = "";
     trackingInput.value = "";
     orderInput.focus();
-    saving = false;
 
   })
   .catch(()=>{
     statusBox.innerText = "❌ Network Error";
-    saving = false;
   });
 
 }
 
-// RESET
+// ===== RESET =====
 function resetAll(){
   mode = "";
-  step = "order";
-  saving = false;
 
   orderInput.style.display = "none";
   trackingInput.style.display = "none";
