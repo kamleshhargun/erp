@@ -5,12 +5,98 @@
 <script src="config.js"></script>
 
 <style>
-body{font-family:Arial;background:#eef2f7;text-align:center;}
-.container{max-width:420px;margin:auto;padding:15px;}
-.card{background:#fff;padding:15px;border-radius:12px;margin-bottom:12px;}
-input{width:100%;padding:10px;margin-top:10px;}
-button{width:100%;padding:10px;margin-top:10px;background:#007bff;color:#fff;border:none;}
-.back{background:#333;}
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #eef2f7, #dfe6f0);
+}
+
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:20px 15px;
+}
+
+h2{
+  margin-bottom:15px;
+  color:#333;
+}
+
+.card{
+  background:#fff;
+  padding:18px;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+  margin-bottom:15px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  margin-top:10px;
+  font-size:14px;
+  transition:0.3s;
+}
+
+input:focus{
+  border-color:#007bff;
+  outline:none;
+  box-shadow:0 0 0 2px rgba(0,123,255,0.1);
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border-radius:8px;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.primary{
+  background:#007bff;
+  color:#fff;
+}
+
+.primary:hover{
+  background:#0056b3;
+}
+
+.back{
+  background:#333;
+  color:#fff;
+}
+
+.back:hover{
+  background:#111;
+}
+
+.result-item{
+  background:#f8f9fb;
+  padding:10px;
+  border-radius:8px;
+  margin-top:8px;
+  font-size:14px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.empty{
+  color:#999;
+  margin-top:10px;
+}
+
+.loader{
+  margin-top:10px;
+  font-size:14px;
+  color:#555;
+}
 </style>
 </head>
 
@@ -21,29 +107,59 @@ button{width:100%;padding:10px;margin-top:10px;background:#007bff;color:#fff;bor
 <h2>🔍 Order Lookup</h2>
 
 <div class="card">
+
 <input id="order" placeholder="Enter Order ID">
-<button onclick="search()">Search</button>
+
+<button class="primary" onclick="search()">Search</button>
+
 <div id="result"></div>
+
 </div>
 
-<button class="back" onclick="goHome()">⬅ Home</button>
+<button class="back" onclick="goHome()">⬅ Back to Home</button>
 
 </div>
 
 <script>
 function search(){
-  fetch(API.lookup(order.value))
+  const orderId = document.getElementById("order").value;
+  const resultDiv = document.getElementById("result");
+
+  if(!orderId){
+    resultDiv.innerHTML = "<div class='empty'>Please enter Order ID</div>";
+    return;
+  }
+
+  resultDiv.innerHTML = "<div class='loader'>⏳ Loading...</div>";
+
+  fetch(API.lookup(orderId))
   .then(r=>r.json())
   .then(data=>{
     let html="";
-    data.forEach(d=>{
-      html+=`<div>${d.order_id} | ${d.sku} | ₹${d.amount}</div>`;
-    });
-    result.innerHTML=html||"No Data";
+
+    if(data.length === 0){
+      html = "<div class='empty'>No Data Found</div>";
+    }else{
+      data.forEach(d=>{
+        html+=`
+        <div class="result-item">
+          <span>${d.sku}</span>
+          <span>₹${d.amount}</span>
+        </div>
+        `;
+      });
+    }
+
+    resultDiv.innerHTML=html;
+  })
+  .catch(()=>{
+    resultDiv.innerHTML = "<div class='empty'>Error fetching data ❌</div>";
   });
 }
 
-function goHome(){ location.href="index.html"; }
+function goHome(){
+  location.href="index.html";
+}
 </script>
 
 </body>
