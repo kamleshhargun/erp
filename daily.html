@@ -68,10 +68,16 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzS_hbdRujRjoK0IN9pDUoZ
 
 let mode = "";
 let orderId = "";
+let buffer = "";
+let timer;
+let isSaving = false; // 🔥 prevent double save
 
 // ===== START =====
 function startFlow(type){
   mode = type;
+  orderId = "";
+  buffer = "";
+  isSaving = false;
 
   orderInput.style.display = "block";
   trackingInput.style.display = "block";
@@ -81,43 +87,57 @@ function startFlow(type){
 
   status.innerText = type.toUpperCase() + " MODE ACTIVE";
 
-  setTimeout(()=>orderInput.focus(),100);
+  orderInput.focus();
 }
 
-// ===== AUTO FOCUS FIX (IMPORTANT FOR SCANNER) =====
-document.addEventListener("click", ()=>{
-  if(orderInput.style.display === "block" && !orderInput.value){
-    orderInput.focus();
-  }
-});
+// ===== SCANNER INPUT CAPTURE =====
+document.addEventListener("keydown", function(e){
 
-// ===== ORDER SCAN =====
-orderInput.addEventListener("input", function(){
+  if(!mode || isSaving) return;
 
-  if(this.value.length > 3){ // scanner usually long value
-    orderId = this.value.trim();
-    trackingInput.focus();
-  }
+  // ignore special keys
+  if(e.key.length > 1 && e.key !== "Enter") return;
 
-});
-
-// ===== TRACKING SCAN =====
-trackingInput.addEventListener("input", function(){
-
-  if(this.value.length > 3){
-    let tracking = this.value.trim();
-    saveData(orderId, tracking);
+  if(e.key === "Enter"){
+    processScan(buffer);
+    buffer = "";
+    return;
   }
 
+  buffer += e.key;
+
+  clearTimeout(timer);
+  timer = setTimeout(()=>{
+    processScan(buffer);
+    buffer = "";
+  }, 100); // 🔥 wait for full scan
+
 });
+
+// ===== PROCESS SCAN =====
+function processScan(text){
+
+  if(!text) return;
+
+  // STEP 1: ORDER
+  if(!orderId){
+    orderId = text;
+    orderInput.value = text;
+    status.innerText = "Order OK → Scan Tracking";
+    return;
+  }
+
+  // STEP 2: TRACKING
+  trackingInput.value = text;
+
+  saveData(orderId, text);
+}
 
 // ===== SAVE =====
 function saveData(order, tracking){
 
-  if(!order || !tracking){
-    status.innerText = "❌ Missing Data";
-    return;
-  }
+  if(isSaving) return;
+  isSaving = true;
 
   status.innerText = "Saving...";
 
@@ -130,21 +150,28 @@ function saveData(order, tracking){
       playBeep();
     }
     else if(data.status === "duplicate"){
-      status.innerText = "⚠ Duplicate";
+      status.innerText = "⚠ Already Saved";
     }
     else{
       status.innerText = "❌ Error";
     }
 
-    // 🔥 CONTINUOUS MODE
-    orderInput.value = "";
-    trackingInput.value = "";
+    // 🔥 RESET FOR NEXT SCAN
+    setTimeout(()=>{
+      orderId = "";
+      isSaving = false;
 
-    orderInput.focus();
+      orderInput.value = "";
+      trackingInput.value = "";
+
+      orderInput.focus();
+
+    }, 300);
 
   })
   .catch(()=>{
     status.innerText = "❌ Network Error";
+    isSaving = false;
   });
 
 }
@@ -156,11 +183,12 @@ function playBeep(){
   sound.play();
 }
 
-// ===== RESET =====
+// ===== RESET BUTTON =====
 function resetAll(){
-
   mode = "";
   orderId = "";
+  buffer = "";
+  isSaving = false;
 
   orderInput.style.display = "none";
   trackingInput.style.display = "none";
@@ -169,7 +197,6 @@ function resetAll(){
   trackingInput.value = "";
 
   status.innerText = "Reset Done";
-
 }
 
 </script>
