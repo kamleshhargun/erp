@@ -1,184 +1,153 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Scanner</title>
 
-<script src="config.js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f5f5f5;
+      padding: 20px;
+    }
 
-<style>
-body{
-  font-family:'Segoe UI';
-  background:#eef2f7;
-  text-align:center;
-}
+    h2 {
+      margin-bottom: 20px;
+    }
 
-.container{
-  max-width:420px;
-  margin:auto;
-  padding:15px;
-}
+    .btn {
+      padding: 12px 20px;
+      margin: 10px;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
 
-.card{
-  background:#fff;
-  padding:15px;
-  border-radius:12px;
-}
+    .pickup { background: green; }
+    .return { background: red; }
 
-.toggle{
-  display:flex;
-  gap:10px;
-}
-.toggle div{
-  flex:1;
-  padding:12px;
-  background:#ddd;
-  border-radius:20px;
-  cursor:pointer;
-}
-.active{
-  background:#007bff;
-  color:#fff;
-}
+    input {
+      padding: 12px;
+      width: 80%;
+      margin-top: 15px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
 
-input{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
 
-.status{
-  margin-top:15px;
-  font-weight:bold;
-}
-
-</style>
+  </style>
 </head>
 
 <body>
 
-<div class="container">
+<h2>Daily Pickup / Return</h2>
 
-<h2>📦 Manual Scanner</h2>
+<button class="btn pickup" onclick="startFlow('pickup')">Pickup</button>
+<button class="btn return" onclick="startFlow('return')">Return</button>
 
-<div class="toggle">
-  <div id="pickupBtn" class="active" onclick="setMode('pickup')">Pickup</div>
-  <div id="returnBtn" onclick="setMode('return')">Return</div>
-</div>
+<br><br>
 
-<div class="card">
+<input type="text" id="orderInput" placeholder="Enter Order ID" style="display:none;">
+<input type="text" id="trackingInput" placeholder="Enter Tracking ID" style="display:none;">
 
-<input id="orderInput" placeholder="Order ID" autofocus>
-<input id="trackingInput" placeholder="Tracking ID">
-
-<div id="status" class="status">Ready...</div>
-
-</div>
-
-</div>
+<div id="status">Ready</div>
 
 <script>
 
-let mode = "pickup";
+// 🔥 CONFIG (yaha apna deployed Apps Script URL daalo)
+const API_URL = "https://script.google.com/macros/s/AKfycbzYF1nx8L09QvI-FF5e92lzf2sK78s90JImo87vX9fXMqJ3e01HrDUIRFR4I_BkgHUlXA/exec";
 
-// ===== MODE =====
-function setMode(m){
-  mode = m;
+let mode = "";
+let orderId = "";
+let step = "order";
 
-  pickupBtn.classList.remove("active");
-  returnBtn.classList.remove("active");
+// ===== START =====
+function startFlow(type){
+  mode = type;
+  step = "order";
 
-  if(m==="pickup") pickupBtn.classList.add("active");
-  else returnBtn.classList.add("active");
+  document.getElementById("orderInput").style.display = "block";
+  document.getElementById("trackingInput").style.display = "none";
 
-  updateStatus("Mode: " + m.toUpperCase());
-  reset();
+  document.getElementById("orderInput").value = "";
+  document.getElementById("trackingInput").value = "";
+
+  document.getElementById("status").innerText = type.toUpperCase() + " - Enter Order ID";
+  document.getElementById("orderInput").focus();
 }
 
-// ===== ENTER FLOW =====
-orderInput.addEventListener("keypress", function(e){
-  if(e.key==="Enter"){
-    if(!orderInput.value.trim()){
-      updateStatus("Enter Order ID ❌");
+// ===== ORDER ENTER =====
+document.getElementById("orderInput").addEventListener("keypress", function(e){
+  if(e.key === "Enter"){
+    orderId = this.value.trim();
+
+    if(!orderId){
+      alert("Enter Order ID");
       return;
     }
-    updateStatus("Order OK → Enter Tracking");
-    trackingInput.focus();
+
+    step = "tracking";
+
+    document.getElementById("trackingInput").style.display = "block";
+    document.getElementById("trackingInput").focus();
+
+    document.getElementById("status").innerText = "Enter Tracking ID";
   }
 });
 
-trackingInput.addEventListener("keypress", function(e){
-  if(e.key==="Enter"){
-    submitData();
+// ===== TRACKING ENTER =====
+document.getElementById("trackingInput").addEventListener("keypress", function(e){
+  if(e.key === "Enter"){
+    let tracking = this.value.trim();
+
+    if(!tracking){
+      alert("Enter Tracking ID");
+      return;
+    }
+
+    saveData(orderId, tracking);
   }
 });
 
 // ===== SAVE =====
-function submitData(){
+function saveData(order, tracking){
 
-  let order = orderInput.value.trim();
-  let tracking = trackingInput.value.trim();
+  document.getElementById("status").innerText = "Saving...";
 
-  if(!order || !tracking){
-    updateStatus("Missing data ❌");
-    return;
-  }
+  fetch(API_URL + "?mode=" + mode + "&order_id=" + order + "&tracking=" + tracking)
+  .then(res => res.json())
+  .then(data => {
 
-  updateStatus("Sending data...");
-
-  console.log("Sending:", {
-    mode,
-    order_id: order,
-    tracking
-  });
-
-  fetch(API.post,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      mode: mode,
-      order_id: order,
-      tracking: tracking
-    })
-  })
-  .then(res=>{
-    console.log("Raw response:", res);
-    return res.json();
-  })
-  .then(data=>{
-
-    console.log("Response JSON:", data);
-
-    if(data.status==="success"){
-      updateStatus("Saved ✅");
-
-      setTimeout(()=>{
-        reset();
-        updateStatus("Ready for next...");
-      },800);
-
-    }else{
-      updateStatus("Error: " + JSON.stringify(data));
+    if(data.status === "success"){
+      document.getElementById("status").innerText = "✅ Saved Successfully";
+    } else {
+      document.getElementById("status").innerText = "❌ Error";
     }
+
+    reset();
 
   })
   .catch(err=>{
-    console.error(err);
-    updateStatus("Network / CORS Error ❌");
+    document.getElementById("status").innerText = "❌ Network Error";
   });
+
 }
 
 // ===== RESET =====
 function reset(){
-  orderInput.value="";
-  trackingInput.value="";
-  orderInput.focus();
-}
-
-// ===== STATUS =====
-function updateStatus(msg){
-  document.getElementById("status").innerText = msg;
+  setTimeout(()=>{
+    document.getElementById("orderInput").style.display = "none";
+    document.getElementById("trackingInput").style.display = "none";
+    document.getElementById("status").innerText = "Ready";
+  },1500);
 }
 
 </script>
