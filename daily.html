@@ -64,139 +64,92 @@ input {
 
 <script>
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzS_hbdRujRjoK0IN9pDUoZuVKegKlD4vsskOehLG3YZgV-NEVR2YmkVI0RXl-gfgRfdg/exec";
+const API = "https://script.google.com/macros/s/AKfycbzS_hbdRujRjoK0IN9pDUoZuVKegKlD4vsskOehLG3YZgV-NEVR2YmkVI0RXl-gfgRfdg/exec";
 
 let mode = "";
-let orderId = "";
-let buffer = "";
+let step = "order";
 let timer;
-let isSaving = false; // 🔥 prevent double save
 
 // ===== START =====
-function startFlow(type){
+function start(type){
   mode = type;
-  orderId = "";
-  buffer = "";
-  isSaving = false;
+  step = "order";
 
-  orderInput.style.display = "block";
-  trackingInput.style.display = "block";
+  order.style.display = "block";
+  tracking.style.display = "block";
 
-  orderInput.value = "";
-  trackingInput.value = "";
+  order.value = "";
+  tracking.value = "";
 
-  status.innerText = type.toUpperCase() + " MODE ACTIVE";
+  status.innerText = type.toUpperCase() + " START";
 
-  orderInput.focus();
+  order.focus();
 }
 
-// ===== SCANNER INPUT CAPTURE =====
-document.addEventListener("keydown", function(e){
-
-  if(!mode || isSaving) return;
-
-  // ignore special keys
-  if(e.key.length > 1 && e.key !== "Enter") return;
-
-  if(e.key === "Enter"){
-    processScan(buffer);
-    buffer = "";
-    return;
-  }
-
-  buffer += e.key;
+// ===== AUTO DETECT =====
+function autoNext(input, type){
 
   clearTimeout(timer);
+
   timer = setTimeout(()=>{
-    processScan(buffer);
-    buffer = "";
-  }, 100); // 🔥 wait for full scan
 
-});
+    if(type === "order"){
+      step = "tracking";
+      tracking.focus();
+      status.innerText = "Scan Tracking";
+    }
 
-// ===== PROCESS SCAN =====
-function processScan(text){
+    if(type === "tracking"){
+      save();
+    }
 
-  if(!text) return;
+  }, 200); // 🔥 scan complete wait
 
-  // STEP 1: ORDER
-  if(!orderId){
-    orderId = text;
-    orderInput.value = text;
-    status.innerText = "Order OK → Scan Tracking";
-    return;
-  }
-
-  // STEP 2: TRACKING
-  trackingInput.value = text;
-
-  saveData(orderId, text);
 }
 
-// ===== SAVE =====
-function saveData(order, tracking){
+// ===== INPUT LISTENER =====
+order.addEventListener("input", ()=> autoNext(order, "order"));
+tracking.addEventListener("input", ()=> autoNext(tracking, "tracking"));
 
-  if(isSaving) return;
-  isSaving = true;
+// ===== SAVE =====
+function save(){
+
+  let o = order.value;
+  let t = tracking.value;
 
   status.innerText = "Saving...";
 
-  fetch(API_URL + "?mode=" + mode + "&order_id=" + order + "&tracking=" + tracking)
-  .then(res => res.json())
-  .then(data => {
+  fetch(API + "?mode=" + mode + "&order_id=" + o + "&tracking=" + t)
+  .then(r => r.json())
+  .then(d => {
 
-    if(data.status === "success"){
+    if(d.status === "success"){
       status.innerText = "✅ Saved";
-      playBeep();
-    }
-    else if(data.status === "duplicate"){
-      status.innerText = "⚠ Already Saved";
-    }
-    else{
+      beep.play();
+    } else {
       status.innerText = "❌ Error";
     }
 
-    // 🔥 RESET FOR NEXT SCAN
-    setTimeout(()=>{
-      orderId = "";
-      isSaving = false;
-
-      orderInput.value = "";
-      trackingInput.value = "";
-
-      orderInput.focus();
-
-    }, 300);
+    // RESET FOR NEXT
+    order.value = "";
+    tracking.value = "";
+    order.focus();
 
   })
   .catch(()=>{
     status.innerText = "❌ Network Error";
-    isSaving = false;
   });
 
 }
 
-// ===== SOUND =====
-function playBeep(){
-  let sound = document.getElementById("beepSound");
-  sound.currentTime = 0;
-  sound.play();
-}
-
-// ===== RESET BUTTON =====
+// ===== RESET =====
 function resetAll(){
   mode = "";
-  orderId = "";
-  buffer = "";
-  isSaving = false;
-
-  orderInput.style.display = "none";
-  trackingInput.style.display = "none";
-
-  orderInput.value = "";
-  trackingInput.value = "";
-
-  status.innerText = "Reset Done";
+  order.style.display = "none";
+  tracking.style.display = "none";
+  order.value = "";
+  tracking.value = "";
+  status.innerText = "Reset";
 }
 
 </script>
