@@ -1,54 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Daily Scanner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Scanner</title>
 
-  <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      background: #f5f5f5;
-      padding: 20px;
-    }
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #f4f6f9;
+  padding: 20px;
+}
 
-    h2 {
-      margin-bottom: 20px;
-    }
+h2 {
+  margin-bottom: 20px;
+}
 
-    .btn {
-      padding: 12px 20px;
-      margin: 10px;
-      border: none;
-      color: white;
-      font-size: 16px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+.btn {
+  padding: 14px 22px;
+  margin: 10px;
+  border: none;
+  color: white;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
 
-    .pickup { background: green; }
-    .return { background: red; }
+.pickup { background: #28a745; }
+.return { background: #dc3545; }
 
-    input {
-      padding: 12px;
-      width: 80%;
-      margin-top: 15px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
+input {
+  padding: 14px;
+  width: 85%;
+  margin-top: 15px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
 
-    #status {
-      margin-top: 20px;
-      font-weight: bold;
-    }
+#status {
+  margin-top: 20px;
+  font-weight: bold;
+  font-size: 18px;
+}
+</style>
 
-  </style>
 </head>
 
 <body>
 
-<h2>Daily Pickup / Return</h2>
+<h2>📦 Daily Pickup / Return</h2>
 
 <button class="btn pickup" onclick="startFlow('pickup')">Pickup</button>
 <button class="btn return" onclick="startFlow('return')">Return</button>
@@ -60,19 +61,21 @@
 
 <div id="status">Ready</div>
 
+<!-- 🔊 SOUND -->
+<audio id="beepSound" src="https://www.soundjay.com/buttons/sounds/beep-01a.mp3" preload="auto"></audio>
+
 <script>
 
-// 🔥 CONFIG (yaha apna deployed Apps Script URL daalo)
+// 🔥 APNA WEB APP URL DAALO
 const API_URL = "https://script.google.com/macros/s/AKfycbzYF1nx8L09QvI-FF5e92lzf2sK78s90JImo87vX9fXMqJ3e01HrDUIRFR4I_BkgHUlXA/exec";
 
 let mode = "";
 let orderId = "";
-let step = "order";
 
-// ===== START =====
+// ===== START FLOW =====
 function startFlow(type){
   mode = type;
-  step = "order";
+  orderId = "";
 
   document.getElementById("orderInput").style.display = "block";
   document.getElementById("trackingInput").style.display = "none";
@@ -80,7 +83,7 @@ function startFlow(type){
   document.getElementById("orderInput").value = "";
   document.getElementById("trackingInput").value = "";
 
-  document.getElementById("status").innerText = type.toUpperCase() + " - Enter Order ID";
+  document.getElementById("status").innerText = type.toUpperCase() + " → Enter Order ID";
   document.getElementById("orderInput").focus();
 }
 
@@ -93,8 +96,6 @@ document.getElementById("orderInput").addEventListener("keypress", function(e){
       alert("Enter Order ID");
       return;
     }
-
-    step = "tracking";
 
     document.getElementById("trackingInput").style.display = "block";
     document.getElementById("trackingInput").focus();
@@ -117,7 +118,7 @@ document.getElementById("trackingInput").addEventListener("keypress", function(e
   }
 });
 
-// ===== SAVE =====
+// ===== SAVE DATA =====
 function saveData(order, tracking){
 
   document.getElementById("status").innerText = "Saving...";
@@ -128,7 +129,12 @@ function saveData(order, tracking){
 
     if(data.status === "success"){
       document.getElementById("status").innerText = "✅ Saved Successfully";
-    } else {
+      playBeep(); // 🔊 SOUND
+    }
+    else if(data.status === "duplicate"){
+      document.getElementById("status").innerText = "⚠ Already Saved";
+    }
+    else{
       document.getElementById("status").innerText = "❌ Error";
     }
 
@@ -139,6 +145,13 @@ function saveData(order, tracking){
     document.getElementById("status").innerText = "❌ Network Error";
   });
 
+}
+
+// ===== PLAY SOUND =====
+function playBeep(){
+  let sound = document.getElementById("beepSound");
+  sound.currentTime = 0;
+  sound.play();
 }
 
 // ===== RESET =====
