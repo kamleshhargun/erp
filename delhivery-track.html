@@ -5,12 +5,134 @@
 <script src="config.js"></script>
 
 <style>
-body{font-family:Arial;background:#eef2f7;text-align:center;}
-.container{max-width:420px;margin:auto;padding:15px;}
-.card{background:#fff;padding:15px;border-radius:12px;margin-bottom:12px;}
-input{width:100%;padding:10px;margin-top:10px;}
-button{width:100%;padding:10px;margin-top:10px;background:#28a745;color:#fff;border:none;}
-.back{background:#333;}
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  font-family:'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg,#eef2f7,#dfe6f0);
+}
+
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:20px 15px;
+}
+
+h2{
+  color:#333;
+  margin-bottom:15px;
+}
+
+.card{
+  background:#fff;
+  padding:18px;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+  margin-bottom:15px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:14px;
+  transition:0.3s;
+}
+
+input:focus{
+  border-color:#28a745;
+  outline:none;
+  box-shadow:0 0 0 2px rgba(40,167,69,0.1);
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border:none;
+  border-radius:8px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.primary{
+  background:#28a745;
+  color:#fff;
+}
+
+.primary:hover{
+  background:#1e7e34;
+}
+
+.back{
+  background:#333;
+  color:#fff;
+}
+
+.back:hover{
+  background:#111;
+}
+
+.loader{
+  margin-top:10px;
+  color:#555;
+}
+
+.error{
+  color:red;
+  margin-top:10px;
+}
+
+.result-card{
+  background:#f8f9fb;
+  padding:12px;
+  border-radius:10px;
+  margin-top:12px;
+  text-align:left;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:6px;
+  font-size:14px;
+}
+
+.label{
+  color:#555;
+}
+
+.value{
+  font-weight:600;
+}
+
+.status{
+  padding:6px 10px;
+  border-radius:20px;
+  display:inline-block;
+  font-size:12px;
+  font-weight:600;
+  margin-bottom:8px;
+}
+
+.status.delivered{
+  background:#d4edda;
+  color:#155724;
+}
+
+.status.pending{
+  background:#fff3cd;
+  color:#856404;
+}
+
+.status.transit{
+  background:#cce5ff;
+  color:#004085;
+}
 </style>
 </head>
 
@@ -21,38 +143,88 @@ button{width:100%;padding:10px;margin-top:10px;background:#28a745;color:#fff;bor
 <h2>🚚 Delhivery Tracking</h2>
 
 <div class="card">
+
 <input id="order" placeholder="Order ID">
 <input id="tracking" placeholder="Tracking ID">
-<button onclick="track()">Track</button>
+
+<button class="primary" onclick="track()">Track Order</button>
 
 <div id="result"></div>
+
 </div>
 
-<button class="back" onclick="goHome()">⬅ Home</button>
+<button class="back" onclick="goHome()">⬅ Back to Home</button>
 
 </div>
 
 <script>
 function track(){
-  fetch(API.track(order.value,tracking.value))
+  const orderId = document.getElementById("order").value;
+  const trackingId = document.getElementById("tracking").value;
+  const resultDiv = document.getElementById("result");
+
+  if(!orderId || !trackingId){
+    resultDiv.innerHTML = "<div class='error'>Please enter Order ID & Tracking ID</div>";
+    return;
+  }
+
+  resultDiv.innerHTML = "<div class='loader'>⏳ Tracking...</div>";
+
+  fetch(API.track(orderId, trackingId))
   .then(r=>r.json())
   .then(d=>{
+
     if(d.error){
-      result.innerText=d.error;
+      resultDiv.innerHTML = `<div class="error">${d.error}</div>`;
       return;
     }
 
-    result.innerHTML=`
-      Status: ${d.status}<br>
-      Location: ${d.location}<br>
-      Customer: ${d.customer}<br>
-      Payment: ${d.payment}<br>
-      Amount: ₹${d.amount}
+    let statusClass = "pending";
+
+    if(d.status.toLowerCase().includes("deliver")){
+      statusClass = "delivered";
+    }else if(d.status.toLowerCase().includes("transit")){
+      statusClass = "transit";
+    }
+
+    resultDiv.innerHTML = `
+      <div class="result-card">
+
+        <div class="status ${statusClass}">
+          ${d.status}
+        </div>
+
+        <div class="row">
+          <span class="label">📍 Location</span>
+          <span class="value">${d.location}</span>
+        </div>
+
+        <div class="row">
+          <span class="label">👤 Customer</span>
+          <span class="value">${d.customer}</span>
+        </div>
+
+        <div class="row">
+          <span class="label">💳 Payment</span>
+          <span class="value">${d.payment}</span>
+        </div>
+
+        <div class="row">
+          <span class="label">💰 Amount</span>
+          <span class="value">₹${d.amount}</span>
+        </div>
+
+      </div>
     `;
+  })
+  .catch(()=>{
+    resultDiv.innerHTML = "<div class='error'>Network Error ❌</div>";
   });
 }
 
-function goHome(){ location.href="index.html"; }
+function goHome(){
+  location.href="index.html";
+}
 </script>
 
 </body>
