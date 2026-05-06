@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Daily Scanner PRO</title>
+<title>Daily Scanner FINAL</title>
 
 <style>
 body {
@@ -11,8 +11,6 @@ body {
   background: #f4f6f9;
   padding: 20px;
 }
-
-h2 { margin-bottom: 20px; }
 
 .btn {
   padding: 14px 22px;
@@ -24,17 +22,15 @@ h2 { margin-bottom: 20px; }
   cursor: pointer;
 }
 
-.pickup { background: #28a745; }
-.return { background: #dc3545; }
-.reset { background: #333; }
+.pickup { background: green; }
+.return { background: red; }
+.reset { background: black; }
 
 input {
   padding: 14px;
   width: 85%;
   margin-top: 12px;
   font-size: 16px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
 }
 
 #status {
@@ -47,16 +43,16 @@ input {
 
 <body>
 
-<h2>📦 Daily Scanner PRO</h2>
+<h2>📦 Daily Scanner FINAL</h2>
 
-<button class="btn pickup" onclick="startFlow('pickup')">Pickup</button>
-<button class="btn return" onclick="startFlow('return')">Return</button>
+<button class="btn pickup" onclick="start('pickup')">Pickup</button>
+<button class="btn return" onclick="start('return')">Return</button>
 <button class="btn reset" onclick="resetAll()">Reset</button>
 
 <br><br>
 
-<input type="text" id="orderInput" placeholder="Scan / Enter Order ID" style="display:none;">
-<input type="text" id="trackingInput" placeholder="Scan / Enter Tracking ID" style="display:none;">
+<input id="orderInput" placeholder="Scan Order ID" style="display:none;">
+<input id="trackingInput" placeholder="Scan Tracking ID" style="display:none;">
 
 <div id="status">Ready</div>
 
@@ -66,90 +62,127 @@ input {
 
 const API = "https://script.google.com/macros/s/AKfycbzS_hbdRujRjoK0IN9pDUoZuVKegKlD4vsskOehLG3YZgV-NEVR2YmkVI0RXl-gfgRfdg/exec";
 
+// ELEMENTS
+const orderInput = document.getElementById("orderInput");
+const trackingInput = document.getElementById("trackingInput");
+const statusBox = document.getElementById("status");
+const beep = document.getElementById("beepSound");
+
 let mode = "";
 let step = "order";
 let timer;
+let saving = false;
 
-// ===== START =====
+// START
 function start(type){
   mode = type;
   step = "order";
 
-  order.style.display = "block";
-  tracking.style.display = "block";
+  orderInput.style.display = "block";
+  trackingInput.style.display = "block";
 
-  order.value = "";
-  tracking.value = "";
+  orderInput.value = "";
+  trackingInput.value = "";
 
-  status.innerText = type.toUpperCase() + " START";
+  statusBox.innerText = type.toUpperCase() + " START";
 
-  order.focus();
+  orderInput.focus();
 }
 
-// ===== AUTO DETECT =====
-function autoNext(input, type){
+// DETECT COMPLETE SCAN (ENTER + NO ENTER BOTH)
+function detect(type){
 
   clearTimeout(timer);
 
   timer = setTimeout(()=>{
 
-    if(type === "order"){
+    if(type === "order" && orderInput.value.trim() !== ""){
       step = "tracking";
-      tracking.focus();
-      status.innerText = "Scan Tracking";
+      trackingInput.focus();
+      statusBox.innerText = "Scan Tracking";
     }
 
-    if(type === "tracking"){
-      save();
+    if(type === "tracking" && trackingInput.value.trim() !== ""){
+      saveData();
     }
 
-  }, 200); // 🔥 scan complete wait
+  }, 250); // stable delay
 
 }
 
-// ===== INPUT LISTENER =====
-order.addEventListener("input", ()=> autoNext(order, "order"));
-tracking.addEventListener("input", ()=> autoNext(tracking, "tracking"));
+// INPUT EVENTS
+orderInput.addEventListener("input", ()=> detect("order"));
+trackingInput.addEventListener("input", ()=> detect("tracking"));
 
-// ===== SAVE =====
-function save(){
+// ENTER SUPPORT
+orderInput.addEventListener("keydown", e=>{
+  if(e.key === "Enter") detect("order");
+});
 
-  let o = order.value;
-  let t = tracking.value;
+trackingInput.addEventListener("keydown", e=>{
+  if(e.key === "Enter") detect("tracking");
+});
 
-  status.innerText = "Saving...";
+// SAVE
+function saveData(){
 
-  fetch(API + "?mode=" + mode + "&order_id=" + o + "&tracking=" + t)
-  .then(r => r.json())
-  .then(d => {
+  if(saving) return;
+  saving = true;
 
-    if(d.status === "success"){
-      status.innerText = "✅ Saved";
+  let order = orderInput.value.trim();
+  let tracking = trackingInput.value.trim();
+
+  if(!order || !tracking){
+    statusBox.innerText = "❌ Missing Data";
+    saving = false;
+    return;
+  }
+
+  statusBox.innerText = "Saving...";
+
+  fetch(API + "?mode=" + mode + "&order_id=" + order + "&tracking=" + tracking)
+  .then(res => res.json())
+  .then(data => {
+
+    if(data.status === "success"){
+      statusBox.innerText = "✅ Saved";
+      beep.currentTime = 0;
       beep.play();
-    } else {
-      status.innerText = "❌ Error";
+    }
+    else if(data.status === "duplicate"){
+      statusBox.innerText = "⚠ Duplicate";
+    }
+    else{
+      statusBox.innerText = "❌ Error";
     }
 
-    // RESET FOR NEXT
-    order.value = "";
-    tracking.value = "";
-    order.focus();
+    // RESET FOR NEXT SCAN
+    orderInput.value = "";
+    trackingInput.value = "";
+    orderInput.focus();
+    saving = false;
 
   })
   .catch(()=>{
-    status.innerText = "❌ Network Error";
+    statusBox.innerText = "❌ Network Error";
+    saving = false;
   });
 
 }
 
-// ===== RESET =====
+// RESET
 function resetAll(){
   mode = "";
-  order.style.display = "none";
-  tracking.style.display = "none";
-  order.value = "";
-  tracking.value = "";
-  status.innerText = "Reset";
+  step = "order";
+  saving = false;
+
+  orderInput.style.display = "none";
+  trackingInput.style.display = "none";
+
+  orderInput.value = "";
+  trackingInput.value = "";
+
+  statusBox.innerText = "Reset Done";
 }
 
 </script>
