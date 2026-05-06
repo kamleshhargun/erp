@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Daily Scanner</title>
+<title>Daily Scanner PRO</title>
 
 <style>
 body {
@@ -12,9 +12,7 @@ body {
   padding: 20px;
 }
 
-h2 {
-  margin-bottom: 20px;
-}
+h2 { margin-bottom: 20px; }
 
 .btn {
   padding: 14px 22px;
@@ -28,41 +26,41 @@ h2 {
 
 .pickup { background: #28a745; }
 .return { background: #dc3545; }
+.reset { background: #333; }
 
 input {
   padding: 14px;
   width: 85%;
-  margin-top: 15px;
+  margin-top: 12px;
   font-size: 16px;
   border-radius: 6px;
   border: 1px solid #ccc;
 }
 
 #status {
-  margin-top: 20px;
+  margin-top: 15px;
   font-weight: bold;
   font-size: 18px;
 }
 </style>
-
 </head>
 
 <body>
 
-<h2>📦 Daily Pickup / Return</h2>
+<h2>📦 Daily Scanner PRO</h2>
 
 <button class="btn pickup" onclick="startFlow('pickup')">Pickup</button>
 <button class="btn return" onclick="startFlow('return')">Return</button>
+<button class="btn reset" onclick="resetAll()">Reset</button>
 
 <br><br>
 
-<input type="text" id="orderInput" placeholder="Enter Order ID" style="display:none;">
-<input type="text" id="trackingInput" placeholder="Enter Tracking ID" style="display:none;">
+<input type="text" id="orderInput" placeholder="Scan / Enter Order ID" style="display:none;">
+<input type="text" id="trackingInput" placeholder="Scan / Enter Tracking ID" style="display:none;">
 
 <div id="status">Ready</div>
 
-<!-- 🔊 SOUND -->
-<audio id="beepSound" src="https://www.soundjay.com/buttons/sounds/beep-01a.mp3" preload="auto"></audio>
+<audio id="beepSound" src="https://www.soundjay.com/buttons/sounds/beep-01a.mp3"></audio>
 
 <script>
 
@@ -70,71 +68,56 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzS_hbdRujRjoK0IN9pDUoZ
 
 let mode = "";
 let orderId = "";
-let typingTimer;
 
-// ===== START FLOW =====
+// ===== START =====
 function startFlow(type){
   mode = type;
-  orderId = "";
 
   orderInput.style.display = "block";
-  trackingInput.style.display = "none";
+  trackingInput.style.display = "block";
 
   orderInput.value = "";
   trackingInput.value = "";
 
-  status.innerText = type.toUpperCase() + " → Scan / Enter Order ID";
-  orderInput.focus();
+  status.innerText = type.toUpperCase() + " MODE ACTIVE";
+
+  setTimeout(()=>orderInput.focus(),100);
 }
 
-// ===== AUTO DETECT INPUT =====
-function handleInput(inputType){
-
-  clearTimeout(typingTimer);
-
-  typingTimer = setTimeout(()=>{
-
-    if(inputType === "order"){
-      orderId = orderInput.value.trim();
-
-      if(!orderId) return;
-
-      trackingInput.style.display = "block";
-      trackingInput.focus();
-      status.innerText = "Scan / Enter Tracking ID";
-    }
-
-    if(inputType === "tracking"){
-      let tracking = trackingInput.value.trim();
-
-      if(!tracking) return;
-
-      saveData(orderId, tracking);
-    }
-
-  }, 300); // 🔥 scanner speed detect
-
-}
-
-// ===== EVENT LISTENERS =====
-orderInput.addEventListener("input", ()=> handleInput("order"));
-trackingInput.addEventListener("input", ()=> handleInput("tracking"));
-
-// ===== ENTER SUPPORT (manual users ke liye) =====
-orderInput.addEventListener("keypress", function(e){
-  if(e.key === "Enter"){
-    handleInput("order");
+// ===== AUTO FOCUS FIX (IMPORTANT FOR SCANNER) =====
+document.addEventListener("click", ()=>{
+  if(orderInput.style.display === "block" && !orderInput.value){
+    orderInput.focus();
   }
 });
 
-trackingInput.addEventListener("keypress", function(e){
-  if(e.key === "Enter"){
-    handleInput("tracking");
+// ===== ORDER SCAN =====
+orderInput.addEventListener("input", function(){
+
+  if(this.value.length > 3){ // scanner usually long value
+    orderId = this.value.trim();
+    trackingInput.focus();
   }
+
 });
 
-// ===== SAVE DATA =====
+// ===== TRACKING SCAN =====
+trackingInput.addEventListener("input", function(){
+
+  if(this.value.length > 3){
+    let tracking = this.value.trim();
+    saveData(orderId, tracking);
+  }
+
+});
+
+// ===== SAVE =====
 function saveData(order, tracking){
+
+  if(!order || !tracking){
+    status.innerText = "❌ Missing Data";
+    return;
+  }
 
   status.innerText = "Saving...";
 
@@ -143,17 +126,21 @@ function saveData(order, tracking){
   .then(data => {
 
     if(data.status === "success"){
-      status.innerText = "✅ Saved Successfully";
+      status.innerText = "✅ Saved";
       playBeep();
     }
     else if(data.status === "duplicate"){
-      status.innerText = "⚠ Already Saved";
+      status.innerText = "⚠ Duplicate";
     }
     else{
       status.innerText = "❌ Error";
     }
 
-    reset();
+    // 🔥 CONTINUOUS MODE
+    orderInput.value = "";
+    trackingInput.value = "";
+
+    orderInput.focus();
 
   })
   .catch(()=>{
@@ -170,12 +157,19 @@ function playBeep(){
 }
 
 // ===== RESET =====
-function reset(){
-  setTimeout(()=>{
-    orderInput.style.display = "none";
-    trackingInput.style.display = "none";
-    status.innerText = "Ready";
-  },1500);
+function resetAll(){
+
+  mode = "";
+  orderId = "";
+
+  orderInput.style.display = "none";
+  trackingInput.style.display = "none";
+
+  orderInput.value = "";
+  trackingInput.value = "";
+
+  status.innerText = "Reset Done";
+
 }
 
 </script>
