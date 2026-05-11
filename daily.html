@@ -159,35 +159,6 @@ input::placeholder{
   display:none;
 }
 
-/* ================= NEW STATS ================= */
-
-.stats{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  margin-bottom:22px;
-}
-
-.card{
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:16px;
-  padding:14px;
-  text-align:center;
-}
-
-.cardTitle{
-  font-size:12px;
-  color:#cbd5e1;
-  margin-bottom:6px;
-}
-
-.cardValue{
-  font-size:22px;
-  font-weight:700;
-  color:#fff;
-}
-
 </style>
 </head>
 
@@ -203,45 +174,8 @@ input::placeholder{
     Manual + Barcode Scanner Support
   </div>
 
-  <!-- ================= NEW STATS ================= -->
-
-  <div class="stats">
-
-    <div class="card">
-      <div class="cardTitle">Today Pickup</div>
-      <div class="cardValue" id="todayPickup">0</div>
-    </div>
-
-    <div class="card">
-      <div class="cardTitle">Today Return</div>
-      <div class="cardValue" id="todayReturn">0</div>
-    </div>
-
-    <div class="card">
-      <div class="cardTitle">Yesterday Pickup</div>
-      <div class="cardValue" id="yesterdayPickup">0</div>
-    </div>
-
-    <div class="card">
-      <div class="cardTitle">Yesterday Return</div>
-      <div class="cardValue" id="yesterdayReturn">0</div>
-    </div>
-
-    <div class="card">
-      <div class="cardTitle">Total Pickup</div>
-      <div class="cardValue" id="totalPickup">0</div>
-    </div>
-
-    <div class="card">
-      <div class="cardTitle">Total Return</div>
-      <div class="cardValue" id="totalReturn">0</div>
-    </div>
-
-  </div>
-
-  <!-- ================= END STATS ================= -->
-
   <div class="btns">
+
     <button class="btn pickup" onclick="start('pickup')">
       Pickup
     </button>
@@ -249,6 +183,7 @@ input::placeholder{
     <button class="btn return" onclick="start('return')">
       Return
     </button>
+
   </div>
 
   <div id="modeText" class="modeBadge">
@@ -256,6 +191,7 @@ input::placeholder{
   </div>
 
   <div class="inputBox">
+
     <label class="label">Order ID</label>
 
     <input
@@ -268,9 +204,11 @@ input::placeholder{
       spellcheck="false"
       inputmode="text"
     />
+
   </div>
 
   <div class="inputBox">
+
     <label class="label">Tracking ID</label>
 
     <input
@@ -283,6 +221,7 @@ input::placeholder{
       spellcheck="false"
       inputmode="text"
     />
+
   </div>
 
   <button class="btn reset" onclick="resetAll()">
@@ -316,54 +255,9 @@ const statusBox = document.getElementById("status");
 const modeText = document.getElementById("modeText");
 const beep = document.getElementById("beep");
 
-// ================= STATS ELEMENTS =================
-
-const todayPickup = document.getElementById("todayPickup");
-const todayReturn = document.getElementById("todayReturn");
-const yesterdayPickup = document.getElementById("yesterdayPickup");
-const yesterdayReturn = document.getElementById("yesterdayReturn");
-const totalPickup = document.getElementById("totalPickup");
-const totalReturn = document.getElementById("totalReturn");
-
 // ================= VARIABLES =================
 
 let mode = "";
-
-// ================= LOAD STATS =================
-
-function loadStats(){
-
-  fetch(API.stats())
-
-  .then(res => res.json())
-
-  .then(data => {
-
-    document.getElementById("todayPickup").innerHTML =
-      data.todayPickup || 0;
-
-    document.getElementById("todayReturn").innerHTML =
-      data.todayReturn || 0;
-
-    document.getElementById("yesterdayPickup").innerHTML =
-      data.yesterdayPickup || 0;
-
-    document.getElementById("yesterdayReturn").innerHTML =
-      data.yesterdayReturn || 0;
-
-    document.getElementById("totalPickup").innerHTML =
-      data.totalPickup || 0;
-
-    document.getElementById("totalReturn").innerHTML =
-      data.totalReturn || 0;
-
-  })
-
-  .catch(err => console.log(err));
-
-}
-  // PAGE LOAD
-loadStats();
 
 // ================= START =================
 
@@ -407,9 +301,13 @@ orderInput.addEventListener("keydown", function(e){
     setStatus("✅ Order ID Captured", "#22c55e");
 
     setTimeout(()=>{
+
       trackingInput.focus();
+
     },100);
+
   }
+
 });
 
 // ================= TRACKING INPUT =================
@@ -427,7 +325,9 @@ trackingInput.addEventListener("keydown", function(e){
     trackingInput.value = value;
 
     saveData();
+
   }
+
 });
 
 // ================= SAVE =================
@@ -462,7 +362,7 @@ function saveData(){
     "&order_id=" + encodeURIComponent(order) +
     "&tracking=" + encodeURIComponent(tracking);
 
-  fetch(url, {
+  fetch(url,{
     method:"GET"
   })
 
@@ -475,12 +375,11 @@ function saveData(){
       setStatus("✅ Saved Successfully", "#22c55e");
 
       beep.currentTime = 0;
+
       beep.play();
 
-      // ================= REFRESH STATS =================
-      loadStats();
-
       nextEntry();
+
     }
 
     else if(data.status === "duplicate"){
@@ -488,11 +387,13 @@ function saveData(){
       setStatus("⚠ Already Saved", "#f59e0b");
 
       nextEntry();
+
     }
 
     else{
 
       setStatus("❌ Save Failed", "#ef4444");
+
     }
 
   })
@@ -502,6 +403,7 @@ function saveData(){
     console.log(error);
 
     setStatus("❌ Network Error", "#ef4444");
+
   });
 
 }
@@ -518,6 +420,7 @@ function nextEntry(){
     orderInput.focus();
 
   },150);
+
 }
 
 // ================= RESET =================
@@ -532,6 +435,7 @@ function resetAll(){
   modeText.innerHTML = "Select Mode";
 
   setStatus("🔄 Reset Complete", "#38bdf8");
+
 }
 
 // ================= STATUS =================
@@ -539,13 +443,13 @@ function resetAll(){
 function setStatus(text,color){
 
   statusBox.innerHTML = text;
-  statusBox.style.border = "1px solid " + color;
+
+  statusBox.style.border =
+    "1px solid " + color;
+
   statusBox.style.color = color;
+
 }
-
-// ================= INITIAL LOAD =================
-
-loadStats();
 
 </script>
 
