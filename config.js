@@ -20,7 +20,7 @@ const API = {
     ),
 
   // ✅ TRACK
-  track: (order, tracking) =>
+   track:(order,tracking)=>
     withNoCache(
       API_BASE +
       "?type=track" +
@@ -28,6 +28,8 @@ const API = {
       "&tracking=" + encodeURIComponent(tracking)
     ),
 
+  post:API_BASE
+};
   // ✅ LEDGER GET
   ledgerGet: (category) =>
     withNoCache(
