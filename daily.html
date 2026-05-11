@@ -159,6 +159,35 @@ input::placeholder{
   display:none;
 }
 
+/* ================= NEW STATS ================= */
+
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:22px;
+}
+
+.card{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;
+  padding:14px;
+  text-align:center;
+}
+
+.cardTitle{
+  font-size:12px;
+  color:#cbd5e1;
+  margin-bottom:6px;
+}
+
+.cardValue{
+  font-size:22px;
+  font-weight:700;
+  color:#fff;
+}
+
 </style>
 </head>
 
@@ -173,6 +202,44 @@ input::placeholder{
   <div class="sub">
     Manual + Barcode Scanner Support
   </div>
+
+  <!-- ================= NEW STATS ================= -->
+
+  <div class="stats">
+
+    <div class="card">
+      <div class="cardTitle">Today Pickup</div>
+      <div class="cardValue" id="todayPickup">0</div>
+    </div>
+
+    <div class="card">
+      <div class="cardTitle">Today Return</div>
+      <div class="cardValue" id="todayReturn">0</div>
+    </div>
+
+    <div class="card">
+      <div class="cardTitle">Yesterday Pickup</div>
+      <div class="cardValue" id="yesterdayPickup">0</div>
+    </div>
+
+    <div class="card">
+      <div class="cardTitle">Yesterday Return</div>
+      <div class="cardValue" id="yesterdayReturn">0</div>
+    </div>
+
+    <div class="card">
+      <div class="cardTitle">Total Pickup</div>
+      <div class="cardValue" id="totalPickup">0</div>
+    </div>
+
+    <div class="card">
+      <div class="cardTitle">Total Return</div>
+      <div class="cardValue" id="totalReturn">0</div>
+    </div>
+
+  </div>
+
+  <!-- ================= END STATS ================= -->
 
   <div class="btns">
     <button class="btn pickup" onclick="start('pickup')">
@@ -249,9 +316,45 @@ const statusBox = document.getElementById("status");
 const modeText = document.getElementById("modeText");
 const beep = document.getElementById("beep");
 
+// ================= STATS ELEMENTS =================
+
+const todayPickup = document.getElementById("todayPickup");
+const todayReturn = document.getElementById("todayReturn");
+const yesterdayPickup = document.getElementById("yesterdayPickup");
+const yesterdayReturn = document.getElementById("yesterdayReturn");
+const totalPickup = document.getElementById("totalPickup");
+const totalReturn = document.getElementById("totalReturn");
+
 // ================= VARIABLES =================
 
 let mode = "";
+
+// ================= LOAD STATS =================
+
+function loadStats(){
+
+  fetch(API + "?stats=true")
+
+  .then(res => res.json())
+
+  .then(data => {
+
+    todayPickup.innerHTML = data.todayPickup || 0;
+    todayReturn.innerHTML = data.todayReturn || 0;
+
+    yesterdayPickup.innerHTML = data.yesterdayPickup || 0;
+    yesterdayReturn.innerHTML = data.yesterdayReturn || 0;
+
+    totalPickup.innerHTML = data.totalPickup || 0;
+    totalReturn.innerHTML = data.totalReturn || 0;
+
+  })
+
+  .catch(error => {
+    console.log(error);
+  });
+
+}
 
 // ================= START =================
 
@@ -282,8 +385,6 @@ orderInput.addEventListener("keydown", function(e){
 
     let value = orderInput.value;
 
-    // IMPORTANT FIX
-    // Scanner ka pura value lene ke liye trim end only
     value = value.replace(/\r/g, "").replace(/\n/g, "");
 
     orderInput.value = value;
@@ -312,7 +413,6 @@ trackingInput.addEventListener("keydown", function(e){
 
     let value = trackingInput.value;
 
-    // IMPORTANT FIX
     value = value.replace(/\r/g, "").replace(/\n/g, "");
 
     trackingInput.value = value;
@@ -347,10 +447,6 @@ function saveData(){
 
   setStatus("⏳ Saving Data...", "#f59e0b");
 
-  // IMPORTANT FIX
-  // encodeURIComponent se pura scanner text jayega
-  // koi bhi #, &, ?, / cut nahi hoga
-
   const url =
     API +
     "?mode=" + encodeURIComponent(mode) +
@@ -371,6 +467,9 @@ function saveData(){
 
       beep.currentTime = 0;
       beep.play();
+
+      // ================= REFRESH STATS =================
+      loadStats();
 
       nextEntry();
     }
@@ -434,6 +533,10 @@ function setStatus(text,color){
   statusBox.style.border = "1px solid " + color;
   statusBox.style.color = color;
 }
+
+// ================= INITIAL LOAD =================
+
+loadStats();
 
 </script>
 
