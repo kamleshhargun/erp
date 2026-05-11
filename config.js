@@ -1,5 +1,5 @@
 // 🔥 SINGLE SOURCE API CONFIG
-const API_BASE = "https://script.google.com/macros/s/AKfycbzYF1nx8L09QvI-FF5e92lzf2sK78s90JImo87vX9fXMqJ3e01HrDUIRFR4I_BkgHUlXA/exec";
+const API_BASE = "https://script.google.com/macros/s/AKfycbxpahTZVKpuaB8MwXQx8Dfejn-EsGJqh7xmf3jerqdkQSvkZ1HD8ynmGNMgby5oX0Uuvg/exec";
 
 // 🔥 HELPER (cache bust - always fresh request)
 function withNoCache(url){
@@ -20,7 +20,7 @@ const API = {
     ),
 
   // ✅ TRACK
-   track:(order,tracking)=>
+  track: (order,tracking) =>
     withNoCache(
       API_BASE +
       "?type=track" +
@@ -28,8 +28,6 @@ const API = {
       "&tracking=" + encodeURIComponent(tracking)
     ),
 
-  post:API_BASE
-};
   // ✅ LEDGER GET
   ledgerGet: (category) =>
     withNoCache(
@@ -38,7 +36,7 @@ const API = {
       "&category=" + encodeURIComponent(category)
     ),
 
-  // ✅ PICKUP (🔥 MOST IMPORTANT)
+  // ✅ PICKUP
   pickup: (order, tracking) =>
     withNoCache(
       API_BASE +
@@ -47,7 +45,7 @@ const API = {
       "&tracking=" + encodeURIComponent(tracking)
     ),
 
-  // ✅ RETURN SCAN (future use)
+  // ✅ RETURN
   returnScan: (order, tracking) =>
     withNoCache(
       API_BASE +
@@ -56,7 +54,9 @@ const API = {
       "&tracking=" + encodeURIComponent(tracking)
     ),
 
-  // (optional legacy support)
+  // ✅ POST
   post: API_BASE,
+
+  // ✅ LEDGER POST
   ledgerPost: API_BASE
 };
