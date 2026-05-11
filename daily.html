@@ -333,28 +333,37 @@ let mode = "";
 
 function loadStats(){
 
-  fetch(API + "?stats=true")
+  fetch(API.stats())
 
   .then(res => res.json())
 
   .then(data => {
 
-    todayPickup.innerHTML = data.todayPickup || 0;
-    todayReturn.innerHTML = data.todayReturn || 0;
+    document.getElementById("todayPickup").innerHTML =
+      data.todayPickup || 0;
 
-    yesterdayPickup.innerHTML = data.yesterdayPickup || 0;
-    yesterdayReturn.innerHTML = data.yesterdayReturn || 0;
+    document.getElementById("todayReturn").innerHTML =
+      data.todayReturn || 0;
 
-    totalPickup.innerHTML = data.totalPickup || 0;
-    totalReturn.innerHTML = data.totalReturn || 0;
+    document.getElementById("yesterdayPickup").innerHTML =
+      data.yesterdayPickup || 0;
+
+    document.getElementById("yesterdayReturn").innerHTML =
+      data.yesterdayReturn || 0;
+
+    document.getElementById("totalPickup").innerHTML =
+      data.totalPickup || 0;
+
+    document.getElementById("totalReturn").innerHTML =
+      data.totalReturn || 0;
 
   })
 
-  .catch(error => {
-    console.log(error);
-  });
+  .catch(err => console.log(err));
 
 }
+  // PAGE LOAD
+loadStats();
 
 // ================= START =================
 
