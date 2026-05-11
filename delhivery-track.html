@@ -1,9 +1,11 @@
+```html
 <!DOCTYPE html>
 <html>
 
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="config.js"></script>
 
 <title>Tracking Dashboard</title>
@@ -37,21 +39,18 @@ body{
 .top h1{
   margin:0;
   font-size:28px;
-  font-weight:700;
 }
 
 .top p{
-  margin-top:6px;
   color:#cbd5e1;
-  font-size:14px;
+  margin-top:6px;
 }
 
 .card{
-  background:#ffffff;
+  background:#fff;
   border-radius:22px;
   padding:20px;
-  box-shadow:
-  0 15px 40px rgba(0,0,0,.25);
+  box-shadow:0 15px 40px rgba(0,0,0,.25);
 }
 
 .input-group{
@@ -61,8 +60,8 @@ body{
 .label{
   display:block;
   color:#334155;
-  font-size:13px;
   margin-bottom:6px;
+  font-size:13px;
   font-weight:600;
 }
 
@@ -72,13 +71,11 @@ input{
   border-radius:12px;
   border:1px solid #cbd5e1;
   font-size:15px;
-  transition:.3s;
 }
 
 input:focus{
   outline:none;
   border-color:#2563eb;
-  box-shadow:0 0 0 4px rgba(37,99,235,.12);
 }
 
 button{
@@ -89,20 +86,24 @@ button{
   font-size:15px;
   font-weight:700;
   cursor:pointer;
-  transition:.3s;
 }
 
 .primary{
-  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  background:
+  linear-gradient(135deg,#2563eb,#1d4ed8);
   color:#fff;
 }
 
-.primary:hover{
-  transform:translateY(-1px);
+.save{
+  margin-top:10px;
+  background:
+  linear-gradient(135deg,#059669,#047857);
+  color:#fff;
+  display:none;
 }
 
 .back{
-  margin-top:14px;
+  margin-top:15px;
   background:#111827;
   color:#fff;
 }
@@ -119,7 +120,6 @@ button{
   padding:12px;
   border-radius:12px;
   margin-top:15px;
-  font-size:14px;
 }
 
 .result-card{
@@ -128,7 +128,6 @@ button{
   border-radius:18px;
   padding:18px;
   color:#111827;
-  border:1px solid #e2e8f0;
 }
 
 .top-row{
@@ -160,33 +159,6 @@ button{
   color:#1d4ed8;
 }
 
-.info{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:12px;
-  border-bottom:1px dashed #cbd5e1;
-  padding-bottom:10px;
-}
-
-.info:last-child{
-  border-bottom:none;
-  margin-bottom:0;
-  padding-bottom:0;
-}
-
-.left{
-  color:#64748b;
-  font-size:14px;
-}
-
-.right{
-  font-weight:700;
-  font-size:14px;
-  text-align:right;
-  word-break:break-word;
-}
-
 .courier{
   background:#111827;
   color:#fff;
@@ -194,6 +166,31 @@ button{
   border-radius:999px;
   font-size:12px;
   font-weight:700;
+}
+
+.info{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:12px;
+  border-bottom:1px dashed #cbd5e1;
+  padding-bottom:10px;
+}
+
+.left{
+  color:#64748b;
+}
+
+.right{
+  font-weight:700;
+  text-align:right;
+}
+
+.success{
+  background:#dcfce7;
+  color:#166534;
+  padding:12px;
+  border-radius:12px;
+  margin-top:15px;
 }
 
 </style>
@@ -206,7 +203,7 @@ button{
 
 <div class="top">
 <h1>📦 Tracking Dashboard</h1>
-<p>Delhivery + BOXD Logistics Tracking</p>
+<p>Delhivery + BOXD Logistics</p>
 </div>
 
 <div class="card">
@@ -225,17 +222,28 @@ button{
 Track Shipment
 </button>
 
+<button
+id="saveBtn"
+class="save"
+onclick="saveTracking()">
+
+Save Tracking
+
+</button>
+
 <div id="result"></div>
 
 </div>
 
 <button class="back" onclick="goHome()">
-⬅ Back to Home
+⬅ Back To Home
 </button>
 
 </div>
 
 <script>
+
+let currentData = null;
 
 function trackOrder(){
 
@@ -260,10 +268,10 @@ function trackOrder(){
 
   result.innerHTML =
     `<div class="loader">
-      ⏳ Fetching Tracking Details...
+      ⏳ Fetching Tracking...
     </div>`;
 
-  fetch(API.track(orderId, tracking))
+  fetch(API.track(orderId,tracking))
 
   .then(r=>r.json())
 
@@ -277,6 +285,12 @@ function trackOrder(){
       return;
     }
 
+    currentData = d;
+
+    document
+      .getElementById("saveBtn")
+      .style.display = "block";
+
     let statusClass = "pending";
 
     const s =
@@ -287,8 +301,7 @@ function trackOrder(){
     }
     else if(
       s.includes("transit") ||
-      s.includes("ship") ||
-      s.includes("out for")
+      s.includes("ship")
     ){
       statusClass = "transit";
     }
@@ -334,11 +347,6 @@ function trackOrder(){
           <div class="right">₹${d.amount}</div>
         </div>
 
-        <div class="info">
-          <div class="left">📦 Tracking</div>
-          <div class="right">${d.tracking}</div>
-        </div>
-
       </div>
 
     `;
@@ -353,11 +361,79 @@ function trackOrder(){
   });
 }
 
+function saveTracking(){
+
+  if(!currentData){
+    return;
+  }
+
+  fetch(API.post,{
+
+    method:"POST",
+
+    headers:{
+      "Content-Type":"application/json"
+    },
+
+    body:JSON.stringify({
+
+      type:"saveTracking",
+
+      order_id:currentData.order_id,
+      tracking:currentData.tracking,
+      status:currentData.status,
+      location:currentData.location,
+      customer:currentData.customer,
+      state:currentData.state,
+      amount:currentData.amount,
+      payment:currentData.payment,
+      courier:currentData.courier,
+      api_source:currentData.api_source
+
+    })
+
+  })
+
+  .then(r=>r.json())
+
+  .then(d=>{
+
+    if(d.status === "saved"){
+
+      document.getElementById("result")
+      .innerHTML +=
+      `<div class="success">
+        Tracking Saved Successfully ✅
+      </div>`;
+
+      document
+        .getElementById("saveBtn")
+        .style.display = "none";
+
+    }else if(d.duplicate){
+
+      alert("Already Saved");
+
+    }else{
+
+      alert("Save Failed");
+    }
+
+  })
+
+  .catch(()=>{
+
+    alert("Network Error");
+
+  });
+}
+
 function goHome(){
-  location.href="index.html";
+  location.href = "index.html";
 }
 
 </script>
 
 </body>
 </html>
+```
