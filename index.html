@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-
 <html>
 <head>
+
 <meta charset="UTF-8">
 <title>HARSIDHI VENTURES ERP</title>
 
@@ -10,8 +10,14 @@
 <script src="config.js"></script>
 
 <style>
-body{
+
+*{
   margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
   font-family:system-ui;
   background:#f2f3f7;
 }
@@ -24,30 +30,36 @@ body{
 }
 
 /* HEADER */
+
 header{
-  padding:16px;
+  padding:18px;
   text-align:center;
-  font-weight:600;
-  font-size:18px;
+  font-weight:700;
+  font-size:20px;
   border-bottom:1px solid #eee;
   background:#ffffff;
+  position:sticky;
+  top:0;
+  z-index:100;
 }
 
 /* CARD */
+
 .card{
   margin:12px;
   padding:14px;
-  border-radius:14px;
+  border-radius:18px;
   background:#fff;
-  box-shadow:0 3px 10px rgba(0,0,0,0.06);
+  box-shadow:0 4px 16px rgba(0,0,0,0.06);
 }
 
 h3{
-  margin:0 0 10px;
-  font-size:15px;
+  margin:0 0 12px;
+  font-size:16px;
 }
 
 /* STATS */
+
 .stats{
   display:flex;
   gap:10px;
@@ -57,19 +69,22 @@ h3{
 .stats div{
   flex:1;
   background:#f8f9fb;
-  padding:12px;
-  border-radius:10px;
+  padding:14px;
+  border-radius:12px;
   text-align:center;
   font-size:12px;
+  line-height:1.4;
 }
 
 .big{
-  font-size:18px;
-  font-weight:600;
-  margin-top:5px;
+  font-size:20px;
+  font-weight:700;
+  margin-top:6px;
+  display:block;
 }
 
 /* GRID */
+
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -77,14 +92,15 @@ h3{
 }
 
 /* BUTTON */
+
 button{
   padding:14px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   background:#1a73e8;
   color:#fff;
   font-size:14px;
-  font-weight:500;
+  font-weight:600;
   cursor:pointer;
   transition:0.2s;
 }
@@ -94,16 +110,110 @@ button:hover{
 }
 
 button:active{
-  transform:scale(0.97);
+  transform:scale(0.96);
+}
+
+/* DAILY PANEL */
+
+.daily-panel{
+
+  margin:0 12px;
+
+  background:#fff;
+
+  border-radius:18px;
+
+  overflow:hidden;
+
+  max-height:0;
+
+  opacity:0;
+
+  transition:
+    max-height 0.45s ease,
+    opacity 0.35s ease;
+
+  box-shadow:0 5px 18px rgba(0,0,0,0.08);
+
+}
+
+.daily-panel.active{
+
+  max-height:1200px;
+
+  opacity:1;
+
+  margin-bottom:12px;
+
+}
+
+.daily-header{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+
+  padding:14px 16px;
+
+  background:#1a73e8;
+
+  color:#fff;
+
+  font-weight:700;
+
+  font-size:15px;
+
+}
+
+.closeBtn{
+
+  background:rgba(255,255,255,0.18);
+
+  border:none;
+
+  color:#fff;
+
+  width:34px;
+
+  height:34px;
+
+  border-radius:50%;
+
+  font-size:16px;
+
+  cursor:pointer;
+
+  padding:0;
+
+}
+
+.closeBtn:hover{
+  background:rgba(255,255,255,0.25);
+}
+
+.dailyFrame{
+
+  width:100%;
+
+  height:950px;
+
+  border:none;
+
+  background:#fff;
+
 }
 
 /* FOOTER */
+
 .footer{
   text-align:center;
   font-size:12px;
   color:#777;
-  padding:12px;
+  padding:18px;
 }
+
 </style>
 
 </head>
@@ -112,66 +222,164 @@ button:active{
 
 <div class="app">
 
-<header>HARSIDHI VENTURES ERP</header>
+<header>
+  HARSIDHI VENTURES ERP
+</header>
 
 <!-- DASHBOARD -->
 
 <div class="card">
+
   <h3>📊 Dashboard</h3>
 
   <div class="stats">
-    <div>Today Pickup<br><span id="todayPickup" class="big">-</span></div>
-    <div>Today Return<br><span id="todayReturn" class="big">-</span></div>
+
+    <div>
+      Today Pickup
+      <span id="todayPickup" class="big">-</span>
+    </div>
+
+    <div>
+      Today Return
+      <span id="todayReturn" class="big">-</span>
+    </div>
+
   </div>
 
   <div class="stats">
-    <div>Yesterday Pickup<br><span id="yestPickup" class="big">-</span></div>
-    <div>Yesterday Return<br><span id="yestReturn" class="big">-</span></div>
+
+    <div>
+      Yesterday Pickup
+      <span id="yestPickup" class="big">-</span>
+    </div>
+
+    <div>
+      Yesterday Return
+      <span id="yestReturn" class="big">-</span>
+    </div>
+
   </div>
 
   <div class="stats">
-    <div>Total Pickup<br><span id="totalPickup" class="big">-</span></div>
-    <div>Total Return<br><span id="totalReturn" class="big">-</span></div>
+
+    <div>
+      Total Pickup
+      <span id="totalPickup" class="big">-</span>
+    </div>
+
+    <div>
+      Total Return
+      <span id="totalReturn" class="big">-</span>
+    </div>
+
   </div>
+
 </div>
 
 <!-- QUICK ACTION -->
 
 <div class="card">
+
   <h3>⚡ Quick Actions</h3>
 
   <div class="grid">
-    <button onclick="go('daily.html')">Daily</button>
-    <button onclick="go('pickup.html')">📦 Pickup</button>
-    <button onclick="go('return.html')">🔄 Return</button>
-    <button onclick="go('return-request.html')">📥 Return Req</button>
+
+    <button onclick="toggleDaily()">
+      📋 Daily
+    </button>
+
+    <button onclick="go('pickup.html')">
+      📦 Pickup
+    </button>
+
+    <button onclick="go('return.html')">
+      🔄 Return
+    </button>
+
+    <button onclick="go('return-request.html')">
+      📥 Return Req
+    </button>
+
   </div>
+
+</div>
+
+<!-- DAILY SLIDE PANEL -->
+
+<div id="dailyPanel" class="daily-panel">
+
+  <div class="daily-header">
+
+    <span>📋 Daily Scanner</span>
+
+    <button class="closeBtn" onclick="toggleDaily()">
+      ✕
+    </button>
+
+  </div>
+
+  <iframe
+    src="daily.html"
+    frameborder="0"
+    class="dailyFrame"
+  ></iframe>
+
 </div>
 
 <!-- PRODUCTION -->
 
 <div class="card">
+
   <h3>🏭 Production</h3>
 
   <div class="grid">
-    <button onclick="go('production/production.html')">Main</button>
-    <button onclick="go('production/cutting.html')">Cutting</button>
-    <button onclick="go('production/fabric.html')">Fabric</button>
-    <button onclick="go('production/stitching.html')">Stitching</button>
-    <button onclick="go('production/finished.html')">Finished</button>
-    <button onclick="go('production/production-ledger.html')">Ledger</button>
+
+    <button onclick="go('production/production.html')">
+      Main
+    </button>
+
+    <button onclick="go('production/cutting.html')">
+      Cutting
+    </button>
+
+    <button onclick="go('production/fabric.html')">
+      Fabric
+    </button>
+
+    <button onclick="go('production/stitching.html')">
+      Stitching
+    </button>
+
+    <button onclick="go('production/finished.html')">
+      Finished
+    </button>
+
+    <button onclick="go('production/production-ledger.html')">
+      Ledger
+    </button>
+
   </div>
+
 </div>
 
-<!-- EXTRA -->
+<!-- OTHER -->
 
 <div class="card">
+
   <h3>📂 Other</h3>
 
   <div class="grid">
-    <button onclick="go('lookup.html')">🔍 Lookup</button>
-    <button onclick="go('delhivery-track.html')">🚚 Track</button>
+
+    <button onclick="go('lookup.html')">
+      🔍 Lookup
+    </button>
+
+    <button onclick="go('delhivery-track.html')">
+      🚚 Track
+    </button>
+
   </div>
+
 </div>
 
 <div class="footer">
@@ -182,50 +390,103 @@ button:active{
 
 <script>
 
-// NAVIGATION
+// ================= NAVIGATION =================
+
 function go(page){
+
   window.location.href = page;
+
 }
 
-// LOAD DASHBOARD
+// ================= DAILY PANEL =================
+
+function toggleDaily(){
+
+  const panel =
+    document.getElementById("dailyPanel");
+
+  panel.classList.toggle("active");
+
+}
+
+// ================= LOAD DASHBOARD =================
+
 async function loadDashboard(){
+
   try{
 
-    const res = await fetch(API.stats());
-    const d = await res.json();
+    const res =
+      await fetch(API.stats());
+
+    const d =
+      await res.json();
 
     document.getElementById("todayPickup").innerText =
-      d.todayPickup ?? d.today_pickup ?? 0;
+      d.todayPickup ??
+      d.today_pickup ??
+      0;
 
     document.getElementById("todayReturn").innerText =
-      d.todayReturn ?? d.today_return ?? 0;
+      d.todayReturn ??
+      d.today_return ??
+      0;
 
     document.getElementById("yestPickup").innerText =
-      d.yesterdayPickup ?? d.yesterday_pickup ?? 0;
+      d.yesterdayPickup ??
+      d.yesterday_pickup ??
+      0;
 
     document.getElementById("yestReturn").innerText =
-      d.yesterdayReturn ?? d.yesterday_return ?? 0;
+      d.yesterdayReturn ??
+      d.yesterday_return ??
+      0;
 
     document.getElementById("totalPickup").innerText =
-      d.totalPickup ?? d.total_pickup ?? 0;
+      d.totalPickup ??
+      d.total_pickup ??
+      0;
 
     document.getElementById("totalReturn").innerText =
-      d.totalReturn ?? d.total_return ?? 0;
+      d.totalReturn ??
+      d.total_return ??
+      0;
 
-  }catch(e){
-    console.log("Stats Error:", e);
-
-    document.querySelectorAll(".big").forEach(el=>{
-      el.innerText = "0";
-    });
   }
+
+  catch(e){
+
+    console.log(
+      "Stats Error:",
+      e
+    );
+
+    document
+    .querySelectorAll(".big")
+    .forEach(el=>{
+
+      el.innerText = "0";
+
+    });
+
+  }
+
 }
 
-// INIT
-document.addEventListener("DOMContentLoaded", ()=>{
-  loadDashboard();
-  setInterval(loadDashboard, 7000);
-});
+// ================= INIT =================
+
+document.addEventListener(
+  "DOMContentLoaded",
+  ()=>{
+
+    loadDashboard();
+
+    setInterval(
+      loadDashboard,
+      7000
+    );
+
+  }
+);
 
 </script>
 
