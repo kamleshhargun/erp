@@ -1,220 +1,396 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
+<title>Current Inventory</title>
+
 <script src="config.js"></script>
 
 <style>
-body{font-family:Arial;background:#eef2f7;margin:0;text-align:center;}
-.container{max-width:420px;margin:auto;padding:15px;}
-.card{background:#fff;padding:15px;border-radius:12px;margin-bottom:12px;}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#eef2f7;
+  padding:15px;
+}
+
+.container{
+  max-width:450px;
+  margin:auto;
+}
+
+.header{
+  background:linear-gradient(135deg,#007bff,#00b4ff);
+  color:#fff;
+  padding:18px;
+  border-radius:14px;
+  margin-bottom:15px;
+  text-align:center;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+}
+
+.header h2{
+  font-size:24px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.card{
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+.card h3{
+  font-size:14px;
+  color:#666;
+  margin-bottom:8px;
+}
+
+.card b{
+  font-size:22px;
+  color:#111;
+}
+
+.search-box{
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:15px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
 
 input{
   width:100%;
-  padding:12px;
-  margin-top:8px;
-  border-radius:8px;
+  padding:13px;
   border:1px solid #ccc;
-  font-size:14px;
+  border-radius:10px;
+  font-size:15px;
+  outline:none;
+}
+
+input:focus{
+  border-color:#007bff;
 }
 
 button{
   width:100%;
-  padding:12px;
-  margin-top:8px;
+  padding:13px;
   border:none;
-  border-radius:8px;
-  font-size:14px;
+  border-radius:10px;
+  font-size:15px;
+  cursor:pointer;
+  margin-top:10px;
 }
 
-.start{background:#28a745;color:#fff;}
-.stop{background:#dc3545;color:#fff;}
-.back{background:#333;color:#fff;}
+.search-btn{
+  background:#007bff;
+  color:#fff;
+}
 
-#status{margin-top:10px;font-weight:500;}
+.refresh-btn{
+  background:#28a745;
+  color:#fff;
+}
+
+.back-btn{
+  background:#333;
+  color:#fff;
+}
+
+.inventory-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.item{
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  text-align:left;
+}
+
+.item-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.item-name{
+  font-size:16px;
+  font-weight:bold;
+  color:#111;
+}
+
+.qty{
+  background:#28a745;
+  color:#fff;
+  padding:5px 10px;
+  border-radius:20px;
+  font-size:13px;
+}
+
+.meta{
+  font-size:13px;
+  color:#666;
+  margin-top:5px;
+}
+
+.empty{
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  color:#777;
+}
+
+#status{
+  margin-top:10px;
+  font-size:14px;
+  color:#444;
+}
+
+.loader{
+  display:none;
+  margin-top:10px;
+}
+
 </style>
-
 </head>
 
 <body>
 
 <div class="container">
 
-<h2>📦 Pickup Scanner</h2>
-
-<div class="card">
-Today Pickup: <b id="count">0</b>
+<div class="header">
+  <h2>📦 Current Inventory</h2>
 </div>
 
-<div class="card">
+<div class="stats">
 
-<input id="orderInput" placeholder="Order ID">
-<input id="trackingInput" placeholder="Tracking ID">
+  <div class="card">
+    <h3>Total Products</h3>
+    <b id="totalProducts">0</b>
+  </div>
 
-<div id="reader" style="margin-top:10px;"></div>
-
-<button class="start" onclick="startScan()">▶ Start Scan</button>
-<button class="stop" onclick="stopScan()">⛔ Stop</button>
-
-<div id="status">Ready to scan Order ID</div>
-
-</div>
-
-<button class="back" onclick="goHome()">⬅ Home</button>
+  <div class="card">
+    <h3>Total Stock</h3>
+    <b id="totalQty">0</b>
+  </div>
 
 </div>
 
-<audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+<div class="search-box">
+
+  <input type="text" id="searchInput" placeholder="Search Product / SKU">
+
+  <button class="search-btn" onclick="searchInventory()">
+    🔍 Search Inventory
+  </button>
+
+  <button class="refresh-btn" onclick="loadInventory()">
+    🔄 Refresh
+  </button>
+
+  <div class="loader" id="loader">
+    Loading inventory...
+  </div>
+
+  <div id="status"></div>
+
+</div>
+
+<div class="inventory-list" id="inventoryList">
+
+  <div class="empty">
+    Inventory data will appear here
+  </div>
+
+</div>
+
+<button class="back-btn" onclick="goHome()">
+  ⬅ Home
+</button>
+
+</div>
 
 <script>
 
-let html5QrCode;
-let step = "order";
-let order = "";
-let lastScan = "";
+let inventoryData = [];
 
-// INIT
+// ================= LOAD INVENTORY =================
+
 window.onload = () => {
-  document.getElementById("orderInput").focus();
-  loadStats();
+  loadInventory();
 };
 
-// ================= SCAN =================
-function startScan(){
+function loadInventory(){
 
-  if(html5QrCode) return;
+  document.getElementById("loader").style.display = "block";
+  document.getElementById("status").innerText = "";
 
-  html5QrCode = new Html5Qrcode("reader");
+  fetch(API_BASE + "?mode=current_inventory&_=" + Date.now())
 
-  html5QrCode.start(
-    { facingMode:"environment" },
-    { fps:10, qrbox:250 },
-    (text)=>{
+  .then(res => res.json())
 
-      if(text === lastScan) return;
-      lastScan = text;
+  .then(data => {
 
-      if(step === "order"){
-        order = text;
-        document.getElementById("orderInput").value = text;
+    document.getElementById("loader").style.display = "none";
 
-        step = "tracking";
-        document.getElementById("status").innerText = "Scan Tracking ID";
-        document.getElementById("trackingInput").focus();
-        return;
-      }
+    if(!data || data.length === 0){
 
-      if(step === "tracking"){
-        document.getElementById("trackingInput").value = text;
-        stopScan();
-        saveData(order, text);
-      }
+      document.getElementById("inventoryList").innerHTML = `
+        <div class="empty">
+          No inventory found
+        </div>
+      `;
 
+      return;
     }
-  );
+
+    inventoryData = data;
+
+    updateStats(data);
+
+    renderInventory(data);
+
+  })
+
+  .catch(err => {
+
+    console.log(err);
+
+    document.getElementById("loader").style.display = "none";
+
+    document.getElementById("status").innerText =
+      "API Error ❌";
+
+  });
+
 }
 
-// ================= STOP =================
-function stopScan(){
-  if(html5QrCode){
-    html5QrCode.stop().catch(()=>{});
-    html5QrCode = null;
-  }
+// ================= RENDER =================
+
+function renderInventory(data){
+
+  const container =
+    document.getElementById("inventoryList");
+
+  container.innerHTML = "";
+
+  data.forEach(item => {
+
+    container.innerHTML += `
+
+      <div class="item">
+
+        <div class="item-top">
+
+          <div class="item-name">
+            ${item.product || "-"}
+          </div>
+
+          <div class="qty">
+            Qty: ${item.qty || 0}
+          </div>
+
+        </div>
+
+        <div class="meta">
+          SKU: ${item.sku || "-"}
+        </div>
+
+        <div class="meta">
+          Location: ${item.location || "-"}
+        </div>
+
+        <div class="meta">
+          Updated: ${item.updated || "-"}
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
 }
 
-// ================= SAVE (FINAL CLEAN) =================
-function saveData(orderId, trackingId){
+// ================= SEARCH =================
 
-  const statusEl = document.getElementById("status");
+function searchInventory(){
 
-  if(!orderId || !trackingId){
-    statusEl.innerText = "Missing data ❌";
+  const keyword =
+    document.getElementById("searchInput")
+    .value
+    .toLowerCase()
+    .trim();
+
+  if(!keyword){
+
+    renderInventory(inventoryData);
     return;
   }
 
-  statusEl.innerText = "Saving...";
+  const filtered = inventoryData.filter(item => {
 
-  const url =
-    API_BASE +
-    "?mode=pickup" +
-    "&order_id=" + encodeURIComponent(orderId) +
-    "&tracking=" + encodeURIComponent(trackingId) +
-    "&_=" + Date.now();
+    return (
+      (item.product || "")
+      .toLowerCase()
+      .includes(keyword)
 
-  console.log("URL:", url);
+      ||
 
-  fetch(url)
-  .then(res => res.json())
-  .then(res => {
+      (item.sku || "")
+      .toLowerCase()
+      .includes(keyword)
 
-    console.log("RESPONSE:", res);
+    );
 
-    if(res.status === "success"){
-      document.getElementById("beep").play();
-      statusEl.innerText = "Saved in Sheet ✅";
-    }else{
-      statusEl.innerText = "Error ❌";
-    }
-
-    resetFlow();
-    loadStats();
-  })
-  .catch(err=>{
-    console.error(err);
-    statusEl.innerText = "Network / API Error ❌";
-    resetFlow();
   });
+
+  renderInventory(filtered);
+
 }
-
-// ================= RESET =================
-function resetFlow(){
-  step = "order";
-  order = "";
-  lastScan = "";
-
-  document.getElementById("orderInput").value = "";
-  document.getElementById("trackingInput").value = "";
-
-  document.getElementById("orderInput").focus();
-  document.getElementById("status").innerText = "Ready for next Order";
-}
-
-// ================= MANUAL =================
-document.getElementById("orderInput").addEventListener("keypress", function(e){
-  if(e.key === "Enter"){
-    order = this.value.trim();
-    if(!order) return;
-
-    step = "tracking";
-    document.getElementById("status").innerText = "Enter Tracking ID";
-    document.getElementById("trackingInput").focus();
-  }
-});
-
-document.getElementById("trackingInput").addEventListener("keypress", function(e){
-  if(e.key === "Enter"){
-    const tracking = this.value.trim();
-    if(!tracking) return;
-
-    saveData(order, tracking);
-  }
-});
 
 // ================= STATS =================
-function loadStats(){
-  fetch(API.stats())
-  .then(r=>r.json())
-  .then(d=>{
-    document.getElementById("count").innerText = d.todayPickup || 0;
-  })
-  .catch(()=>{});
+
+function updateStats(data){
+
+  document.getElementById("totalProducts")
+  .innerText = data.length;
+
+  let totalQty = 0;
+
+  data.forEach(item => {
+    totalQty += Number(item.qty || 0);
+  });
+
+  document.getElementById("totalQty")
+  .innerText = totalQty;
+
 }
 
-// ================= NAV =================
+// ================= NAVIGATION =================
+
 function goHome(){
-  location.href="index.html";
+  location.href = "index.html";
 }
 
 </script>
