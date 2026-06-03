@@ -174,13 +174,11 @@
 
 let mode = "Pickup";
 let active = true;
-
 let recentScans = [];
 
 function setMode(type){
 
     active = true;
-
     mode = type;
 
     document.getElementById(
@@ -195,7 +193,6 @@ function setMode(type){
     document.getElementById(
         "awb"
     ).focus();
-
 }
 
 function stopScanning(){
@@ -206,89 +203,59 @@ function stopScanning(){
         "statusBox"
     ).innerHTML =
     "Scanning Stopped";
-
-}
-
-function beep(){
-
-    try{
-
-        const audio =
-        new Audio(
-        "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
-        );
-
-        audio.play();
-
-    }catch(e){}
-
 }
 
 function addRecentScan(
     awb,
-    orderId
+    orderId,
+    scanType
 ){
 
     recentScans.unshift({
         awb,
-        orderId
+        orderId,
+        scanType
     });
 
     if(
         recentScans.length > 10
     ){
-
         recentScans.pop();
-
     }
 
     let html = "";
 
     recentScans.forEach(row=>{
 
-        html +=
-        `
+        html += `
         <li class="list-group-item">
-            <b>${row.awb}</b>
+            <div>
+                <strong>${row.awb}</strong>
+            </div>
+
+            <small>
+                Order :
+                ${row.orderId}
+            </small>
+
             <br>
-            ${row.orderId}
+
+            <span class="
+                badge
+                ${row.scanType === 'Pickup'
+                ? 'bg-success'
+                : 'bg-danger'}
+            ">
+                ${row.scanType}
+            </span>
         </li>
         `;
-
     });
 
     document.getElementById(
         "recentScans"
     ).innerHTML =
     html;
-
-}
-
-async function loadTodayCounts(){
-
-    try{
-
-        const data =
-        await getTodayCounts();
-
-        if(
-            data.success
-        ){
-
-            document.getElementById(
-                "pickupCount"
-            ).innerHTML =
-            data.pickup || 0;
-
-            document.getElementById(
-                "returnCount"
-            ).innerHTML =
-            data.return || 0;
-
-        }
-
-    }catch(e){}
-
 }
 
 document
@@ -297,20 +264,17 @@ document
 "keydown",
 async function(e){
 
-    if(
-        e.key !== "Enter"
-    ) return;
+    if(e.key !== "Enter")
+    return;
 
-    if(
-        !active
-    ) return;
+    if(!active)
+    return;
 
     const awb =
     this.value.trim();
 
-    if(
-        !awb
-    ) return;
+    if(!awb)
+    return;
 
     document.getElementById(
         "statusBox"
@@ -320,9 +284,7 @@ async function(e){
     try{
 
         const tracking =
-        await trackAWB(
-            awb
-        );
+        await trackAWB(awb);
 
         if(
             !tracking.success
@@ -334,17 +296,23 @@ async function(e){
             tracking.message ||
             "Tracking Not Found";
 
-            this.value = "";
+            this.select();
 
             return;
-
         }
 
         const orderId =
+
             tracking.orderId ||
+
             tracking.shipment?.order_id ||
+
             tracking.shipment?.orderId ||
+
             tracking.shipment?.reference_number ||
+
+            tracking.shipment?.reference_no ||
+
             "-";
 
         document.getElementById(
@@ -388,10 +356,11 @@ async function(e){
 
             addRecentScan(
                 awb,
-                orderId
+                orderId,
+                mode
             );
 
-            loadTodayCounts();
+            await loadTodayCounts();
 
         }else{
 
@@ -400,7 +369,6 @@ async function(e){
             ).innerHTML =
             save.message ||
             "Save Failed";
-
         }
 
     }catch(err){
@@ -409,13 +377,18 @@ async function(e){
             "statusBox"
         ).innerHTML =
         err.toString();
-
     }
 
     this.value = "";
 
+    this.focus();
+
 });
 
 loadTodayCounts();
+
+document.getElementById(
+    "awb"
+).focus();
 
 </script>
