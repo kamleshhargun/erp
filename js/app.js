@@ -6,125 +6,198 @@ const API_URL =
 "https://script.google.com/macros/s/AKfycbwIfkmxE22R4DihL204omXxic1rG4JbIGyV4bSoa_EIKKPmmsEI2azuJ31TDYxmhwba/exec";
 
 /* =========================================
-   PAGE LOADER
+   API HELPER
 ========================================= */
-window.onload = function(){
 
-    checkConnection();
+async function apiGet(params = "") {
 
-};
-async function loadPage(page) {
+    try {
 
-  try {
+        const response = await fetch(
+            `${API_URL}${params}`
+        );
 
-    const res =
-      await fetch(
-        "pages/" +
-        page +
-        ".html"
-      );
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
 
-    if (!res.ok) {
+        return await response.json();
 
-      throw new Error(
-        "Page Not Found"
-      );
+    } catch (error) {
 
+        console.error(error);
+
+        return {
+            success: false,
+            message: error.message
+        };
     }
+}
 
-    const html =
-      await res.text();
+async function apiPost(payload = {}) {
 
-    document.getElementById(
-      "contentArea"
-    ).innerHTML =
-      html;
+    try {
 
-  } catch (err) {
+        const response = await fetch(
+            API_URL,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                    "application/json"
+                },
+                body: JSON.stringify(payload)
+            }
+        );
 
-    document.getElementById(
-      "contentArea"
-    ).innerHTML =
-      `
-      <div class="alert alert-danger">
-        ${err}
-      </div>
-      `;
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
 
-    console.error(err);
+        return await response.json();
 
-  }
+    } catch (error) {
 
+        console.error(error);
+
+        return {
+            success: false,
+            message: error.message
+        };
+    }
 }
 
 /* =========================================
-   DASHBOARD DATA
+   CONNECTION CHECK
+========================================= */
+
+async function checkConnection() {
+
+    const btn =
+        document.getElementById(
+            "connectionStatus"
+        );
+
+    if (!btn) return;
+
+    try {
+
+        const data =
+            await apiGet(
+                "?action=ping"
+            );
+
+        if (data.success) {
+
+            btn.className =
+                "btn btn-success w-100";
+
+            btn.innerHTML =
+                "🟢 Connected";
+
+        } else {
+
+            throw new Error();
+        }
+
+    } catch {
+
+        btn.className =
+            "btn btn-danger w-100";
+
+        btn.innerHTML =
+            "🔴 Disconnected";
+    }
+}
+
+/* =========================================
+   PAGE LOADER
+========================================= */
+
+async function loadPage(page) {
+
+    try {
+
+        const response =
+            await fetch(
+                `pages/${page}.html`
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                "Page Not Found"
+            );
+        }
+
+        const html =
+            await response.text();
+
+        document
+            .getElementById(
+                "contentArea"
+            )
+            .innerHTML = html;
+
+    } catch (error) {
+
+        console.error(error);
+
+        document
+            .getElementById(
+                "contentArea"
+            )
+            .innerHTML = `
+            <div class="alert alert-danger">
+                ${error.message}
+            </div>
+        `;
+    }
+}
+
+/* =========================================
+   DASHBOARD
 ========================================= */
 
 async function loadDashboard() {
 
-  try {
-
-    const res =
-      await fetch(
-        API_URL +
-        "?action=dashboard"
-      );
-
     const data =
-      await res.json();
+        await apiGet(
+            "?action=dashboard"
+        );
 
-    if (!data.success) {
+    if (!data.success)
+        return;
 
-      return;
+    const total =
+        document.getElementById(
+            "totalOrders"
+        );
 
-    }
+    const pickup =
+        document.getElementById(
+            "pickupOrders"
+        );
 
-    if (
-      document.getElementById(
-        "totalOrders"
-      )
-    ) {
+    const ret =
+        document.getElementById(
+            "returnOrders"
+        );
 
-      document.getElementById(
-        "totalOrders"
-      ).innerText =
-        data.total || 0;
+    if (total)
+        total.textContent =
+            data.total || 0;
 
-    }
+    if (pickup)
+        pickup.textContent =
+            data.pickup || 0;
 
-    if (
-      document.getElementById(
-        "pickupOrders"
-      )
-    ) {
-
-      document.getElementById(
-        "pickupOrders"
-      ).innerText =
-        data.pickup || 0;
-
-    }
-
-    if (
-      document.getElementById(
-        "returnOrders"
-      )
-    ) {
-
-      document.getElementById(
-        "returnOrders"
-      ).innerText =
-        data.return || 0;
-
-    }
-
-  } catch (err) {
-
-    console.error(err);
-
-  }
-
+    if (ret)
+        ret.textContent =
+            data.return || 0;
 }
 
 /* =========================================
@@ -133,55 +206,31 @@ async function loadDashboard() {
 
 async function loadTodayCounts() {
 
-  try {
-
-    const res =
-      await fetch(
-        API_URL +
-        "?action=todayCounts"
-      );
-
     const data =
-      await res.json();
+        await apiGet(
+            "?action=todayCounts"
+        );
 
-    if (!data.success) {
+    if (!data.success)
+        return;
 
-      return;
+    const pickup =
+        document.getElementById(
+            "pickupCount"
+        );
 
-    }
+    const ret =
+        document.getElementById(
+            "returnCount"
+        );
 
-    if (
-      document.getElementById(
-        "pickupCount"
-      )
-    ) {
+    if (pickup)
+        pickup.textContent =
+            data.pickup || 0;
 
-      document.getElementById(
-        "pickupCount"
-      ).innerText =
-        data.pickup || 0;
-
-    }
-
-    if (
-      document.getElementById(
-        "returnCount"
-      )
-    ) {
-
-      document.getElementById(
-        "returnCount"
-      ).innerText =
-        data.return || 0;
-
-    }
-
-  } catch (err) {
-
-    console.error(err);
-
-  }
-
+    if (ret)
+        ret.textContent =
+            data.return || 0;
 }
 
 /* =========================================
@@ -190,32 +239,10 @@ async function loadTodayCounts() {
 
 async function trackAWB(awb) {
 
-  try {
-
-    const res =
-      await fetch(
-        API_URL +
+    return await apiGet(
         "?action=track&awb=" +
-        encodeURIComponent(
-          awb
-        )
-      );
-
-    return await res.json();
-
-  } catch (err) {
-
-    return {
-
-      success: false,
-
-      message:
-        String(err)
-
-    };
-
-  }
-
+        encodeURIComponent(awb)
+    );
 }
 
 /* =========================================
@@ -223,52 +250,31 @@ async function trackAWB(awb) {
 ========================================= */
 
 async function saveScan(
-  awb,
-  type
+    awb,
+    type
 ) {
 
-  try {
+    return await apiPost({
 
-    const res =
-      await fetch(
-        API_URL,
-        {
-          method: "POST",
+        action: "save",
 
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
+        awb,
 
-          body:
-            JSON.stringify({
+        type
 
-              action: "save",
+    });
+}
 
-              awb: awb,
+/* =========================================
+   SHEET DATA
+========================================= */
 
-              type: type
+async function getSheetData(month) {
 
-            })
-
-        }
-      );
-
-    return await res.json();
-
-  } catch (err) {
-
-    return {
-
-      success: false,
-
-      message:
-        String(err)
-
-    };
-
-  }
-
+    return await apiGet(
+        "?action=getSheetData&month=" +
+        encodeURIComponent(month)
+    );
 }
 
 /* =========================================
@@ -277,70 +283,79 @@ async function saveScan(
 
 function beep() {
 
-  const ctx =
-    new (
-      window.AudioContext ||
-      window.webkitAudioContext
-    )();
+    try {
 
-  const osc =
-    ctx.createOscillator();
+        const ctx =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
 
-  const gain =
-    ctx.createGain();
+        const osc =
+            ctx.createOscillator();
 
-  osc.connect(gain);
+        const gain =
+            ctx.createGain();
 
-  gain.connect(
-    ctx.destination
-  );
+        osc.connect(gain);
+        gain.connect(
+            ctx.destination
+        );
 
-  osc.frequency.value =
-    800;
+        osc.frequency.value = 800;
+        osc.type = "sine";
 
-  osc.type =
-    "sine";
+        osc.start();
 
-  osc.start();
+        gain.gain
+            .exponentialRampToValueAtTime(
+                0.0001,
+                ctx.currentTime + 0.2
+            );
 
-  gain.gain.exponentialRampToValueAtTime(
-    0.0001,
-    ctx.currentTime + 0.20
-  );
+        osc.stop(
+            ctx.currentTime + 0.2
+        );
 
-  osc.stop(
-    ctx.currentTime + 0.20
-  );
+    } catch (error) {
 
+        console.error(
+            "Beep Error",
+            error
+        );
+    }
 }
 
 /* =========================================
    LIVE CLOCK
 ========================================= */
 
+let clockStarted = false;
+
 function startClock() {
 
-  const el =
-    document.getElementById(
-      "clock"
-    );
+    if (clockStarted)
+        return;
 
-  if (!el) {
+    const clock =
+        document.getElementById(
+            "clock"
+        );
 
-    return;
+    if (!clock)
+        return;
 
-  }
+    clockStarted = true;
 
-  setInterval(() => {
+    setInterval(() => {
 
-    el.innerHTML =
-      new Date()
-      .toLocaleString(
-        "en-IN"
-      );
+        clock.textContent =
+            new Date()
+            .toLocaleString(
+                "en-IN"
+            );
 
-  }, 1000);
-
+    }, 1000);
 }
 
 /* =========================================
@@ -348,44 +363,20 @@ function startClock() {
 ========================================= */
 
 window.addEventListener(
-  "load",
-  () => {
+    "load",
+    async () => {
 
-    startClock();
+        startClock();
 
-    loadDashboard();
+        await checkConnection();
 
-    loadTodayCounts();
+        setInterval(
+            checkConnection,
+            30000
+        );
 
-  }
+        loadDashboard();
+
+        loadTodayCounts();
+    }
 );
-/* =========================================
-   SHEET DATA
-========================================= */
-
-async function getSheetData(month){
-
-  try{
-
-    const res =
-      await fetch(
-        API_URL +
-        "?action=getSheetData&month=" +
-        encodeURIComponent(month)
-      );
-
-    return await res.json();
-
-  }catch(err){
-
-    return {
-
-      success:false,
-
-      message:String(err)
-
-    };
-
-  }
-
-}
