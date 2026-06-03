@@ -3,7 +3,7 @@
 ========================================= */
 
 const API_URL =
-"https://script.google.com/macros/s/AKfycbygYJcHD7t56J_ZgS_JYGkVLvqVNK6Z1r-5MFivMQpGFQdjEd8goJ8dvDx9vcc3BJs/exec";
+"https://script.google.com/macros/s/AKfycby0ursK_N80ENh_yGVMluYM9YyPf21aQ5pgk5AmVdixqCEqJ0yMeqnbXctCsDFTtg1y/exec";
 
 /* =========================================
    PAGE LOADER
