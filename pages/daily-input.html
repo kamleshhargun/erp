@@ -175,13 +175,22 @@
 let mode = "Pickup";
 let active = true;
 
+let recentScans = [];
+
 function setMode(type){
+
+    active = true;
 
     mode = type;
 
     document.getElementById(
         "currentMode"
     ).innerText = type;
+
+    document.getElementById(
+        "statusBox"
+    ).innerHTML =
+    "Ready To Scan";
 
     document.getElementById(
         "awb"
@@ -200,80 +209,213 @@ function stopScanning(){
 
 }
 
+function beep(){
+
+    try{
+
+        const audio =
+        new Audio(
+        "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
+        );
+
+        audio.play();
+
+    }catch(e){}
+
+}
+
+function addRecentScan(
+    awb,
+    orderId
+){
+
+    recentScans.unshift({
+        awb,
+        orderId
+    });
+
+    if(
+        recentScans.length > 10
+    ){
+
+        recentScans.pop();
+
+    }
+
+    let html = "";
+
+    recentScans.forEach(row=>{
+
+        html +=
+        `
+        <li class="list-group-item">
+            <b>${row.awb}</b>
+            <br>
+            ${row.orderId}
+        </li>
+        `;
+
+    });
+
+    document.getElementById(
+        "recentScans"
+    ).innerHTML =
+    html;
+
+}
+
+async function loadTodayCounts(){
+
+    try{
+
+        const data =
+        await getTodayCounts();
+
+        if(
+            data.success
+        ){
+
+            document.getElementById(
+                "pickupCount"
+            ).innerHTML =
+            data.pickup || 0;
+
+            document.getElementById(
+                "returnCount"
+            ).innerHTML =
+            data.return || 0;
+
+        }
+
+    }catch(e){}
+
+}
+
 document
 .getElementById("awb")
 .addEventListener(
 "keydown",
 async function(e){
 
-    if(e.key !== "Enter")
-    return;
+    if(
+        e.key !== "Enter"
+    ) return;
+
+    if(
+        !active
+    ) return;
 
     const awb =
     this.value.trim();
 
-    if(!awb)
-    return;
+    if(
+        !awb
+    ) return;
 
-    const tracking =
-    await trackAWB(awb);
+    document.getElementById(
+        "statusBox"
+    ).innerHTML =
+    "Checking Tracking...";
 
-    if(!tracking.success){
+    try{
+
+        const tracking =
+        await trackAWB(
+            awb
+        );
+
+        if(
+            !tracking.success
+        ){
+
+            document.getElementById(
+                "statusBox"
+            ).innerHTML =
+            tracking.message ||
+            "Tracking Not Found";
+
+            this.value = "";
+
+            return;
+
+        }
+
+        const orderId =
+            tracking.orderId ||
+            tracking.shipment?.order_id ||
+            tracking.shipment?.orderId ||
+            tracking.shipment?.reference_number ||
+            "-";
+
+        document.getElementById(
+            "showAwb"
+        ).innerHTML =
+        awb;
+
+        document.getElementById(
+            "showOrderId"
+        ).innerHTML =
+        orderId;
+
+        document.getElementById(
+            "showCustomer"
+        ).innerHTML =
+        tracking.courier ||
+        "BOXD";
 
         document.getElementById(
             "statusBox"
         ).innerHTML =
-        tracking.message;
+        "Saving Scan...";
 
-        return;
-    }
+        const save =
+        await saveScan(
+            awb,
+            mode
+        );
 
-    document.getElementById(
-        "showAwb"
-    ).innerHTML =
-    awb;
+        if(
+            save.success
+        ){
 
-    document.getElementById(
-        "showOrderId"
-    ).innerHTML =
-    tracking.orderId ||
-    tracking.shipment?.order_id ||
-    "-";
+            beep();
 
-    document.getElementById(
-        "showCustomer"
-    ).innerHTML =
-    tracking.courier ||
-    "BOXD";
+            document.getElementById(
+                "statusBox"
+            ).innerHTML =
+            save.message ||
+            "Saved Successfully";
 
-    const save =
-    await saveScan(
-        awb,
-        mode
-    );
+            addRecentScan(
+                awb,
+                orderId
+            );
 
-    if(save.success){
+            loadTodayCounts();
 
-        beep();
+        }else{
 
-        document.getElementById(
-            "statusBox"
-        ).innerHTML =
-        save.message;
+            document.getElementById(
+                "statusBox"
+            ).innerHTML =
+            save.message ||
+            "Save Failed";
 
-        loadTodayCounts();
+        }
 
-    }else{
+    }catch(err){
 
         document.getElementById(
             "statusBox"
         ).innerHTML =
-        save.message;
+        err.toString();
 
     }
 
     this.value = "";
 
 });
+
+loadTodayCounts();
 
 </script>
