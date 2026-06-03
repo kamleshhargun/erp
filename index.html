@@ -43,9 +43,9 @@ justify-content:center;align-items:center;
 
 <div class="sidebar">
 <h4 class="p-3 border-bottom"> </h4>
-<a href="index.html">🏠 Dashboard</a>
-<a href="daily-input.html">📥 Daily Input</a>
-<li><a href="order-track.html">📦 Order Track</a></li>
+<a href="#" onclick="loadPage('dashboard')">🏠 Dashboard</a>
+<a href="#" onclick="loadPage('daily-input')">📥 Daily Input</a>
+<a href="#" onclick="loadPage('order-track')">📦 Order Track</a>
 <a href="#">🚚 Pickup Analysis</a>
 <a href="#">↩ Return Analysis</a>
 <a href="#">📊 Reports</a>
@@ -60,6 +60,7 @@ justify-content:center;align-items:center;
 </div>
 
 <div class="container-fluid p-4">
+  <div id="contentArea">
 
 <div class="row g-3">
 
@@ -121,7 +122,7 @@ justify-content:center;align-items:center;
 </div>
 </div>
 </div>
-
+</div>
 </div>
 
 <div class="footer">
@@ -131,6 +132,24 @@ Developed By Kone Soft Tech © 2026
 </div>
 
 <script>
+async function loadPage(page){
+
+    const res =
+    await fetch(
+      page + ".html"
+    );
+
+    const html =
+    await res.text();
+
+    document
+    .getElementById(
+      "contentArea"
+    )
+    .innerHTML = html;
+
+}
+
 setInterval(()=>{
 document.getElementById("clock").innerHTML=new Date().toLocaleString();
 },1000);
