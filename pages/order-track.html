@@ -208,121 +208,89 @@ async function trackAWB(){
 
     const awb =
     document
-    .getElementById(
-        "trackAwb"
-    )
+    .getElementById("trackAwb")
     .value
     .trim();
 
     if(!awb){
 
-        alert(
-            "Enter AWB Number"
-        );
-
+        alert("Enter AWB Number");
         return;
 
     }
 
-    document
-    .getElementById(
-        "showAwb"
-    )
-    .innerHTML =
-    awb;
-
-    document
-    .getElementById(
-        "showOrder"
-    )
-    .innerHTML =
-    "Loading...";
-
-    document
-    .getElementById(
-        "showCourier"
-    )
-    .innerHTML =
-    "Loading...";
-
-    document
-    .getElementById(
-        "showStatus"
-    )
-    .innerHTML =
-    "Loading...";
-
-    document
-    .getElementById(
-        "timeline"
-    )
-    .innerHTML =
+    document.getElementById("timeline").innerHTML =
     `
     <div class="alert alert-info">
         Fetching Tracking...
     </div>
     `;
 
-    /*
-       Future API Integration
+    const data =
+    await window.trackAWB(awb);
 
-       const res =
-       await fetch(
-          API_URL +
-          '?action=track&awb=' +
-          awb
-       );
+    if(!data.success){
 
-       const data =
-       await res.json();
-    */
-
-    setTimeout(()=>{
-
-        document
-        .getElementById(
-            "showOrder"
-        )
-        .innerHTML =
-        "ORD10001";
-
-        document
-        .getElementById(
-            "showCourier"
-        )
-        .innerHTML =
-        "Delhivery";
-
-        document
-        .getElementById(
-            "showStatus"
-        )
-        .innerHTML =
-        "In Transit";
-
-        document
-        .getElementById(
-            "timeline"
-        )
-        .innerHTML =
+        document.getElementById("timeline").innerHTML =
         `
-        <div class="border-start border-primary ps-3 mb-3">
-            <b>Manifest Created</b><br>
-            03-Jun-2026 10:00 AM
-        </div>
-
-        <div class="border-start border-primary ps-3 mb-3">
-            <b>Shipment Picked Up</b><br>
-            03-Jun-2026 04:00 PM
-        </div>
-
-        <div class="border-start border-primary ps-3">
-            <b>In Transit</b><br>
-            04-Jun-2026 09:00 AM
+        <div class="alert alert-danger">
+            ${data.message || "Tracking Not Found"}
         </div>
         `;
 
-    },1000);
+        return;
+
+    }
+
+    const shipment =
+    data.shipment || {};
+
+    document.getElementById("showAwb").innerHTML =
+    awb;
+
+    document.getElementById("showOrder").innerHTML =
+    shipment.order_id ||
+    shipment.orderId ||
+    shipment.reference_number ||
+    "-";
+
+    document.getElementById("showCourier").innerHTML =
+    "BOXD";
+
+    document.getElementById("showStatus").innerHTML =
+    shipment.status || "-";
+
+    let timelineHtml = "";
+
+    if(shipment.tracking_events){
+
+        shipment.tracking_events
+        .forEach(event=>{
+
+            timelineHtml +=
+            `
+            <div class="border-start border-primary ps-3 mb-3">
+                <b>${event.status || "-"}</b><br>
+                ${event.created_at || ""}
+            </div>
+            `;
+
+        });
+
+    }
+
+    if(!timelineHtml){
+
+        timelineHtml =
+        `
+        <div class="alert alert-secondary">
+            No Timeline Available
+        </div>
+        `;
+    }
+
+    document.getElementById("timeline").innerHTML =
+    timelineHtml;
 
 }
 
