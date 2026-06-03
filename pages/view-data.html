@@ -1,24 +1,207 @@
-// DOM Cache
+<div class="card shadow-sm">
 
-const monthInput = document.getElementById("monthInput");
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">📋 Monthly Sheet Data</h4>
+    </div>
 
-const tableBody = document.getElementById("sheetTableBody");
+    <div class="card-body">
 
-const totalRecordsEl = document.getElementById("totalRecords");
-const pickupRecordsEl = document.getElementById("pickupRecords");
-const returnRecordsEl = document.getElementById("returnRecords");
+        <!-- Filter Section -->
 
-// Load Data
+        <div class="row mb-4">
 
-async function loadSheetData() {
+            <div class="col-md-4 mb-2">
+
+                <label class="form-label">
+                    Month Sheet Name
+                </label>
+
+                <input
+                    type="text"
+                    id="monthInput"
+                    class="form-control"
+                    placeholder="06/2026">
+
+            </div>
+
+            <div class="col-md-2 mb-2 d-flex align-items-end">
+
+                <button
+                    id="loadBtn"
+                    class="btn btn-primary w-100"
+                    onclick="loadSheetData()">
+
+                    📥 Load Data
+
+                </button>
+
+            </div>
+
+            <div class="col-md-3 mb-2 d-flex align-items-end">
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    class="form-control"
+                    placeholder="Search AWB / Order ID">
+
+            </div>
+
+        </div>
+
+        <!-- Summary Cards -->
+
+        <div class="row mb-4">
+
+            <div class="col-md-4 mb-3">
+
+                <div class="card border-primary">
+
+                    <div class="card-body text-center">
+
+                        <h6>Total Records</h6>
+
+                        <h2
+                            id="totalRecords"
+                            class="text-primary">
+
+                            0
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <div class="card border-success">
+
+                    <div class="card-body text-center">
+
+                        <h6>Pickup</h6>
+
+                        <h2
+                            id="pickupRecords"
+                            class="text-success">
+
+                            0
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <div class="card border-danger">
+
+                    <div class="card-body text-center">
+
+                        <h6>Return</h6>
+
+                        <h2
+                            id="returnRecords"
+                            class="text-danger">
+
+                            0
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Table -->
+
+        <div class="table-responsive">
+
+            <table
+                class="table table-bordered table-striped table-hover align-middle">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>AWB</th>
+                        <th>Type</th>
+                        <th>Order ID</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="sheetTableBody">
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            class="text-center">
+
+                            No Data Loaded
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const monthInput =
+    document.getElementById("monthInput");
+
+const loadBtn =
+    document.getElementById("loadBtn");
+
+const tableBody =
+    document.getElementById("sheetTableBody");
+
+const searchInput =
+    document.getElementById("searchInput");
+
+const totalRecords =
+    document.getElementById("totalRecords");
+
+const pickupRecords =
+    document.getElementById("pickupRecords");
+
+const returnRecords =
+    document.getElementById("returnRecords");
+
+let allData = [];
+
+/* Load Data */
+
+async function loadSheetData(){
 
     const month =
         monthInput.value.trim();
 
-    if (!month) {
+    if(!month){
 
         alert(
-            "Enter Month (Example: 06/2026)"
+            "Enter Month Example : 06/2026"
         );
 
         monthInput.focus();
@@ -26,182 +209,264 @@ async function loadSheetData() {
         return;
     }
 
-    // Validation MM/YYYY
-
     const monthRegex =
         /^(0[1-9]|1[0-2])\/\d{4}$/;
 
-    if (!monthRegex.test(month)) {
+    if(
+        !monthRegex.test(month)
+    ){
 
         alert(
-            "Month format should be MM/YYYY"
+            "Month Format Must Be MM/YYYY"
         );
 
         return;
     }
 
-    showLoading();
+    try{
 
-    try {
+        loadBtn.disabled = true;
+
+        tableBody.innerHTML = `
+        <tr>
+
+            <td colspan="5"
+                class="text-center">
+
+                <div
+                    class="spinner-border spinner-border-sm">
+
+                </div>
+
+                Loading...
+
+            </td>
+
+        </tr>
+        `;
 
         const result =
             await getSheetData(month);
 
-        if (!result.success) {
+        if(
+            !result.success
+        ){
 
-            showMessage(
-                result.message ||
-                "Failed To Load Data",
-                "danger"
-            );
+            tableBody.innerHTML = `
+            <tr>
+
+                <td colspan="5"
+                    class="text-center text-danger">
+
+                    ${
+                        result.message ||
+                        "Failed To Load Data"
+                    }
+
+                </td>
+
+            </tr>
+            `;
 
             return;
         }
 
-        renderData(
-            result.data || []
-        );
+        allData =
+            result.data || [];
+
+        renderTable(allData);
+
+        updateSummary(allData);
 
     }
-    catch (error) {
+    catch(error){
 
         console.error(error);
 
-        showMessage(
-            "Server Error",
-            "danger"
-        );
+        tableBody.innerHTML = `
+        <tr>
+
+            <td colspan="5"
+                class="text-center text-danger">
+
+                Server Error
+
+            </td>
+
+        </tr>
+        `;
+
+    }
+    finally{
+
+        loadBtn.disabled = false;
     }
 }
 
-// Loading State
+/* Render Table */
 
-function showLoading() {
+function renderTable(data){
 
-    tableBody.innerHTML = `
+    if(!data.length){
+
+        tableBody.innerHTML = `
         <tr>
-            <td colspan="5" class="text-center">
-                <div class="spinner-border spinner-border-sm"></div>
-                Loading Data...
-            </td>
-        </tr>
-    `;
-}
 
-// Message State
-
-function showMessage(
-    message,
-    color = "secondary"
-) {
-
-    tableBody.innerHTML = `
-        <tr>
             <td colspan="5"
-                class="text-center text-${color}">
-                ${message}
+                class="text-center">
+
+                No Records Found
+
             </td>
+
         </tr>
-    `;
-}
-
-// Render Table
-
-function renderData(data) {
-
-    let pickup = 0;
-    let ret = 0;
-
-    if (!data.length) {
-
-        showMessage(
-            "No Records Found"
-        );
-
-        updateSummary(
-            0,
-            0,
-            0
-        );
+        `;
 
         return;
     }
 
-    const rows =
-        data.map(row => {
+    let html = "";
 
-            if (row[3] === "Pickup")
-                pickup++;
+    data.forEach(row=>{
 
-            if (row[3] === "Return")
-                ret++;
+        html += `
+        <tr>
 
-            return `
-                <tr>
+            <td>${row[0] || "-"}</td>
 
-                    <td>${row[0] || "-"}</td>
+            <td>${row[1] || "-"}</td>
 
-                    <td>${row[1] || "-"}</td>
+            <td>
 
-                    <td>
-                        <span class="fw-bold">
-                            ${row[2] || "-"}
-                        </span>
-                    </td>
+                <strong>
 
-                    <td>
-                        <span class="badge ${
-                            row[3] === "Pickup"
-                            ? "bg-success"
-                            : "bg-danger"
-                        }">
-                            ${row[3]}
-                        </span>
-                    </td>
+                    ${row[2] || "-"}
 
-                    <td>${row[4] || "-"}</td>
+                </strong>
 
-                </tr>
-            `;
+            </td>
 
-        }).join("");
+            <td>
 
-    tableBody.innerHTML = rows;
+                <span class="badge ${
+                    row[3] === "Pickup"
+                    ? "bg-success"
+                    : "bg-danger"
+                }">
 
-    updateSummary(
-        data.length,
-        pickup,
-        ret
-    );
+                    ${row[3] || "-"}
+
+                </span>
+
+            </td>
+
+            <td>${row[4] || "-"}</td>
+
+        </tr>
+        `;
+    });
+
+    tableBody.innerHTML = html;
 }
 
-// Update Summary
+/* Summary */
 
-function updateSummary(
-    total,
-    pickup,
-    ret
-) {
+function updateSummary(data){
 
-    totalRecordsEl.textContent =
-        total;
+    let pickup = 0;
+    let ret = 0;
 
-    pickupRecordsEl.textContent =
+    data.forEach(row=>{
+
+        if(
+            row[3] === "Pickup"
+        ){
+            pickup++;
+        }
+
+        if(
+            row[3] === "Return"
+        ){
+            ret++;
+        }
+
+    });
+
+    totalRecords.textContent =
+        data.length;
+
+    pickupRecords.textContent =
         pickup;
 
-    returnRecordsEl.textContent =
+    returnRecords.textContent =
         ret;
 }
 
-// Enter Key Support
+/* Search Filter */
+
+searchInput.addEventListener(
+    "keyup",
+    function(){
+
+        const keyword =
+            this.value
+            .toLowerCase()
+            .trim();
+
+        const filtered =
+            allData.filter(row =>
+
+                String(row[2] || "")
+                .toLowerCase()
+                .includes(keyword)
+
+                ||
+
+                String(row[4] || "")
+                .toLowerCase()
+                .includes(keyword)
+
+            );
+
+        renderTable(filtered);
+    }
+);
+
+/* Enter Key Support */
 
 monthInput.addEventListener(
     "keydown",
-    function (e) {
+    function(e){
 
-        if (e.key === "Enter") {
+        if(
+            e.key === "Enter"
+        ){
 
             loadSheetData();
         }
     }
 );
+
+/* Auto Current Month */
+
+window.addEventListener(
+    "load",
+    function(){
+
+        const now =
+            new Date();
+
+        const month =
+            String(
+                now.getMonth() + 1
+            ).padStart(2,"0");
+
+        monthInput.value =
+            month +
+            "/" +
+            now.getFullYear();
+
+    }
+);
+
+</script>
