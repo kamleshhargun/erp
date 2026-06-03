@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Order Tracking</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+body{
+    background:#f4f7fb;
+}
+
+.card{
+    border:none;
+}
+
+.status-card{
+    text-align:center;
+    border-radius:12px;
+}
+
+.status-count{
+    font-size:32px;
+    font-weight:bold;
+}
+
+.timeline-item{
+    padding:10px;
+    border-left:4px solid #0d6efd;
+    margin-bottom:10px;
+    background:#fff;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="container-fluid p-4">
+
+<h2 class="mb-4">
+📦 Order Tracking
+</h2>
+
+<div class="card shadow-sm mb-4">
+
+<div class="card-body">
+
+<div class="row">
+
+<div class="col-md-10">
+
+<input
+type="text"
+id="awb"
+class="form-control"
+placeholder="Enter AWB Number">
+
+</div>
+
+<div class="col-md-2">
+
+<button
+class="btn btn-primary w-100"
+onclick="trackAWB()">
+
+Search
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="row g-3 mb-4">
+
+<div class="col-md-2">
+<div class="card status-card shadow-sm">
+<div class="card-body">
+Manifest
+<div class="status-count">150</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card status-card shadow-sm">
+<div class="card-body">
+Transit
+<div class="status-count">320</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card status-card shadow-sm">
+<div class="card-body">
+OFD
+<div class="status-count">85</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card status-card shadow-sm">
+<div class="card-body">
+Delivered
+<div class="status-count">1200</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card status-card shadow-sm">
+<div class="card-body">
+RTO
+<div class="status-count">70</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card status-card shadow-sm">
+<div class="card-body">
+NDR
+<div class="status-count">25</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="card shadow-sm mb-4">
+
+<div class="card-header">
+Tracking Details
+</div>
+
+<div class="card-body">
+
+<div class="row">
+
+<div class="col-md-3">
+
+<b>AWB</b>
+
+<div id="showAwb">
+-
+</div>
+
+</div>
+
+<div class="col-md-3">
+
+<b>Order ID</b>
+
+<div id="showOrder">
+-
+</div>
+
+</div>
+
+<div class="col-md-3">
+
+<b>Customer</b>
+
+<div id="showCustomer">
+-
+</div>
+
+</div>
+
+<div class="col-md-3">
+
+<b>Status</b>
+
+<div id="showStatus">
+-
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="card shadow-sm mb-4">
+
+<div class="card-header">
+Tracking Timeline
+</div>
+
+<div class="card-body">
+
+<div id="timeline">
+
+<div class="timeline-item">
+03-Jun-2026 10:00 AM
+<br>
+Manifest Created
+</div>
+
+<div class="timeline-item">
+03-Jun-2026 02:00 PM
+<br>
+Shipment Picked Up
+</div>
+
+<div class="timeline-item">
+04-Jun-2026 09:00 AM
+<br>
+In Transit
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="card shadow-sm">
+
+<div class="card-header">
+Recent Tracking
+</div>
+
+<div class="card-body">
+
+<div class="table-responsive">
+
+<table class="table table-bordered">
+
+<thead>
+
+<tr>
+<th>AWB</th>
+<th>Order ID</th>
+<th>Status</th>
+<th>Date</th>
+</tr>
+
+</thead>
+
+<tbody id="trackingTable">
+
+<tr>
+<td>123456789</td>
+<td>ORD1001</td>
+<td>Delivered</td>
+<td>03-Jun-2026</td>
+</tr>
+
+<tr>
+<td>123456790</td>
+<td>ORD1002</td>
+<td>In Transit</td>
+<td>03-Jun-2026</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+async function trackAWB(){
+
+const awb =
+document.getElementById(
+"awb"
+).value.trim();
+
+if(!awb) return;
+
+document.getElementById(
+"showAwb"
+).innerText =
+awb;
+
+document.getElementById(
+"showOrder"
+).innerText =
+"ORD" +
+Math.floor(
+Math.random()*10000
+);
+
+document.getElementById(
+"showCustomer"
+).innerText =
+"Demo Customer";
+
+document.getElementById(
+"showStatus"
+).innerText =
+"Delivered";
+
+}
+
+/*
+
+Future API
+
+const API_URL = "";
+
+const res =
+await fetch(
+API_URL + awb
+);
+
+const data =
+await res.json();
+
+*/
+
+</script>
+
+</body>
+</html>
