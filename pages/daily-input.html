@@ -215,34 +215,64 @@ async function(e){
     if(!awb)
     return;
 
-    document.getElementById(
-        "statusBox"
-    ).innerHTML =
-    "Fetching Data...";
+    const tracking =
+    await trackAWB(awb);
 
-    setTimeout(()=>{
-
-        document.getElementById(
-            "showAwb"
-        ).innerHTML =
-        awb;
-
-        document.getElementById(
-            "showOrderId"
-        ).innerHTML =
-        "Loading...";
-
-        document.getElementById(
-            "showCustomer"
-        ).innerHTML =
-        "Loading...";
+    if(!tracking.success){
 
         document.getElementById(
             "statusBox"
         ).innerHTML =
-        "Ready For Save";
+        tracking.message;
 
-    },500);
+        return;
+    }
+
+    document.getElementById(
+        "showAwb"
+    ).innerHTML =
+    awb;
+
+    document.getElementById(
+        "showOrderId"
+    ).innerHTML =
+    tracking.orderId ||
+    tracking.shipment?.order_id ||
+    "-";
+
+    document.getElementById(
+        "showCustomer"
+    ).innerHTML =
+    tracking.courier ||
+    "BOXD";
+
+    const save =
+    await saveScan(
+        awb,
+        mode
+    );
+
+    if(save.success){
+
+        beep();
+
+        document.getElementById(
+            "statusBox"
+        ).innerHTML =
+        save.message;
+
+        loadTodayCounts();
+
+    }else{
+
+        document.getElementById(
+            "statusBox"
+        ).innerHTML =
+        save.message;
+
+    }
+
+    this.value = "";
 
 });
 
