@@ -6,51 +6,45 @@
 
     <div class="card-body">
 
-        <!-- Mode Buttons -->
+        <!-- MODE BUTTONS -->
 
         <div class="row mb-4">
 
-            <div class="col-md-4 mb-2">
-
+            <div class="col-md-4">
                 <button
                     id="pickupBtn"
                     class="btn btn-success w-100"
                     onclick="setMode('Pickup')">
 
-                    📦 Pickup Mode
+                    Pickup Mode
 
                 </button>
-
             </div>
 
-            <div class="col-md-4 mb-2">
-
+            <div class="col-md-4">
                 <button
                     id="returnBtn"
-                    class="btn btn-outline-danger w-100"
+                    class="btn btn-danger w-100"
                     onclick="setMode('Return')">
 
-                    ↩ Return Mode
+                    Return Mode
 
                 </button>
-
             </div>
 
-            <div class="col-md-4 mb-2">
-
+            <div class="col-md-4">
                 <button
                     class="btn btn-secondary w-100"
                     onclick="stopScanning()">
 
-                    ⛔ Stop Scan
+                    Stop Scan
 
                 </button>
-
             </div>
 
         </div>
 
-        <!-- Current Mode -->
+        <!-- CURRENT MODE -->
 
         <div class="alert alert-primary">
 
@@ -61,14 +55,14 @@
 
         </div>
 
-        <!-- Scanner Input -->
+        <!-- AWB INPUT -->
 
         <div class="card shadow-sm mb-3">
 
             <div class="card-body">
 
                 <label class="form-label fw-bold">
-                    Scan AWB
+                    Scan / Enter AWB
                 </label>
 
                 <input
@@ -76,46 +70,33 @@
                     id="awb"
                     class="form-control form-control-lg text-center fw-bold"
                     placeholder="Scan AWB Here"
-                    autocomplete="off">
+                    autocomplete="off"
+                    autofocus>
 
             </div>
 
         </div>
 
-        <!-- Tracking Details -->
+        <!-- LAST SCAN -->
 
         <div class="card shadow-sm mb-3">
 
             <div class="card-header">
-                Order Details
+                Last Scan
             </div>
 
             <div class="card-body">
 
                 <div class="row">
 
-                    <div class="col-md-4 mb-2">
-
+                    <div class="col-md-6">
                         <b>AWB</b>
-
-                        <div id="showAwb">-</div>
-
+                        <div id="lastAwb">-</div>
                     </div>
 
-                    <div class="col-md-4 mb-2">
-
-                        <b>Order ID</b>
-
-                        <div id="showOrderId">-</div>
-
-                    </div>
-
-                    <div class="col-md-4 mb-2">
-
-                        <b>Courier</b>
-
-                        <div id="showCustomer">-</div>
-
+                    <div class="col-md-6">
+                        <b>Type</b>
+                        <div id="lastType">-</div>
                     </div>
 
                 </div>
@@ -124,7 +105,7 @@
 
         </div>
 
-        <!-- Status -->
+        <!-- STATUS -->
 
         <div class="card shadow-sm mb-3">
 
@@ -132,7 +113,7 @@
 
                 <div
                     id="statusBox"
-                    class="alert alert-primary mb-0">
+                    class="fw-bold text-primary">
 
                     Ready To Scan
 
@@ -142,11 +123,11 @@
 
         </div>
 
-        <!-- Summary -->
+        <!-- COUNTS -->
 
-        <div class="row">
+        <div class="row mb-3">
 
-            <div class="col-md-6 mb-3">
+            <div class="col-md-6">
 
                 <div class="card shadow-sm">
 
@@ -158,23 +139,15 @@
 
                         <h5>
                             Pickup :
-                            <span
-                                id="pickupCount"
-                                class="badge bg-success">
-
+                            <span id="pickupCount">
                                 0
-
                             </span>
                         </h5>
 
                         <h5>
                             Return :
-                            <span
-                                id="returnCount"
-                                class="badge bg-danger">
-
+                            <span id="returnCount">
                                 0
-
                             </span>
                         </h5>
 
@@ -184,7 +157,9 @@
 
             </div>
 
-            <div class="col-md-6 mb-3">
+            <!-- RECENT SCANS -->
+
+            <div class="col-md-6">
 
                 <div class="card shadow-sm">
 
@@ -216,99 +191,98 @@
 
 let mode = "Pickup";
 let active = true;
-let processing = false;
 let recentScans = [];
 
-// DOM
-
-const awbInput = document.getElementById("awb");
-const currentMode = document.getElementById("currentMode");
-const statusBox = document.getElementById("statusBox");
-
-const showAwb = document.getElementById("showAwb");
-const showOrderId = document.getElementById("showOrderId");
-const showCustomer = document.getElementById("showCustomer");
-
-const recentScansList =
-    document.getElementById("recentScans");
-
-const pickupBtn =
-    document.getElementById("pickupBtn");
-
-const returnBtn =
-    document.getElementById("returnBtn");
-
-// Status
-
-function updateStatus(
-    message,
-    type = "primary"
-){
-
-    statusBox.className =
-        `alert alert-${type} mb-0`;
-
-    statusBox.innerHTML = message;
-}
-
-// Mode
+/* ==========================
+   MODE CHANGE
+========================== */
 
 function setMode(type){
 
     mode = type;
     active = true;
 
-    currentMode.textContent = type;
+    document.getElementById(
+        "currentMode"
+    ).innerText = type;
 
-    if(type === "Pickup"){
+    document.getElementById(
+        "statusBox"
+    ).innerHTML =
+    "Ready To Scan";
 
-        pickupBtn.className =
-            "btn btn-success w-100";
+    document.getElementById(
+        "awb"
+    ).focus();
 
-        returnBtn.className =
-            "btn btn-outline-danger w-100";
-
-    }else{
-
-        pickupBtn.className =
-            "btn btn-outline-success w-100";
-
-        returnBtn.className =
-            "btn btn-danger w-100";
-    }
-
-    updateStatus(
-        `Ready To Scan (${type})`,
-        "primary"
-    );
-
-    awbInput.focus();
 }
 
-// Stop
+/* ==========================
+   STOP SCAN
+========================== */
 
 function stopScanning(){
 
     active = false;
 
-    updateStatus(
-        "Scanning Stopped",
-        "danger"
-    );
+    document.getElementById(
+        "statusBox"
+    ).innerHTML =
+    "Scanning Stopped";
+
 }
 
-// Recent Scans
+/* ==========================
+   BEEP
+========================== */
+
+function beep(){
+
+    const ctx =
+    new (
+        window.AudioContext ||
+        window.webkitAudioContext
+    )();
+
+    const osc =
+    ctx.createOscillator();
+
+    const gain =
+    ctx.createGain();
+
+    osc.connect(gain);
+
+    gain.connect(
+        ctx.destination
+    );
+
+    osc.frequency.value = 900;
+
+    osc.start();
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        ctx.currentTime + 0.20
+    );
+
+    osc.stop(
+        ctx.currentTime + 0.20
+    );
+
+}
+
+/* ==========================
+   RECENT SCANS
+========================== */
 
 function addRecentScan(
     awb,
-    orderId,
-    scanType
+    type
 ){
 
     recentScans.unshift({
         awb,
-        orderId,
-        scanType
+        type
     });
 
     if(
@@ -317,11 +291,6 @@ function addRecentScan(
         recentScans.pop();
     }
 
-    renderRecentScans();
-}
-
-function renderRecentScans(){
-
     let html = "";
 
     recentScans.forEach(row=>{
@@ -329,196 +298,135 @@ function renderRecentScans(){
         html += `
         <li class="list-group-item">
 
-            <strong>${row.awb}</strong>
+            <div>
+                <strong>${row.awb}</strong>
+            </div>
 
-            <br>
-
-            <small>
-                Order :
-                ${row.orderId}
-            </small>
-
-            <br>
-
-            <span class="badge ${
-                row.scanType === "Pickup"
-                ? "bg-success"
-                : "bg-danger"
-            }">
-
-                ${row.scanType}
-
+            <span class="
+                badge
+                ${row.type === 'Pickup'
+                ? 'bg-success'
+                : 'bg-danger'}
+            ">
+                ${row.type}
             </span>
 
         </li>
         `;
+
     });
 
-    recentScansList.innerHTML = html;
+    document.getElementById(
+        "recentScans"
+    ).innerHTML =
+    html;
+
 }
 
-// Process Scan
+/* ==========================
+   AWB SCAN
+========================== */
 
-async function processScan(awb){
+document
+.getElementById("awb")
+.addEventListener(
+"keydown",
+async function(e){
 
-    if(processing)
+    if(e.key !== "Enter")
     return;
 
-    processing = true;
+    if(!active)
+    return;
+
+    const awb =
+    this.value.trim();
+
+    if(!awb)
+    return;
+
+    this.disabled = true;
+
+    document.getElementById(
+        "statusBox"
+    ).innerHTML =
+    "Saving...";
 
     try{
 
-        updateStatus(
-            "Checking Tracking...",
-            "info"
-        );
-
-        const tracking =
-            await trackAWB(awb);
-
-        if(
-            !tracking.success
-        ){
-
-            updateStatus(
-                tracking.message ||
-                "Tracking Not Found",
-                "danger"
-            );
-
-            return;
-        }
-
-        const orderId =
-
-            tracking.orderId ||
-
-            tracking.shipment?.order_id ||
-
-            tracking.shipment?.orderId ||
-
-            tracking.shipment?.reference_number ||
-
-            tracking.shipment?.reference_no ||
-
-            "-";
-
-        showAwb.textContent =
-            awb;
-
-        showOrderId.textContent =
-            orderId;
-
-        showCustomer.textContent =
-            tracking.courier ||
-            "BOXD";
-
-        updateStatus(
-            "Saving Scan...",
-            "warning"
-        );
-
         const save =
-            await saveScan(
-                awb,
-                mode
-            );
+        await saveScan(
+            awb,
+            mode
+        );
 
         if(save.success){
 
-            if(
-                typeof beep ===
-                "function"
-            ){
-                beep();
-            }
+            beep();
 
-            updateStatus(
-                save.message ||
-                "Saved Successfully",
-                "success"
-            );
+            document.getElementById(
+                "statusBox"
+            ).innerHTML =
+            "✅ Saved Successfully";
+
+            document.getElementById(
+                "lastAwb"
+            ).innerHTML =
+            awb;
+
+            document.getElementById(
+                "lastType"
+            ).innerHTML =
+            mode;
 
             addRecentScan(
                 awb,
-                orderId,
                 mode
             );
 
-            if(
-                typeof loadTodayCounts ===
-                "function"
-            ){
-                await loadTodayCounts();
-            }
+            await loadTodayCounts();
 
         }else{
 
-            updateStatus(
-                save.message ||
-                "Save Failed",
-                "danger"
-            );
+            document.getElementById(
+                "statusBox"
+            ).innerHTML =
+            save.message ||
+            "Save Failed";
+
         }
 
-    }catch(error){
+    }catch(err){
 
-        console.error(error);
+        document.getElementById(
+            "statusBox"
+        ).innerHTML =
+        err.toString();
 
-        updateStatus(
-            error.message ||
-            "Unexpected Error",
-            "danger"
-        );
-
-    }finally{
-
-        processing = false;
-
-        awbInput.value = "";
-
-        awbInput.focus();
     }
-}
 
-// Scanner Enter
+    this.value = "";
 
-awbInput.addEventListener(
-    "keydown",
-    async function(e){
+    this.disabled = false;
 
-        if(
-            e.key !== "Enter"
-        )
-        return;
+    this.focus();
 
-        if(!active)
-        return;
+});
 
-        const awb =
-            this.value.trim();
+/* ==========================
+   INIT
+========================== */
 
-        if(!awb)
-        return;
+loadTodayCounts();
 
-        await processScan(awb);
-    }
-);
+setTimeout(()=>{
 
-// Init
+    document
+    .getElementById(
+        "awb"
+    )
+    .focus();
 
-updateStatus(
-    "Ready To Scan",
-    "primary"
-);
-
-awbInput.focus();
-
-if(
-    typeof loadTodayCounts ===
-    "function"
-){
-    loadTodayCounts();
-}
+},300);
 
 </script>
