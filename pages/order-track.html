@@ -1,297 +1,198 @@
-<div class="card shadow-sm">
+// DOM Elements
 
-    <div class="card-header">
-        <h4 class="mb-0">
-            📦 Order Tracking
-        </h4>
-    </div>
+const trackInput = document.getElementById("trackAwb");
 
-    <div class="card-body">
+const timelineDiv = document.getElementById("timeline");
 
-        <div class="row mb-4">
+const showAwb = document.getElementById("showAwb");
+const showOrder = document.getElementById("showOrder");
+const showCourier = document.getElementById("showCourier");
+const showStatus = document.getElementById("showStatus");
 
-            <div class="col-md-10">
+// Search Button Function
 
-                <input
-                    type="text"
-                    id="trackAwb"
-                    class="form-control form-control-lg"
-                    placeholder="Enter AWB Number">
+async function searchTracking() {
 
-            </div>
+    const awb = trackInput.value.trim();
 
-            <div class="col-md-2">
+    if (!awb) {
 
-                <button
-                    class="btn btn-primary w-100 h-100"
-                    onclick="searchTracking()">
-
-                    Search
-
-                </button>
-
-            </div>
-
-        </div>
-
-        <!-- Status Summary -->
-
-        <div class="row g-3 mb-4">
-
-            <div class="col-md-2">
-                <div class="card text-center shadow-sm">
-                    <div class="card-body">
-                        <div>Manifest</div>
-                        <h3 id="manifestCount">0</h3>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-2">
-                <div class="card text-center shadow-sm">
-                    <div class="card-body">
-                        <div>Transit</div>
-                        <h3 id="transitCount">0</h3>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-2">
-                <div class="card text-center shadow-sm">
-                    <div class="card-body">
-                        <div>OFD</div>
-                        <h3 id="ofdCount">0</h3>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-2">
-                <div class="card text-center shadow-sm">
-                    <div class="card-body">
-                        <div>Delivered</div>
-                        <h3 id="deliveredCount">0</h3>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-2">
-                <div class="card text-center shadow-sm">
-                    <div class="card-body">
-                        <div>RTO</div>
-                        <h3 id="rtoCount">0</h3>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-2">
-                <div class="card text-center shadow-sm">
-                    <div class="card-body">
-                        <div>NDR</div>
-                        <h3 id="ndrCount">0</h3>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Tracking Details -->
-
-        <div class="card shadow-sm mb-4">
-
-            <div class="card-header">
-                Tracking Details
-            </div>
-
-            <div class="card-body">
-
-                <div class="row">
-
-                    <div class="col-md-3">
-                        <b>AWB</b>
-                        <div id="showAwb">-</div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <b>Order ID</b>
-                        <div id="showOrder">-</div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <b>Courier</b>
-                        <div id="showCourier">-</div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <b>Status</b>
-                        <div id="showStatus">-</div>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- Timeline -->
-
-        <div class="card shadow-sm mb-4">
-
-            <div class="card-header">
-                Tracking Timeline
-            </div>
-
-            <div
-                class="card-body"
-                id="timeline">
-
-                <div class="alert alert-secondary">
-
-                    Search AWB To View Timeline
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- Recent Tracking -->
-
-        <div class="card shadow-sm">
-
-            <div class="card-header">
-                Recent Tracking
-            </div>
-
-            <div class="card-body">
-
-                <div class="table-responsive">
-
-                    <table
-                        class="table table-bordered table-hover">
-
-                        <thead>
-
-                            <tr>
-                                <th>AWB</th>
-                                <th>Order ID</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="trackingTable">
-
-                            <tr>
-                                <td colspan="4" class="text-center">
-                                    No Tracking Found
-                                </td>
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<script>
-
-async function trackAWB(awb){
-
-    const awb =
-    document
-    .getElementById("trackAwb")
-    .value
-    .trim();
-
-    if(!awb){
-
-        alert("Enter AWB Number");
+        alert("Please Enter AWB Number");
+        trackInput.focus();
         return;
-
     }
 
-    document.getElementById("timeline").innerHTML =
-    `
-    <div class="alert alert-info">
-        Fetching Tracking...
-    </div>
-    `;
-
-    const data =
-    await window.trackAWB(awb);
-
-    if(!data.success){
-
-        document.getElementById("timeline").innerHTML =
-        `
-        <div class="alert alert-danger">
-            ${data.message || "Tracking Not Found"}
-        </div>
-        `;
-
-        return;
-
-    }
-
-    const shipment =
-    data.shipment || {};
-
-    document.getElementById("showAwb").innerHTML =
-    awb;
-
-    document.getElementById("showOrder").innerHTML =
-    shipment.order_id ||
-    shipment.orderId ||
-    shipment.reference_number ||
-    "-";
-
-    document.getElementById("showCourier").innerHTML =
-    "BOXD";
-
-    document.getElementById("showStatus").innerHTML =
-    shipment.status || "-";
-
-    let timelineHtml = "";
-
-    if(shipment.tracking_events){
-
-        shipment.tracking_events
-        .forEach(event=>{
-
-            timelineHtml +=
-            `
-            <div class="border-start border-primary ps-3 mb-3">
-                <b>${event.status || "-"}</b><br>
-                ${event.created_at || ""}
-            </div>
-            `;
-
-        });
-
-    }
-
-    if(!timelineHtml){
-
-        timelineHtml =
-        `
-        <div class="alert alert-secondary">
-            No Timeline Available
-        </div>
-        `;
-    }
-
-    document.getElementById("timeline").innerHTML =
-    timelineHtml;
-
+    await loadTracking(awb);
 }
 
-</script>
+// Main Tracking Function
+
+async function loadTracking(awb) {
+
+    try {
+
+        timelineDiv.innerHTML = `
+            <div class="alert alert-info">
+                Fetching Tracking Details...
+            </div>
+        `;
+
+        const data =
+            await window.trackAWB(awb);
+
+        if (!data?.success) {
+
+            timelineDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    ${data?.message || "Tracking Not Found"}
+                </div>
+            `;
+
+            clearTrackingDetails();
+
+            return;
+        }
+
+        const shipment =
+            data.shipment || {};
+
+        renderTrackingDetails(
+            awb,
+            shipment
+        );
+
+        renderTimeline(
+            shipment.tracking_events || []
+        );
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        timelineDiv.innerHTML = `
+            <div class="alert alert-danger">
+                Failed To Fetch Tracking
+            </div>
+        `;
+    }
+}
+
+// Tracking Details
+
+function renderTrackingDetails(
+    awb,
+    shipment
+) {
+
+    showAwb.textContent = awb;
+
+    showOrder.textContent =
+
+        shipment.order_id ||
+        shipment.orderId ||
+        shipment.reference_number ||
+        shipment.reference_no ||
+        "-";
+
+    showCourier.textContent =
+        shipment.courier ||
+        "BOXD";
+
+    showStatus.innerHTML =
+        getStatusBadge(
+            shipment.status || "-"
+        );
+}
+
+// Status Badge
+
+function getStatusBadge(status) {
+
+    const value =
+        status.toLowerCase();
+
+    let color = "secondary";
+
+    if (value.includes("deliver"))
+        color = "success";
+
+    else if (value.includes("ofd"))
+        color = "warning";
+
+    else if (value.includes("ndr"))
+        color = "danger";
+
+    else if (value.includes("rto"))
+        color = "dark";
+
+    else if (value.includes("transit"))
+        color = "primary";
+
+    return `
+        <span class="badge bg-${color}">
+            ${status}
+        </span>
+    `;
+}
+
+// Timeline
+
+function renderTimeline(events) {
+
+    if (!events.length) {
+
+        timelineDiv.innerHTML = `
+            <div class="alert alert-secondary">
+                No Timeline Available
+            </div>
+        `;
+
+        return;
+    }
+
+    timelineDiv.innerHTML =
+        events.map(event => `
+
+        <div class="border-start border-4 border-primary ps-3 mb-3">
+
+            <div class="fw-bold">
+                ${event.status || "-"}
+            </div>
+
+            <small class="text-muted">
+                ${event.created_at || ""}
+            </small>
+
+            ${
+                event.location
+                ? `<div>${event.location}</div>`
+                : ""
+            }
+
+        </div>
+
+    `).join("");
+}
+
+// Clear Details
+
+function clearTrackingDetails() {
+
+    showAwb.textContent = "-";
+    showOrder.textContent = "-";
+    showCourier.textContent = "-";
+    showStatus.textContent = "-";
+}
+
+// Enter Key Support
+
+trackInput.addEventListener(
+    "keydown",
+    async (e) => {
+
+        if (e.key === "Enter") {
+            await searchTracking();
+        }
+    }
+);
