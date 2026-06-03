@@ -1,274 +1,207 @@
-<div class="card shadow-sm">
+// DOM Cache
 
-    <div class="card-header">
-        <h4 class="mb-0">
-            📋 Monthly Sheet Data
-        </h4>
-    </div>
+const monthInput = document.getElementById("monthInput");
 
-    <div class="card-body">
+const tableBody = document.getElementById("sheetTableBody");
 
-        <div class="row mb-3">
+const totalRecordsEl = document.getElementById("totalRecords");
+const pickupRecordsEl = document.getElementById("pickupRecords");
+const returnRecordsEl = document.getElementById("returnRecords");
 
-            <div class="col-md-4">
+// Load Data
 
-                <label class="form-label">
-                    Month Sheet Name
-                </label>
-
-                <input
-                    type="text"
-                    id="monthInput"
-                    class="form-control"
-                    placeholder="06/2026">
-
-            </div>
-
-            <div class="col-md-2 d-flex align-items-end">
-
-                <button
-                    class="btn btn-primary w-100"
-                    onclick="loadSheetData()">
-
-                    Load Data
-
-                </button>
-
-            </div>
-
-        </div>
-
-        <div class="row mb-3">
-
-            <div class="col-md-3">
-
-                <div class="card">
-
-                    <div class="card-body text-center">
-
-                        <h6>Total Records</h6>
-
-                        <h3 id="totalRecords">
-                            0
-                        </h3>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-3">
-
-                <div class="card">
-
-                    <div class="card-body text-center">
-
-                        <h6>Pickup</h6>
-
-                        <h3 id="pickupRecords">
-                            0
-                        </h3>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-3">
-
-                <div class="card">
-
-                    <div class="card-body text-center">
-
-                        <h6>Return</h6>
-
-                        <h3 id="returnRecords">
-                            0
-                        </h3>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="table-responsive">
-
-            <table
-                class="table table-bordered table-striped table-hover">
-
-                <thead class="table-dark">
-
-                    <tr>
-
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>AWB</th>
-                        <th>Type</th>
-                        <th>Order ID</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody id="sheetTableBody">
-
-                    <tr>
-
-                        <td
-                            colspan="5"
-                            class="text-center">
-
-                            No Data Loaded
-
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-</div>
-
-<script>
-
-async function loadSheetData(){
+async function loadSheetData() {
 
     const month =
-    document.getElementById(
-        "monthInput"
-    ).value.trim();
+        monthInput.value.trim();
 
-    if(!month){
+    if (!month) {
 
         alert(
-            "Enter Month (Example : 06/2026)"
+            "Enter Month (Example: 06/2026)"
+        );
+
+        monthInput.focus();
+
+        return;
+    }
+
+    // Validation MM/YYYY
+
+    const monthRegex =
+        /^(0[1-9]|1[0-2])\/\d{4}$/;
+
+    if (!monthRegex.test(month)) {
+
+        alert(
+            "Month format should be MM/YYYY"
         );
 
         return;
-
     }
 
-    document.getElementById(
-        "sheetTableBody"
-    ).innerHTML =
-    `
-    <tr>
-        <td colspan="5" class="text-center">
-            Loading...
-        </td>
-    </tr>
-    `;
+    showLoading();
 
-    const result =
-    await getSheetData(
-        month
-    );
+    try {
 
-    if(!result.success){
+        const result =
+            await getSheetData(month);
 
-        document.getElementById(
-            "sheetTableBody"
-        ).innerHTML =
-        `
+        if (!result.success) {
+
+            showMessage(
+                result.message ||
+                "Failed To Load Data",
+                "danger"
+            );
+
+            return;
+        }
+
+        renderData(
+            result.data || []
+        );
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        showMessage(
+            "Server Error",
+            "danger"
+        );
+    }
+}
+
+// Loading State
+
+function showLoading() {
+
+    tableBody.innerHTML = `
         <tr>
-            <td colspan="5" class="text-center text-danger">
-                ${result.message}
+            <td colspan="5" class="text-center">
+                <div class="spinner-border spinner-border-sm"></div>
+                Loading Data...
             </td>
         </tr>
-        `;
+    `;
+}
 
-        return;
-    }
+// Message State
 
-    let html = "";
+function showMessage(
+    message,
+    color = "secondary"
+) {
+
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="5"
+                class="text-center text-${color}">
+                ${message}
+            </td>
+        </tr>
+    `;
+}
+
+// Render Table
+
+function renderData(data) {
 
     let pickup = 0;
     let ret = 0;
 
-    result.data.forEach(row=>{
+    if (!data.length) {
 
-        if(row[3] === "Pickup")
-        pickup++;
+        showMessage(
+            "No Records Found"
+        );
 
-        if(row[3] === "Return")
-        ret++;
+        updateSummary(
+            0,
+            0,
+            0
+        );
 
-        html += `
-        <tr>
-
-            <td>${row[0]}</td>
-
-            <td>${row[1]}</td>
-
-            <td>${row[2]}</td>
-
-            <td>
-
-                <span class="
-                    badge
-                    ${row[3] === 'Pickup'
-                        ? 'bg-success'
-                        : 'bg-danger'}
-                ">
-                    ${row[3]}
-                </span>
-
-            </td>
-
-            <td>${row[4]}</td>
-
-        </tr>
-        `;
-
-    });
-
-    if(result.data.length === 0){
-
-        html =
-        `
-        <tr>
-
-            <td colspan="5"
-                class="text-center">
-
-                No Records Found
-
-            </td>
-
-        </tr>
-        `;
+        return;
     }
 
-    document.getElementById(
-        "sheetTableBody"
-    ).innerHTML =
-    html;
+    const rows =
+        data.map(row => {
 
-    document.getElementById(
-        "totalRecords"
-    ).innerHTML =
-    result.data.length;
+            if (row[3] === "Pickup")
+                pickup++;
 
-    document.getElementById(
-        "pickupRecords"
-    ).innerHTML =
-    pickup;
+            if (row[3] === "Return")
+                ret++;
 
-    document.getElementById(
-        "returnRecords"
-    ).innerHTML =
-    ret;
+            return `
+                <tr>
 
+                    <td>${row[0] || "-"}</td>
+
+                    <td>${row[1] || "-"}</td>
+
+                    <td>
+                        <span class="fw-bold">
+                            ${row[2] || "-"}
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="badge ${
+                            row[3] === "Pickup"
+                            ? "bg-success"
+                            : "bg-danger"
+                        }">
+                            ${row[3]}
+                        </span>
+                    </td>
+
+                    <td>${row[4] || "-"}</td>
+
+                </tr>
+            `;
+
+        }).join("");
+
+    tableBody.innerHTML = rows;
+
+    updateSummary(
+        data.length,
+        pickup,
+        ret
+    );
 }
 
-</script>
+// Update Summary
+
+function updateSummary(
+    total,
+    pickup,
+    ret
+) {
+
+    totalRecordsEl.textContent =
+        total;
+
+    pickupRecordsEl.textContent =
+        pickup;
+
+    returnRecordsEl.textContent =
+        ret;
+}
+
+// Enter Key Support
+
+monthInput.addEventListener(
+    "keydown",
+    function (e) {
+
+        if (e.key === "Enter") {
+
+            loadSheetData();
+        }
+    }
+);
