@@ -202,18 +202,17 @@ function setMode(type){
     mode = type;
     active = true;
 
-    document.getElementById(
-        "currentMode"
-    ).innerText = type;
+    document.getElementById("currentMode").textContent = type;
 
-    document.getElementById(
-        "statusBox"
-    ).innerHTML =
+    document.getElementById("statusBox").innerHTML =
     "Ready To Scan";
 
-    document.getElementById(
-        "awb"
-    ).focus();
+    const awbInput =
+    document.getElementById("awb");
+
+    if(awbInput){
+        awbInput.focus();
+    }
 
 }
 
@@ -225,69 +224,67 @@ function stopScanning(){
 
     active = false;
 
-    document.getElementById(
-        "statusBox"
-    ).innerHTML =
+    document.getElementById("statusBox").innerHTML =
     "Scanning Stopped";
 
 }
 
 /* ==========================
-   BEEP
+   BEEP SOUND
 ========================== */
 
 function beep(){
 
-    const ctx =
-    new (
-        window.AudioContext ||
-        window.webkitAudioContext
-    )();
+    try{
 
-    const osc =
-    ctx.createOscillator();
+        const ctx =
+        new (
+            window.AudioContext ||
+            window.webkitAudioContext
+        )();
 
-    const gain =
-    ctx.createGain();
+        const osc =
+        ctx.createOscillator();
 
-    osc.connect(gain);
+        const gain =
+        ctx.createGain();
 
-    gain.connect(
-        ctx.destination
-    );
+        osc.connect(gain);
+        gain.connect(ctx.destination);
 
-    osc.frequency.value = 900;
+        osc.frequency.value = 900;
 
-    osc.start();
+        osc.start();
 
-    gain.gain.exponentialRampToValueAtTime(
-        0.0001,
-        ctx.currentTime + 0.20
-    );
+        gain.gain.exponentialRampToValueAtTime(
+            0.0001,
+            ctx.currentTime + 0.20
+        );
 
-    osc.stop(
-        ctx.currentTime + 0.20
-    );
+        osc.stop(
+            ctx.currentTime + 0.20
+        );
+
+    }catch(e){
+
+        console.log(e);
+
+    }
 
 }
 
 /* ==========================
-   RECENT SCANS
+   RECENT SCAN LIST
 ========================== */
 
-function addRecentScan(
-    awb,
-    type
-){
+function addRecentScan(awb,type){
 
     recentScans.unshift({
         awb,
         type
     });
 
-    if(
-        recentScans.length > 10
-    ){
+    if(recentScans.length > 10){
         recentScans.pop();
     }
 
@@ -296,19 +293,18 @@ function addRecentScan(
     recentScans.forEach(row=>{
 
         html += `
-        <li class="list-group-item">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
 
-            <div>
-                <strong>${row.awb}</strong>
-            </div>
+            <strong>${row.awb}</strong>
 
-            <span class="
-                badge
-                ${row.type === 'Pickup'
-                ? 'bg-success'
-                : 'bg-danger'}
-            ">
+            <span class="badge ${
+                row.type === "Pickup"
+                ? "bg-success"
+                : "bg-danger"
+            }">
+
                 ${row.type}
+
             </span>
 
         </li>
@@ -318,34 +314,27 @@ function addRecentScan(
 
     document.getElementById(
         "recentScans"
-    ).innerHTML =
-    html;
+    ).innerHTML = html;
 
 }
 
 /* ==========================
-   AWB SCAN
+   SCAN FUNCTION
 ========================== */
 
-document
-.getElementById("awb")
-.addEventListener(
-"keydown",
-async function(e){
+async function processScan(){
 
-    if(e.key !== "Enter")
-    return;
-
-    if(!active)
-    return;
+    const input =
+    document.getElementById("awb");
 
     const awb =
-    this.value.trim();
+    input.value.trim();
 
-    if(!awb)
-    return;
+    if(!awb || !active){
+        return;
+    }
 
-    this.disabled = true;
+    input.disabled = true;
 
     document.getElementById(
         "statusBox"
@@ -354,13 +343,13 @@ async function(e){
 
     try{
 
-        const save =
+        const result =
         await saveScan(
             awb,
             mode
         );
 
-        if(save.success){
+        if(result.success){
 
             beep();
 
@@ -384,14 +373,19 @@ async function(e){
                 mode
             );
 
-            await loadTodayCounts();
+            if(
+                typeof loadTodayCounts ===
+                "function"
+            ){
+                await loadTodayCounts();
+            }
 
         }else{
 
             document.getElementById(
                 "statusBox"
             ).innerHTML =
-            save.message ||
+            result.message ||
             "Save Failed";
 
         }
@@ -401,32 +395,58 @@ async function(e){
         document.getElementById(
             "statusBox"
         ).innerHTML =
-        err.toString();
+        err.message ||
+        String(err);
 
     }
 
-    this.value = "";
+    input.value = "";
+    input.disabled = false;
+    input.focus();
 
-    this.disabled = false;
-
-    this.focus();
-
-});
+}
 
 /* ==========================
    INIT
 ========================== */
 
-loadTodayCounts();
-
 setTimeout(()=>{
 
-    document
-    .getElementById(
+    const input =
+    document.getElementById(
         "awb"
-    )
-    .focus();
+    );
+
+    if(!input){
+        return;
+    }
+
+    input.focus();
+
+    input.addEventListener(
+        "keydown",
+        function(e){
+
+            if(
+                e.key === "Enter"
+            ){
+
+                e.preventDefault();
+
+                processScan();
+
+            }
+
+        }
+    );
 
 },300);
+
+if(
+    typeof loadTodayCounts ===
+    "function"
+){
+    loadTodayCounts();
+}
 
 </script>
