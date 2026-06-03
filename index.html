@@ -1,493 +1,155 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-
 <meta charset="UTF-8">
-<title>HARSIDHI VENTURES ERP</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harsidhi Ventures ERP</title>
 
-<script src="config.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+body{background:#f4f7fb;}
+.sidebar{
+position:fixed;left:0;top:0;width:250px;height:100vh;
+background:#0f172a;color:#fff;overflow:auto;
 }
-
-body{
-  font-family:system-ui;
-  background:#f2f3f7;
+.sidebar a{
+display:block;color:#fff;text-decoration:none;padding:12px 20px;
 }
-
-.app{
-  max-width:420px;
-  margin:auto;
-  background:#fff;
-  min-height:100vh;
+.sidebar a:hover{background:#2563eb;}
+.main{margin-left:250px;}
+.header{
+background:#fff;padding:15px 25px;
+box-shadow:0 2px 8px rgba(0,0,0,.08);
 }
-
-/* HEADER */
-
-header{
-  padding:18px;
-  text-align:center;
-  font-weight:700;
-  font-size:20px;
-  border-bottom:1px solid #eee;
-  background:#ffffff;
-  position:sticky;
-  top:0;
-  z-index:100;
-}
-
-/* CARD */
-
-.card{
-  margin:12px;
-  padding:14px;
-  border-radius:18px;
-  background:#fff;
-  box-shadow:0 4px 16px rgba(0,0,0,0.06);
-}
-
-h3{
-  margin:0 0 12px;
-  font-size:16px;
-}
-
-/* STATS */
-
-.stats{
-  display:flex;
-  gap:10px;
-  margin-top:10px;
-}
-
-.stats div{
-  flex:1;
-  background:#f8f9fb;
-  padding:14px;
-  border-radius:12px;
-  text-align:center;
-  font-size:12px;
-  line-height:1.4;
-}
-
-.big{
-  font-size:20px;
-  font-weight:700;
-  margin-top:6px;
-  display:block;
-}
-
-/* GRID */
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-/* BUTTON */
-
-button{
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  background:#1a73e8;
-  color:#fff;
-  font-size:14px;
-  font-weight:600;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-button:hover{
-  background:#155cc6;
-}
-
-button:active{
-  transform:scale(0.96);
-}
-
-/* DAILY PANEL */
-
-.daily-panel{
-
-  margin:0 12px;
-
-  background:#fff;
-
-  border-radius:18px;
-
-  overflow:hidden;
-
-  max-height:0;
-
-  opacity:0;
-
-  transition:
-    max-height 0.45s ease,
-    opacity 0.35s ease;
-
-  box-shadow:0 5px 18px rgba(0,0,0,0.08);
-
-}
-
-.daily-panel.active{
-
-  max-height:1200px;
-
-  opacity:1;
-
-  margin-bottom:12px;
-
-}
-
-.daily-header{
-
-  display:flex;
-
-  justify-content:space-between;
-
-  align-items:center;
-
-  padding:14px 16px;
-
-  background:#1a73e8;
-
-  color:#fff;
-
-  font-weight:700;
-
-  font-size:15px;
-
-}
-
-.closeBtn{
-
-  background:rgba(255,255,255,0.18);
-
-  border:none;
-
-  color:#fff;
-
-  width:34px;
-
-  height:34px;
-
-  border-radius:50%;
-
-  font-size:16px;
-
-  cursor:pointer;
-
-  padding:0;
-
-}
-
-.closeBtn:hover{
-  background:rgba(255,255,255,0.25);
-}
-
-.dailyFrame{
-
-  width:100%;
-
-  height:950px;
-
-  border:none;
-
-  background:#fff;
-
-}
-
-/* FOOTER */
-
+.card-stat{border:none;border-radius:15px;}
 .footer{
-  text-align:center;
-  font-size:12px;
-  color:#777;
-  padding:18px;
+background:#0f172a;color:#fff;text-align:center;
+padding:12px;margin-top:30px;
 }
-
+.scan-box{
+height:160px;border-radius:5px;color:#fff;
+display:flex;flex-direction:column;
+justify-content:center;align-items:center;
+}
+@media(max-width:768px){
+.sidebar{position:relative;width:100%;height:auto;}
+.main{margin-left:0;}
+}
 </style>
-
 </head>
-
 <body>
 
-<div class="app">
+<div class="sidebar">
+<h4 class="p-3 border-bottom">Harsidhi ERP</h4>
+<a href="#">🏠 Dashboard</a>
+<a href="#">📥 Daily Input</a>
+<a href="#">📦 Order Tracking</a>
+<a href="#">🚚 Pickup Analysis</a>
+<a href="#">↩ Return Analysis</a>
+<a href="#">📊 Reports</a>
+<a href="#">⚙ Settings</a>
+</div>
 
-<header>
-  HARSIDHI VENTURES ERP
-</header>
+<div class="main">
 
-<!-- DASHBOARD -->
+<div class="header d-flex justify-content-between align-items-center">
+<h3 class="m-0">Harsidhi Ventures ERP</h3>
+<div id="clock"></div>
+</div>
 
-<div class="card">
+<div class="container-fluid p-4">
 
-  <h3>📊 Dashboard</h3>
+<div class="row g-3">
 
-  <div class="stats">
+<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>Total Orders</h6><h2>2500</h2></div></div></div>
+<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>Pickup</h6><h2>1450</h2></div></div></div>
+<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>Return</h6><h2>110</h2></div></div></div>
+<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>Delivered</h6><h2>820</h2></div></div></div>
 
-    <div>
-      Today Pickup
-      <span id="todayPickup" class="big">-</span>
-    </div>
-
-    <div>
-      Today Return
-      <span id="todayReturn" class="big">-</span>
-    </div>
-
-  </div>
-
-  <div class="stats">
-
-    <div>
-      Yesterday Pickup
-      <span id="yestPickup" class="big">-</span>
-    </div>
-
-    <div>
-      Yesterday Return
-      <span id="yestReturn" class="big">-</span>
-    </div>
-
-  </div>
-
-  <div class="stats">
-
-    <div>
-      Total Pickup
-      <span id="totalPickup" class="big">-</span>
-    </div>
-
-    <div>
-      Total Return
-      <span id="totalReturn" class="big">-</span>
-    </div>
-
-  </div>
+<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>Manifest</h6><h2>210</h2></div></div></div>
+<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>In Transit</h6><h2>590</h2></div></div></div>
+<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>RTO</h6><h2>90</h2></div></div></div>
+<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>NDR</h6><h2>35</h2></div></div></div>
 
 </div>
 
-<!-- QUICK ACTION -->
+<div class="card shadow-sm mt-4">
+<div class="card-header"><b>Daily Scan</b></div>
+<div class="card-body">
 
-<div class="card">
-
-  <h3>⚡ Quick Actions</h3>
-
-  <div class="grid">
-
-    <button onclick="toggleDaily()">
-      📋 Daily
-    </button>
-
-    <button onclick="go('pickup.html')">
-      📦 Pickup
-    </button>
-
-    <button onclick="go('return.html')">
-      🔄 Return
-    </button>
-
-    <button onclick="go('return-request.html')">
-      📥 Return Req
-    </button>
-
-  </div>
-
+<h5>Pickup</h5>
+<div class="row g-3 mb-4">
+<div class="col-md-2"><div class="scan-box bg-primary"><div>01-Jun</div><h2>120</h2></div></div>
+<div class="col-md-2"><div class="scan-box bg-primary"><div>02-Jun</div><h2>145</h2></div></div>
+<div class="col-md-2"><div class="scan-box bg-primary"><div>03-Jun</div><h2>167</h2></div></div>
 </div>
 
-<!-- DAILY SLIDE PANEL -->
-
-<div id="dailyPanel" class="daily-panel">
-
-  <div class="daily-header">
-
-    <span>📋 Daily Scanner</span>
-
-    <button class="closeBtn" onclick="toggleDaily()">
-      ✕
-    </button>
-
-  </div>
-
-  <iframe
-    src="daily.html"
-    frameborder="0"
-    class="dailyFrame"
-  ></iframe>
-
+<h5>Return</h5>
+<div class="row g-3">
+<div class="col-md-2"><div class="scan-box bg-danger"><div>01-Jun</div><h2>12</h2></div></div>
+<div class="col-md-2"><div class="scan-box bg-danger"><div>02-Jun</div><h2>8</h2></div></div>
+<div class="col-md-2"><div class="scan-box bg-danger"><div>03-Jun</div><h2>15</h2></div></div>
 </div>
 
-<!-- PRODUCTION -->
-
-<div class="card">
-
-  <h3>🏭 Production</h3>
-
-  <div class="grid">
-
-    <button onclick="go('production/production.html')">
-      Main
-    </button>
-
-    <button onclick="go('production/cutting.html')">
-      Cutting
-    </button>
-
-    <button onclick="go('production/fabric.html')">
-      Fabric
-    </button>
-
-    <button onclick="go('production/stitching.html')">
-      Stitching
-    </button>
-
-    <button onclick="go('production/finished.html')">
-      Finished
-    </button>
-
-    <button onclick="go('production/production-ledger.html')">
-      Ledger
-    </button>
-
-  </div>
-
+</div>
 </div>
 
-<!-- OTHER -->
+<div class="row mt-4">
+<div class="col-lg-6">
+<div class="card shadow-sm">
+<div class="card-header">Pickup Trend</div>
+<div class="card-body"><canvas id="pickupChart"></canvas></div>
+</div>
+</div>
 
-<div class="card">
+<div class="col-lg-6">
+<div class="card shadow-sm">
+<div class="card-header">Order Status</div>
+<div class="card-body"><canvas id="statusChart"></canvas></div>
+</div>
+</div>
+</div>
 
-  <h3>📂 Other</h3>
-
-  <div class="grid">
-
-    <button onclick="go('lookup.html')">
-      🔍 Lookup
-    </button>
-
-    <button onclick="go('delhivery-track.html')">
-      🚚 Track
-    </button>
-
-  </div>
+<div class="card shadow-sm mt-4">
+<div class="card-header"><b>AWB Search</b></div>
+<div class="card-body">
+<div class="input-group">
+<input type="text" class="form-control" placeholder="Enter AWB Number">
+<button class="btn btn-primary">Search</button>
+</div>
+</div>
+</div>
 
 </div>
 
 <div class="footer">
-  © Harsidhi Ventures
+Developed By Kone Soft Tech © 2026
 </div>
 
 </div>
 
 <script>
+setInterval(()=>{
+document.getElementById("clock").innerHTML=new Date().toLocaleString();
+},1000);
 
-// ================= NAVIGATION =================
-
-function go(page){
-
-  window.location.href = page;
-
+new Chart(document.getElementById('pickupChart'),{
+type:'line',
+data:{
+labels:['1','2','3','4','5','6','7'],
+datasets:[{label:'Pickup',data:[120,150,180,200,170,210,230]}]
 }
+});
 
-// ================= DAILY PANEL =================
-
-function toggleDaily(){
-
-  const panel =
-    document.getElementById("dailyPanel");
-
-  panel.classList.toggle("active");
-
+new Chart(document.getElementById('statusChart'),{
+type:'doughnut',
+data:{
+labels:['Delivered','Transit','RTO','NDR'],
+datasets:[{data:[820,590,90,35]}]
 }
-
-// ================= LOAD DASHBOARD =================
-
-async function loadDashboard(){
-
-  try{
-
-    const res =
-      await fetch(API.stats());
-
-    const d =
-      await res.json();
-
-    document.getElementById("todayPickup").innerText =
-      d.todayPickup ??
-      d.today_pickup ??
-      0;
-
-    document.getElementById("todayReturn").innerText =
-      d.todayReturn ??
-      d.today_return ??
-      0;
-
-    document.getElementById("yestPickup").innerText =
-      d.yesterdayPickup ??
-      d.yesterday_pickup ??
-      0;
-
-    document.getElementById("yestReturn").innerText =
-      d.yesterdayReturn ??
-      d.yesterday_return ??
-      0;
-
-    document.getElementById("totalPickup").innerText =
-      d.totalPickup ??
-      d.total_pickup ??
-      0;
-
-    document.getElementById("totalReturn").innerText =
-      d.totalReturn ??
-      d.total_return ??
-      0;
-
-  }
-
-  catch(e){
-
-    console.log(
-      "Stats Error:",
-      e
-    );
-
-    document
-    .querySelectorAll(".big")
-    .forEach(el=>{
-
-      el.innerText = "0";
-
-    });
-
-  }
-
-}
-
-// ================= INIT =================
-
-document.addEventListener(
-  "DOMContentLoaded",
-  ()=>{
-
-    loadDashboard();
-
-    setInterval(
-      loadDashboard,
-      7000
-    );
-
-  }
-);
-
+});
 </script>
 
 </body>
