@@ -3,7 +3,7 @@
 ========================================= */
 
 const API_URL =
-"https://script.google.com/macros/s/AKfycby0ursK_N80ENh_yGVMluYM9YyPf21aQ5pgk5AmVdixqCEqJ0yMeqnbXctCsDFTtg1y/exec";
+"https://script.google.com/macros/s/AKfycbwIfkmxE22R4DihL204omXxic1rG4JbIGyV4bSoa_EIKKPmmsEI2azuJ31TDYxmhwba/exec";
 
 /* =========================================
    PAGE LOADER
@@ -359,3 +359,33 @@ window.addEventListener(
 
   }
 );
+/* =========================================
+   SHEET DATA
+========================================= */
+
+async function getSheetData(month){
+
+  try{
+
+    const res =
+      await fetch(
+        API_URL +
+        "?action=getSheetData&month=" +
+        encodeURIComponent(month)
+      );
+
+    return await res.json();
+
+  }catch(err){
+
+    return {
+
+      success:false,
+
+      message:String(err)
+
+    };
+
+  }
+
+}
