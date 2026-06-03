@@ -8,7 +8,11 @@ const API_URL =
 /* =========================================
    PAGE LOADER
 ========================================= */
+window.onload = function(){
 
+    checkConnection();
+
+};
 async function loadPage(page) {
 
   try {
