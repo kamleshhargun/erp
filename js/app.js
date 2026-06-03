@@ -249,22 +249,33 @@ async function trackAWB(awb) {
    SAVE SCAN
 ========================================= */
 
-async function saveScan(
-    awb,
-    type
-) {
+async function saveScan(awb, type){
 
-    return await apiPost({
+    const res = await fetch(
+        API_URL,
+        {
+            method:"POST",
 
-        action: "save",
+            headers:{
+                "Content-Type":"application/json"
+            },
 
-        awb,
+            body:JSON.stringify({
 
-        type
+                action:"save",
 
-    });
+                awb:awb,
+
+                type:type
+
+            })
+
+        }
+    );
+
+    return await res.json();
+
 }
-
 /* =========================================
    SHEET DATA
 ========================================= */
