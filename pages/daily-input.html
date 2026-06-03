@@ -1,215 +1,80 @@
-<div class="card shadow-sm">
-
-    <div class="card-header">
-        <h4 class="mb-0">📥 Daily Input</h4>
-    </div>
-
-    <div class="card-body">
-
-        <div class="row mb-4">
-
-            <div class="col-md-4">
-                <button
-                    id="pickupBtn"
-                    class="btn btn-success w-100"
-                    onclick="setMode('Pickup')">
-                    Pickup Mode
-                </button>
-            </div>
-
-            <div class="col-md-4">
-                <button
-                    id="returnBtn"
-                    class="btn btn-danger w-100"
-                    onclick="setMode('Return')">
-                    Return Mode
-                </button>
-            </div>
-
-            <div class="col-md-4">
-                <button
-                    class="btn btn-secondary w-100"
-                    onclick="stopScanning()">
-                    Stop Scan
-                </button>
-            </div>
-
-        </div>
-
-        <div class="alert alert-primary">
-
-            Current Mode :
-            <strong id="currentMode">
-                Pickup
-            </strong>
-
-        </div>
-
-        <div class="card shadow-sm mb-3">
-
-            <div class="card-body">
-
-                <label class="form-label">
-                    Scan AWB
-                </label>
-
-                <input
-                    type="text"
-                    id="awb"
-                    class="form-control form-control-lg text-center fw-bold"
-                    placeholder="Scan AWB Here"
-                    autofocus>
-
-            </div>
-
-        </div>
-
-        <div class="card shadow-sm mb-3">
-
-            <div class="card-header">
-                Order Details
-            </div>
-
-            <div class="card-body">
-
-                <div class="row">
-
-                    <div class="col-md-4">
-                        <b>AWB</b>
-                        <div id="showAwb">-</div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <b>Order ID</b>
-                        <div id="showOrderId">-</div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <b>Courier</b>
-                        <div id="showCustomer">-</div>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="card shadow-sm mb-3">
-
-            <div class="card-body">
-
-                <div
-                    id="statusBox"
-                    class="fw-bold text-primary">
-
-                    Ready To Scan
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-6">
-
-                <div class="card shadow-sm">
-
-                    <div class="card-header">
-                        Today's Count
-                    </div>
-
-                    <div class="card-body">
-
-                        <h5>
-                            Pickup :
-                            <span id="pickupCount">
-                                0
-                            </span>
-                        </h5>
-
-                        <h5>
-                            Return :
-                            <span id="returnCount">
-                                0
-                            </span>
-                        </h5>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-6">
-
-                <div class="card shadow-sm">
-
-                    <div class="card-header">
-                        Recent Scans
-                    </div>
-
-                    <div class="card-body">
-
-                        <ul
-                            id="recentScans"
-                            class="list-group">
-                        </ul>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<script>
-
 let mode = "Pickup";
 let active = true;
+let processing = false;
 let recentScans = [];
 
-function setMode(type){
+/* DOM Elements */
 
-    active = true;
+const awbInput = document.getElementById("awb");
+const currentMode = document.getElementById("currentMode");
+const statusBox = document.getElementById("statusBox");
+const recentScansList = document.getElementById("recentScans");
+
+const showAwb = document.getElementById("showAwb");
+const showOrderId = document.getElementById("showOrderId");
+const showCustomer = document.getElementById("showCustomer");
+
+const pickupBtn = document.getElementById("pickupBtn");
+const returnBtn = document.getElementById("returnBtn");
+
+/* Mode Change */
+
+function setMode(type) {
+
     mode = type;
+    active = true;
 
-    document.getElementById(
-        "currentMode"
-    ).innerText = type;
+    currentMode.textContent = type;
 
-    document.getElementById(
-        "statusBox"
-    ).innerHTML =
-    "Ready To Scan";
+    pickupBtn.classList.remove("btn-success");
+    returnBtn.classList.remove("btn-danger");
 
-    document.getElementById(
-        "awb"
-    ).focus();
+    if (type === "Pickup") {
+        pickupBtn.classList.add("btn-success");
+    } else {
+        returnBtn.classList.add("btn-danger");
+    }
+
+    updateStatus(
+        `Ready To Scan (${type})`,
+        "primary"
+    );
+
+    awbInput.focus();
 }
 
-function stopScanning(){
+/* Stop Scanning */
+
+function stopScanning() {
 
     active = false;
 
-    document.getElementById(
-        "statusBox"
-    ).innerHTML =
-    "Scanning Stopped";
+    updateStatus(
+        "Scanning Stopped",
+        "danger"
+    );
 }
+
+/* Status Helper */
+
+function updateStatus(
+    message,
+    color = "primary"
+) {
+
+    statusBox.className =
+        `fw-bold text-${color}`;
+
+    statusBox.innerHTML = message;
+}
+
+/* Recent Scans */
 
 function addRecentScan(
     awb,
     orderId,
     scanType
-){
+) {
 
     recentScans.unshift({
         awb,
@@ -217,142 +82,102 @@ function addRecentScan(
         scanType
     });
 
-    if(
-        recentScans.length > 10
-    ){
-        recentScans.pop();
-    }
+    recentScans =
+        recentScans.slice(0, 10);
 
-    let html = "";
+    renderRecentScans();
+}
 
-    recentScans.forEach(row=>{
+function renderRecentScans() {
 
-        html += `
+    recentScansList.innerHTML =
+        recentScans.map(row => `
         <li class="list-group-item">
+
             <div>
                 <strong>${row.awb}</strong>
             </div>
 
             <small>
-                Order :
-                ${row.orderId}
+                Order: ${row.orderId}
             </small>
 
             <br>
 
-            <span class="
-                badge
-                ${row.scanType === 'Pickup'
-                ? 'bg-success'
-                : 'bg-danger'}
-            ">
+            <span class="badge ${
+                row.scanType === "Pickup"
+                ? "bg-success"
+                : "bg-danger"
+            }">
                 ${row.scanType}
             </span>
-        </li>
-        `;
-    });
 
-    document.getElementById(
-        "recentScans"
-    ).innerHTML =
-    html;
+        </li>
+    `).join("");
 }
 
-document
-.getElementById("awb")
-.addEventListener(
-"keydown",
-async function(e){
+/* Scan Process */
 
-    if(e.key !== "Enter")
-    return;
+async function processScan(awb) {
 
-    if(!active)
-    return;
+    if (processing) return;
 
-    const awb =
-    this.value.trim();
+    processing = true;
 
-    if(!awb)
-    return;
+    try {
 
-    document.getElementById(
-        "statusBox"
-    ).innerHTML =
-    "Checking Tracking...";
-
-    try{
+        updateStatus(
+            "Checking Tracking...",
+            "warning"
+        );
 
         const tracking =
-        await trackAWB(awb);
+            await trackAWB(awb);
 
-        if(
-            !tracking.success
-        ){
+        if (!tracking.success) {
 
-            document.getElementById(
-                "statusBox"
-            ).innerHTML =
-            tracking.message ||
-            "Tracking Not Found";
-
-            this.select();
+            updateStatus(
+                tracking.message ||
+                "Tracking Not Found",
+                "danger"
+            );
 
             return;
         }
 
         const orderId =
-
             tracking.orderId ||
-
             tracking.shipment?.order_id ||
-
             tracking.shipment?.orderId ||
-
             tracking.shipment?.reference_number ||
-
             tracking.shipment?.reference_no ||
-
             "-";
 
-        document.getElementById(
-            "showAwb"
-        ).innerHTML =
-        awb;
+        showAwb.textContent = awb;
+        showOrderId.textContent = orderId;
+        showCustomer.textContent =
+            tracking.courier || "BOXD";
 
-        document.getElementById(
-            "showOrderId"
-        ).innerHTML =
-        orderId;
-
-        document.getElementById(
-            "showCustomer"
-        ).innerHTML =
-        tracking.courier ||
-        "BOXD";
-
-        document.getElementById(
-            "statusBox"
-        ).innerHTML =
-        "Saving Scan...";
-
-        const save =
-        await saveScan(
-            awb,
-            mode
+        updateStatus(
+            "Saving Scan...",
+            "info"
         );
 
-        if(
-            save.success
-        ){
+        const save =
+            await saveScan(
+                awb,
+                mode
+            );
+
+        if (save.success) {
 
             beep();
 
-            document.getElementById(
-                "statusBox"
-            ).innerHTML =
-            save.message ||
-            "Saved Successfully";
+            updateStatus(
+                save.message ||
+                "Saved Successfully",
+                "success"
+            );
 
             addRecentScan(
                 awb,
@@ -362,33 +187,63 @@ async function(e){
 
             await loadTodayCounts();
 
-        }else{
+        } else {
 
-            document.getElementById(
-                "statusBox"
-            ).innerHTML =
-            save.message ||
-            "Save Failed";
+            updateStatus(
+                save.message ||
+                "Save Failed",
+                "danger"
+            );
         }
 
-    }catch(err){
+    } catch (error) {
 
-        document.getElementById(
-            "statusBox"
-        ).innerHTML =
-        err.toString();
+        console.error(error);
+
+        updateStatus(
+            error.message ||
+            "Unexpected Error",
+            "danger"
+        );
+
+    } finally {
+
+        processing = false;
+
+        awbInput.value = "";
+        awbInput.focus();
     }
+}
 
-    this.value = "";
+/* Scanner Event */
 
-    this.focus();
+awbInput.addEventListener(
+    "keydown",
+    async (e) => {
 
-});
+        if (e.key !== "Enter")
+            return;
+
+        if (!active)
+            return;
+
+        const awb =
+            awbInput.value.trim();
+
+        if (!awb)
+            return;
+
+        await processScan(awb);
+    }
+);
+
+/* Init */
 
 loadTodayCounts();
 
-document.getElementById(
-    "awb"
-).focus();
+updateStatus(
+    "Ready To Scan",
+    "primary"
+);
 
-</script>
+awbInput.focus();
