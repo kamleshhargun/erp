@@ -1,175 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Harsidhi Ventures ERP</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<style>
-body{background:#f4f7fb;}
-.sidebar{
-position:fixed;left:0;top:0;width:250px;height:100vh;
-background:#0f172a;color:#fff;overflow:auto;
-}
-.sidebar a{
-display:block;color:#fff;text-decoration:none;padding:12px 20px;
-}
-.sidebar a:hover{background:#2563eb;}
-.main{margin-left:250px;}
-.header{
-background:#fff;padding:15px 25px;
-box-shadow:0 2px 8px rgba(0,0,0,.08);
-}
-.card-stat{border:none;border-radius:15px;}
-.footer{
-background:#0f172a;color:#fff;text-align:center;
-padding:12px;margin-top:30px;
-}
-.scan-box{
-height:160px;border-radius:5px;color:#fff;
-display:flex;flex-direction:column;
-justify-content:center;align-items:center;
-}
-@media(max-width:768px){
-.sidebar{position:relative;width:100%;height:auto;}
-.main{margin-left:0;}
-}
-</style>
+<link rel="stylesheet" href="css/style.css">
+
 </head>
+
 <body>
 
-<div class="sidebar">
-<h4 class="p-3 border-bottom"> </h4>
-<a href="#" onclick="loadPage('index')">🏠 Dashboard</a>
-<a href="#" onclick="loadPage('daily-input')">📥 Daily Input</a>
-<a href="#" onclick="loadPage('order-track')">📦 Order Track</a>
-<a href="#">🚚 Pickup Analysis</a>
-<a href="#">↩ Return Analysis</a>
-<a href="#">📊 Reports</a>
-<a href="#">⚙ Settings</a>
-</div>
+<div id="contentArea">
 
-<div class="main">
-
-<div class="header d-flex justify-content-between align-items-center">
-<h3 class="m-0">Harsidhi Ventures ERP</h3>
-<div id="clock"></div>
-</div>
-
-<div class="container-fluid p-4">
-  <div id="contentArea">
-
-<div class="row g-3">
-
-<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>Total Orders</h6><h2>2500</h2></div></div></div>
-<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>Pickup</h6><h2>1450</h2></div></div></div>
-<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>Return</h6><h2>110</h2></div></div></div>
-<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>Delivered</h6><h2>820</h2></div></div></div>
-
-<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>Manifest</h6><h2>210</h2></div></div></div>
-<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>In Transit</h6><h2>590</h2></div></div></div>
-<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>RTO</h6><h2>90</h2></div></div></div>
-<div class="col-md-3"><div class="card card-stat shadow-sm"><div class="card-body"><h6>NDR</h6><h2>35</h2></div></div></div>
+<h1>
+Harsidhi Ventures ERP
+</h1>
 
 </div>
 
-<div class="card shadow-sm mt-4">
-<div class="card-header"><b>Daily Scan</b></div>
-<div class="card-body">
-
-<h5>Pickup</h5>
-<div class="row g-3 mb-4">
-<div class="col-md-2"><div class="scan-box bg-primary"><div>01-Jun</div><h2>120</h2></div></div>
-<div class="col-md-2"><div class="scan-box bg-primary"><div>02-Jun</div><h2>145</h2></div></div>
-<div class="col-md-2"><div class="scan-box bg-primary"><div>03-Jun</div><h2>167</h2></div></div>
-</div>
-
-<h5>Return</h5>
-<div class="row g-3">
-<div class="col-md-2"><div class="scan-box bg-danger"><div>01-Jun</div><h2>12</h2></div></div>
-<div class="col-md-2"><div class="scan-box bg-danger"><div>02-Jun</div><h2>8</h2></div></div>
-<div class="col-md-2"><div class="scan-box bg-danger"><div>03-Jun</div><h2>15</h2></div></div>
-</div>
-
-</div>
-</div>
-
-<div class="row mt-4">
-<div class="col-lg-6">
-<div class="card shadow-sm">
-<div class="card-header">Pickup Trend</div>
-<div class="card-body"><canvas id="pickupChart"></canvas></div>
-</div>
-</div>
-
-<div class="col-lg-6">
-<div class="card shadow-sm">
-<div class="card-header">Order Status</div>
-<div class="card-body"><canvas id="statusChart"></canvas></div>
-</div>
-</div>
-</div>
-
-<div class="card shadow-sm mt-4">
-<div class="card-header"><b>AWB Search</b></div>
-<div class="card-body">
-<div class="input-group">
-<input type="text" class="form-control" placeholder="Enter AWB Number">
-<button class="btn btn-primary">Search</button>
-</div>
-</div>
-</div>
-</div>
-</div>
-
-<div class="footer">
-Developed By Kone Soft Tech © 2026
-</div>
-
-</div>
-
-<script>
-async function loadPage(page){
-
-    const res =
-    await fetch(
-      page + ".html"
-    );
-
-    const html =
-    await res.text();
-
-    document
-    .getElementById(
-      "contentArea"
-    )
-    .innerHTML = html;
-
-}
-
-setInterval(()=>{
-document.getElementById("clock").innerHTML=new Date().toLocaleString();
-},1000);
-
-new Chart(document.getElementById('pickupChart'),{
-type:'line',
-data:{
-labels:['1','2','3','4','5','6','7'],
-datasets:[{label:'Pickup',data:[120,150,180,200,170,210,230]}]
-}
-});
-
-new Chart(document.getElementById('statusChart'),{
-type:'doughnut',
-data:{
-labels:['Delivered','Transit','RTO','NDR'],
-datasets:[{data:[820,590,90,35]}]
-}
-});
-</script>
+<script src="js/app.js"></script>
 
 </body>
 </html>
