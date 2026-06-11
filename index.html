@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inventory Management System</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<div class="app">
+
+<header class="topbar">
+    <h1>Inventory Dashboard</h1>
+
+    <div class="search-wrap">
+        <input
+            type="text"
+            id="skuSearch"
+            placeholder="Search SKU / Product Name..."
+        >
+    </div>
+</header>
+
+<!-- DASHBOARD -->
+
+<section class="dashboard">
+
+<div class="card stat-card">
+    <span>Total SKU</span>
+    <h2 id="totalSku">0</h2>
+</div>
+
+<div class="card stat-card">
+    <span>Total Stock</span>
+    <h2 id="totalStock">0</h2>
+</div>
+
+<div class="card stat-card">
+    <span>Low Stock</span>
+    <h2 id="lowStock">0</h2>
+</div>
+
+<div class="card stat-card">
+    <span>Out Of Stock</span>
+    <h2 id="outStock">0</h2>
+</div>
+
+</section>
+
+<!-- TABS -->
+
+<div class="tabs">
+
+<button class="tab-btn active" data-tab="inventory">
+Inventory
+</button>
+
+<button class="tab-btn" data-tab="sales">
+Sales
+</button>
+
+<button class="tab-btn" data-tab="returns">
+Returns
+</button>
+
+<button class="tab-btn" data-tab="production">
+Production
+</button>
+
+<button class="tab-btn" data-tab="awb">
+AWB Search
+</button>
+
+</div>
+
+<!-- INVENTORY -->
+
+<section class="tab-content active" id="inventory">
+
+<div class="table-card">
+
+<table>
+
+<thead>
+<tr>
+<th>SKU</th>
+<th>Name</th>
+<th>Opening</th>
+<th>Sales</th>
+<th>Returns</th>
+<th>Production</th>
+<th>Current Stock</th>
+</tr>
+</thead>
+
+<tbody id="inventoryTable">
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+<!-- SALES -->
+
+<section class="tab-content" id="sales">
+
+<div class="form-card">
+
+<h3>Add Sales</h3>
+
+<input
+type="text"
+id="saleAwb"
+placeholder="AWB Number"
+>
+
+<input
+type="text"
+id="saleOrder"
+placeholder="Order ID"
+>
+
+<input
+type="text"
+id="saleSku"
+placeholder="SKU"
+>
+
+<input
+type="number"
+id="saleQty"
+placeholder="Quantity"
+>
+
+<button id="saleBtn">
+Save Sale
+</button>
+
+</div>
+
+</section>
+
+<!-- RETURNS -->
+
+<section class="tab-content" id="returns">
+
+<div class="form-card">
+
+<h3>Add Return</h3>
+
+<select id="returnType">
+
+<option value="Pickup">
+Pickup Return
+</option>
+
+<option value="Customer Return">
+Customer Return
+</option>
+
+</select>
+
+<input
+type="text"
+id="returnAwb"
+placeholder="AWB"
+>
+
+<input
+type="text"
+id="returnSku"
+placeholder="SKU"
+>
+
+<input
+type="number"
+id="returnQty"
+placeholder="Quantity"
+>
+
+<button id="returnBtn">
+Save Return
+</button>
+
+</div>
+
+</section>
+
+<!-- PRODUCTION -->
+
+<section class="tab-content" id="production">
+
+<div class="form-card">
+
+<h3>Add Production</h3>
+
+<input
+type="text"
+id="prodSku"
+placeholder="SKU"
+>
+
+<input
+type="number"
+id="prodQty"
+placeholder="Quantity"
+>
+
+<button id="productionBtn">
+Add Production
+</button>
+
+</div>
+
+</section>
+
+<!-- AWB -->
+
+<section class="tab-content" id="awb">
+
+<div class="form-card">
+
+<h3>AWB Search</h3>
+
+<input
+type="text"
+id="awbInput"
+placeholder="Enter AWB"
+>
+
+<button id="awbBtn">
+Search
+</button>
+
+<div id="awbResult"></div>
+
+</div>
+
+</section>
+
+</div>
+
+<script>
+
+const API_URL =
+"https://script.google.com/macros/s/AKfycbxayQsXigi7s85ifmlycJoBtd8rI4j_1RF2m9sCQpxVpA5tSRnzZYqGGEVaAZPSy8vFbQ/exec";
+
+</script>
+
+<script src="app.js"></script>
+
+</body>
+</html>
